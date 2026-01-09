@@ -1,0 +1,171 @@
+{
+  "name": "Milestone deadline approaching (3 days before)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "milestone-deadline-approaching",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -224
+      ],
+      "id": "a848a120-2f2c-4ce5-a00a-c660b1b9fd11",
+      "name": "Webhook",
+      "webhookId": "e174bad3-086d-4f31-879a-7b923d6c6738",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        96,
+        0
+      ],
+      "id": "c31988f4-214b-41a6-adf8-15a298eb4075",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT DISTINCT\n  m.id        AS milestone_id,\n  m.title     AS milestone_title,\n  m.end_date  AS milestone_end_date,\n\n  pm.id       AS project_id,\n  pm.title    AS project_title,\n\n  -- milestone owner\n  mo.email    AS milestone_owner_email,\n\n  -- project manager\n  pmo.email   AS project_manager_email\n\nFROM milestones m\n\n-- milestone owner\nJOIN spree_users mo\n  ON mo.id = m.owner_id\n\n-- project\nJOIN project_managements pm\n  ON pm.id = m.project_management_id\n\n-- project manager\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nWHERE\n  DATE(m.end_date) = DATE(UTC_TIMESTAMP() + INTERVAL 2 DAY);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -368,
+        -96
+      ],
+      "id": "8d7f00bb-150b-43d3-bfc8-1e34c53545df",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.project_manager_email}}, {{$json.milestone_owner_email}}",
+        "subject": "=Milestone {{$json.milestone_title}}  due in 3 days",
+        "html": "=Milestone {{$json.milestone_title}}  due in 3 days",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        128
+      ],
+      "id": "f89e2fc9-4a7d-4314-b0b2-38a003892234",
+      "name": "PM, Milestone Owner",
+      "webhookId": "beaedefe-7968-48c3-90a1-30b0750fcbbd",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -688,
+        -64
+      ],
+      "id": "862eb346-2744-467d-82af-49d2da75d261",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "PM, Milestone Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM, Milestone Owner": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ed8385b7-0670-4b16-832d-9effa77379bc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "BoiVvksei125bvb7",
+  "tags": [
+    {
+      "updatedAt": "2025-12-26T06:34:13.189Z",
+      "createdAt": "2025-12-26T06:34:13.189Z",
+      "id": "ntOn6pa6wD5AUrNk",
+      "name": "Module 1 - Projects"
+    }
+  ]
+}

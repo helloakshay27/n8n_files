@@ -1,0 +1,134 @@
+{
+  "name": "To-do assigned",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        288,
+        -64
+      ],
+      "id": "1dd523c6-e872-4127-aa44-8c4f28c75670",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "to-do-assigned",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "0366f5a2-ee44-4047-8e37-59b719256028",
+      "name": "Webhook",
+      "webhookId": "7980b848-ed02-4685-bcf5-cac06a66da3f",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{ $json.todo_owner_email }}",
+        "subject": "=New To-Do assigned: {{$json.todo_title}}",
+        "emailFormat": "=html",
+        "html": "=Hello,\n\nA new todo has been assigned to you.\n\nTodo: {{$json.todo_title}}\nStatus: {{$json.todo_status}}\nTarget date: {{$json.target_date}}\n\nRegards,\nPMS System\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        -160
+      ],
+      "id": "376e700b-4fe8-4845-ac7a-8817131cebe9",
+      "name": "User",
+      "webhookId": "a8086996-e288-4b3d-9268-29f4db56f99c",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.id            AS todo_id,\n  t.title         AS todo_title,\n  t.status        AS todo_status,\n  t.target_date,\n  t.created_at,\n\n  u.email         AS todo_owner_email\n\nFROM todos t\n\nJOIN spree_users u\n  ON u.id = t.user_id\n\nWHERE\n  t.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -192,
+        -224
+      ],
+      "id": "5a36be65-fb42-40a3-836b-d258106430b9",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "79016810-4db2-41f9-a089-fb11e156836a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "1UoWWUVDamBaFeis",
+  "tags": []
+}

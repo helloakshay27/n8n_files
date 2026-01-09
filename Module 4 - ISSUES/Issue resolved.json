@@ -1,0 +1,152 @@
+{
+  "name": "Issue resolved",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "issue-resolved",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "99fdd192-317e-4725-bb2d-0a4ce12bdac4",
+      "name": "Webhook",
+      "webhookId": "83f06387-8f77-416a-8671-a313485c8e1c",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        256,
+        16
+      ],
+      "id": "6b6c4431-8258-46b1-817e-3dd29a9a75cc",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{$json.project_manager_email}},{{$json.reporter_email}}\n",
+        "subject": "=Issue {{$json.issue_title}} marked as resolved",
+        "html": "=Hello,\n\nThe issue “{{$json.issue_title}}” has been marked as resolved.\n\nProject: {{$json.project_title}}\nResolved at: {{$json.issue_updated_at}}\n\nRegards,\nPMS System\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        -208
+      ],
+      "id": "e336d7ba-c274-44e7-8f76-ea9d39d58f7e",
+      "name": "Reporter, PM",
+      "webhookId": "75afec8b-0120-4482-a457-e6223661930e",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  i.id                AS issue_id,\n  i.title             AS issue_title,\n  i.status            AS issue_status,\n  i.updated_at        AS issue_updated_at,\n\n  pm.id               AS project_id,\n  pm.title            AS project_title,\n\n  -- project manager\n  pmo.email           AS project_manager_email,\n\n  -- issue reporter (created by)\n  reporter.email      AS reporter_email\n\nFROM issues i\n\n-- project\nJOIN project_managements pm\n  ON pm.id = i.project_management_id\n\n-- project manager\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\n-- issue reporter\nJOIN spree_users reporter\n  ON reporter.id = i.created_by_id\n\nWHERE\n  i.status IN ('resolved', 'closed')\n  AND i.updated_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND i.updated_at > i.created_at;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -192,
+        -256
+      ],
+      "id": "10229d6f-12dc-46e8-851a-3d0d109b0662",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -336,
+        48
+      ],
+      "id": "31f15259-2835-4e24-9121-2979d1a9a9cc",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reporter, PM": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Reporter, PM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "adf33b7f-8ac4-4c5c-b6a2-dda9d17a4334",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "wJtg75lBfGX4HW2n",
+  "tags": []
+}

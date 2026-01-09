@@ -1,0 +1,152 @@
+{
+  "name": "Issue severity = High / Critical",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "issue-severity",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "b9affb1a-c0d3-4d8f-9b91-ffc4fff11ed1",
+      "name": "Webhook",
+      "webhookId": "de83c815-eab0-4ead-8707-90ba9374d4c1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        176,
+        -112
+      ],
+      "id": "2e92ee20-8546-44f4-b4e5-8a4cf04901e1",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{$json.project_manager_email}}",
+        "subject": "=Critical issue logged: {{$json.issue_title}}",
+        "html": "=Hello,\n\nA critical issue has been logged.\n\nIssue: {{$json.issue_title}}\nProject: {{$json.project_title}}\nSeverity: {{$json.issue_priority}}\n\nPlease review and take action immediately.\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -64,
+        -192
+      ],
+      "id": "cbc97bca-d497-44bd-8103-e8e839534709",
+      "name": "PM, QA, Leadership",
+      "webhookId": "dfc87cc8-4d17-4da2-9da6-c46d98c82291",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  i.id            AS issue_id,\n  i.title         AS issue_title,\n  i.priority      AS issue_priority,\n  i.created_at    AS issue_created_at,\n\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  -- project manager\n  pm_owner.email  AS project_manager_email\n\nFROM issues i\n\nJOIN project_managements pm\n  ON pm.id = i.project_management_id\n\nJOIN spree_users pm_owner\n  ON pm_owner.id = pm.owner_id\n\nWHERE\n  i.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND LOWER(i.priority) IN ('high', 'urgent');\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -272,
+        -224
+      ],
+      "id": "cffb3d18-333c-4e4f-b34a-1b2886c79d00",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -368,
+        32
+      ],
+      "id": "83eae61e-b99a-4ceb-8d50-3b9639c12938",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM, QA, Leadership": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "PM, QA, Leadership",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "e669017b-31c7-4aad-9f09-bcd3ffa5b518",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "hCsKtiKEt7xag2Pv",
+  "tags": []
+}

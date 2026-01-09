@@ -1,0 +1,98 @@
+{
+  "name": "Task Inactivity (no update for 3 days)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "task-inactivity",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -432,
+        -144
+      ],
+      "id": "336b0b3f-b04b-470d-88cf-54478de6853a",
+      "name": "Webhook",
+      "webhookId": "2ad6cc43-a612-4a42-864e-d67b2bc2797a",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "Task T has no update for 3 days",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -112,
+        -96
+      ],
+      "id": "2843ca97-b6ca-446d-b0b1-c25ac1a88903",
+      "name": "Task Owner, PM",
+      "webhookId": "ee070c71-f118-42d2-bcbd-5c969ad2943b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        144,
+        16
+      ],
+      "id": "0c0c4804-1dc5-4402-9b86-a772cde7345c",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Task Owner, PM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Owner, PM": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "99cd7ae2-a7ad-4c64-9a4c-1f751022fc01",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "FQBtO2WM87R74rFX",
+  "tags": []
+}

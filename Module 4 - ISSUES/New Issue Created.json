@@ -1,0 +1,133 @@
+{
+  "name": "New Issue Created",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-issue-created",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "2ecb8541-e08d-47a3-a297-c31fb2e9ddfc",
+      "name": "Webhook",
+      "webhookId": "dd274af3-5a0c-434e-9ad0-f4f1740248f1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        272,
+        48
+      ],
+      "id": "dc634266-7898-43bb-901f-bfb02df9ed2c",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{$json.issue_owner_email}},{{$json.project_manager_email}}\n",
+        "subject": "=Issue {{$json.issue_title}} has been created",
+        "html": "=Hello,\n\nA new issue has been created.\n\nIssue: {{$json.issue_title}}\nProject: {{$json.project_title}}\nPriority: {{$json.issue_priority}}\nStatus: {{$json.issue_status}}\n\nPlease review it at your earliest convenience.\n\nThanks\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        -96
+      ],
+      "id": "36b3cdce-4034-4610-9a56-9d6c9d40325b",
+      "name": "Issue Owner, PM",
+      "webhookId": "e9ff97d5-8be6-4232-ad97-473c3f4b6725",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  i.id                    AS issue_id,\n  i.title                 AS issue_title,\n  i.created_at            AS issue_created_at,\n  i.status                AS issue_status,\n  i.priority              AS issue_priority,\n\n  pm.id                   AS project_id,\n  pm.title                AS project_title,\n\n  -- issue owner\n  io.email                AS issue_owner_email,\n\n  -- project manager\n  pmo.email               AS project_manager_email\n\nFROM issues i\n\n-- issue owner\nJOIN spree_users io\n  ON io.id = i.responsible_person_id\n\n-- project\nJOIN project_managements pm\n  ON pm.id = i.project_management_id\n\n-- project manager\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nWHERE\n  i.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -240,
+        -224
+      ],
+      "id": "587d3156-9743-4ae8-af6d-dd3d16d0d4c2",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Issue Owner, PM": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Issue Owner, PM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "d9b50d43-8951-40d9-8f79-a5c4142a6649",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "yQkcmCwlQ9nqiJbM",
+  "tags": []
+}
