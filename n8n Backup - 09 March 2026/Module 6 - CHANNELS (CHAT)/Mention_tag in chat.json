@@ -1,0 +1,100 @@
+{
+  "name": "Mention/tag in chat",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        16
+      ],
+      "id": "b5c9b16e-30ec-4737-983e-9c54d82c9dfe",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mention-tag-in-chat",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "1643145f-264e-4ccf-97d8-e18fd18746e9",
+      "name": "Webhook",
+      "webhookId": "03f52a49-c7c2-4d6c-9eda-29a4766a386f",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "You Were Mentioned in {{$json.channel_name}",
+        "html": "=Dear {{$json.RecipientName}},\n\nYou were mentioned by <b>{{$json.mentioned_by_name}}</b> in the channel <b>{{$json.channel_name}}</b>.\n\n<b>Message Context</b>\n* Channel: {{$json.channel_name}}\n* Mentioned By: {{$json.mentioned_by_name}}\n* Message Snippet:\n“{{$json.message_excerpt}}”\n\nPlease review the conversation and respond if required.\n\nOpen Conversation:\n{{$json.channel_url}}\n\nRegards,\n<b>Collaboration & Communication System</b>\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "e0aeca85-d8ae-4cf5-b3ed-5cfc9e4bcf36",
+      "name": "Mentioned User",
+      "webhookId": "760e9e24-0d5a-4ebd-a696-5526f52c510d",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Mentioned User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mentioned User": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "eb365272-fe92-4031-ab9b-217337c9e957",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "yuvrV942mHJuQ6Kc",
+  "tags": []
+}

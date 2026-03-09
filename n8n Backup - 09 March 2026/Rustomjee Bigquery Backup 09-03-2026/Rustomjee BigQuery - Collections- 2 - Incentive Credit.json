@@ -1,0 +1,224 @@
+{
+  "name": "Rustomjee BigQuery - Collections- 2 - Incentive Credit",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {},
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9aa9cc85-7d7e-4e24-acaa-605244be711d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.collections_demand_groupby\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        -112
+      ],
+      "id": "e3b7d9e1-cf27-42ea-8101-f88713a96e25",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items\n  .map(item => {\n    const demandDate = new Date(item.json.FKDAT);\n    const paymentDate = new Date(item.json.PAY_DATE);\n\n    const diffDays = (paymentDate - demandDate) / (1000 * 60 * 60 * 24);\n\n    if (diffDays >= 0 && diffDays <= 5) {\n      return {\n        json: {\n          customer_id: item.json.KUNNR,\n          demand_date: item.json.FKDAT,\n          payment_date: item.json.PAY_DATE,\n          diff_days: diffDays,\n          points: 6000,\n          rule: \"Paid within 5 days\"\n        }\n      };\n    }\n\n    return null;\n  })\n  .filter(Boolean);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -16
+      ],
+      "id": "d920f2d2-35f6-4c27-a674-a1a416be03b0",
+      "name": "Adding 6000 Incentive for the payment within 5 days",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT\n  KUNNR,\n  FKDAT,\n  PAY_DATE,\n  paid_status\nFROM\n  `powerbi-implementation.dataWarehouse_prod.collections_demand_groupby`\nWHERE\n  paid_status IN ('Fully Paid', 'Partially Paid')\n  AND FKDAT IS NOT NULL\n  AND PAY_DATE IS NOT NULL",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        80
+      ],
+      "id": "551ab040-82a1-40a4-b5e5-3cd72bd80922",
+      "name": "Fetching Details of the Fully and Partially Paid Customers",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_leads \n  WHERE LeadSource = \"Loyalty\"",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        448,
+        -144
+      ],
+      "id": "f5352482-932a-4772-9b00-963633aaec92",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"customer_code\": \"{{ $json.customer_id }}\",\n  \"amount\": {{ $json.points }},\n  \"remarks\": \"{{ $json.rule }}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        864,
+        -96
+      ],
+      "id": "feeccf5e-95fc-47f3-a544-c8f8856522a5",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items\n  .map(item => {\n    const demandDate = new Date(item.json.FKDAT);\n    const paymentDate = new Date(item.json.PAY_DATE);\n\n    const diffDays = (paymentDate - demandDate) / (1000 * 60 * 60 * 24);\n\n    if (diffDays > 5 && diffDays <= 10) {\n      return {\n        json: {\n          customer_id: item.json.KUNNR,\n          demand_date: item.json.FKDAT,\n          payment_date: item.json.PAY_DATE,\n          diff_days: diffDays,\n          points: 3000, // 👈 example, change as needed\n          rule: \"Paid within 10 days\"\n        }\n      };\n    }\n\n    return null;\n  })\n  .filter(Boolean);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        224
+      ],
+      "id": "ae4d95d8-ccbd-469c-9752-5759ab3356b3",
+      "name": "Adding 3000 Incentive for the payment within 10 days",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetching Details of the Fully and Partially Paid Customers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        []
+      ]
+    },
+    "Fetching Details of the Fully and Partially Paid Customers": {
+      "main": [
+        [
+          {
+            "node": "Adding 6000 Incentive for the payment within 5 days",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Adding 3000 Incentive for the payment within 10 days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adding 6000 Incentive for the payment within 5 days": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "fa6acccd-404b-40e6-86a4-65b4efcf0fb9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "Cae5konIaCmt5leX",
+  "tags": []
+}

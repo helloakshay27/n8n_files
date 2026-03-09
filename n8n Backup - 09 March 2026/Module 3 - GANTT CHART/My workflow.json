@@ -1,0 +1,99 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gantt-timeline-change-affecting-task",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "04a2b918-3db3-449c-80aa-ebbf3b3ccd0e",
+      "name": "Webhook",
+      "webhookId": "1d0d2c11-9906-43d3-ab4a-ac799a91e662",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "Timeline for your task T updated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "ee2c114f-f02a-47fe-9be5-98f88acea8fd",
+      "name": "Task Owner",
+      "webhookId": "95eaaf11-d1b5-4ad3-91f9-04794badc4a3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        16
+      ],
+      "id": "02e03342-257f-4445-b740-ed6f4742485b",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Task Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Owner": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "2cc99a66-61ca-416f-aec5-617891f18486",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "MKjfvybGavlEVBuM",
+  "tags": []
+}

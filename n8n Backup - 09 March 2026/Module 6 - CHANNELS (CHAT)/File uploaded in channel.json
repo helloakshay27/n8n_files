@@ -1,0 +1,100 @@
+{
+  "name": "File uploaded in channel",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        16
+      ],
+      "id": "eaf4531c-f826-4461-b538-a8294cd9a5f1",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "file-uploaded-in-channel",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "9c4e464b-110c-4835-a8f4-827fe3a1d6d6",
+      "name": "Webhook",
+      "webhookId": "855efcb4-bfd9-49fd-83a5-85d43c2c6ce4",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "=New File Shared in {{$json.channel_name}}",
+        "html": "=Dear {{$json.RecipientName}},\n\nA new file has been shared in the channel <b>{{$json.channel_name}}</b>.\n\n<b>File Details</b>\n* File Name: {{$json.file_name}}\n* Uploaded By: {{$json.uploaded_by_name}}\n* Uploaded On: {{$json.created_at}}\n\nPlease review the file as part of ongoing collaboration.\n\nAccess Channel:\n{{$json.channel_url}}\n\nRegards,\n<b>Team Collaboration Platform</b>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "ef715ce3-e9a1-4250-902d-4b9f1c32f63c",
+      "name": "Channel members",
+      "webhookId": "eb671d1f-cd45-4971-b404-e51852477aca",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Channel members",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Channel members": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "81450a00-c61f-4267-8746-5d689ddcf753",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "Kxx1JlXsDmalJOix",
+  "tags": []
+}

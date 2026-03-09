@@ -1,0 +1,146 @@
+{
+  "name": "Action items overdue",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        224,
+        -96
+      ],
+      "id": "1f78e7bf-fc4c-4fd2-8e53-d77aea9b2127",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "action-items-overdue",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "c07e9465-8b93-4b6d-93f1-4128a38d2f48",
+      "name": "Webhook",
+      "webhookId": "bff7607d-1797-4d41-b81b-323bdb3e839b",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{ $json.action_owner_email }}",
+        "subject": "=Overdue MoM Action Item – {{$json.mom_title}}",
+        "emailFormat": "=Dear {{$json.RecipientName}},\n\nThe following MoM action item is overdue and requires immediate attention.\n\nDetails:\n• Action Item: {{$json.mom_title}}\n• Original Due Date: {{$json.due_date}}\n• Overdue By: {{$json.overdue_days}} days\n\nKindly update the status or share a recovery plan.\n\nRegards,\nPMO – Escalations\n\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        -32
+      ],
+      "id": "f6f15bd3-a82a-4522-9742-1bb8f6cf07b3",
+      "name": "Action Owners, PM",
+      "webhookId": "fcbb60fb-add2-4d78-b0d9-91834dfa19e2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  mt.id                 AS mom_task_id,\n  mt.description        AS action_description,\n  mt.target_date,\n  mt.status             AS action_status,\n\n  DATEDIFF(\n    UTC_DATE(),\n    mt.target_date\n  )                     AS overdue_days,\n\n  md.id                 AS mom_id,\n  md.title              AS mom_title,\n  md.meeting_date,\n\n  pm.id                 AS project_id,\n  pm.title              AS project_title,\n\n  -- Action owner\n  owner.id              AS action_owner_id,\n  owner.firstname       AS action_owner_first_name,\n  owner.lastname        AS action_owner_last_name,\n  owner.email           AS action_owner_email,\n\n  -- Project manager\n  pm_owner.email        AS project_manager_email\n\nFROM mom_tasks mt\n\nJOIN mom_details md\n  ON md.id = mt.mom_detail_id\n\nLEFT JOIN project_managements pm\n  ON pm.id = md.resource_id\n  AND md.resource_type = 'ProjectManagement'\n\n-- Action owner\nJOIN spree_users owner\n  ON owner.id = mt.responsible_person_id\n\n-- Project manager\nLEFT JOIN spree_users pm_owner\n  ON pm_owner.id = pm.owner_id\n\nWHERE\n  mt.target_date < UTC_DATE()\n  AND mt.status != 'completed'\n  AND owner.email IS NOT NULL\n  AND owner.email != '';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -272,
+        -240
+      ],
+      "id": "ac1a14e7-15cc-47c9-9343-cb4f54772db7",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = [];\nconst notifiedManagers = new Set(); // ✅ MUST be defined\n\nfor (const item of $input.all()) {\n  const {\n    project_id,\n    project_title,\n    new_project_status,\n    status_changed_at,\n    project_manager_email,\n    team_user_email\n  } = item.json;\n\n  // 🔹 Send to TEAM MEMBERS (every row)\n  if (team_user_email) {\n    output.push({\n      json: {\n        email: team_user_email,\n        role: 'team',\n        project_id,\n        project_title,\n        new_project_status,\n        status_changed_at\n      }\n    });\n  }\n\n  // 🔹 Send to PROJECT MANAGER (only once per project)\n  if (\n    project_manager_email &&\n    !notifiedManagers.has(project_id)\n  ) {\n    notifiedManagers.add(project_id);\n\n    output.push({\n      json: {\n        email: project_manager_email,\n        role: 'manager',\n        project_id,\n        project_title,\n        new_project_status,\n        status_changed_at\n      }\n    });\n  }\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        -256
+      ],
+      "id": "3062c075-5cc7-4192-b28a-94498d884a83",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Action Owners, PM": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Action Owners, PM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "a12cab61-e3b6-4c63-82ec-c6fbac771404",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "0iBjyhDnvema4uqb",
+  "tags": []
+}

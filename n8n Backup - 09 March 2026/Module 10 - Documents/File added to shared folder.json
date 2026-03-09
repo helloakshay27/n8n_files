@@ -1,0 +1,100 @@
+{
+  "name": "File added to shared folder",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        16
+      ],
+      "id": "98c199ee-4700-49f9-9e48-c1940d97901f",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "file-added-to-shared-folder",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "c364a941-c724-41fe-b902-26492b446625",
+      "name": "Webhook",
+      "webhookId": "f4ec1d70-90f2-4f78-9f31-269d7f6454b3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "= New File Uploaded – {{$json.file_name}}",
+        "html": "=Dear {{$json.RecipientName}},\n\nA new file has been uploaded to a shared folder you are part of.\n\nFile Details:\n• File Name: {{$json.file_name}}\n• Folder: {{$json.folder_name}}\n• Uploaded By: {{$json.uploaded_by_name}}\n• Uploaded On: {{$json.created_at}}\n\nPlease review as required.\n\nRegards,\nDocument Control\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "c48a43e8-2ab5-4ef3-8b4b-d6702b92bbbc",
+      "name": "Folder Members",
+      "webhookId": "ee5a218d-7ed6-41b2-9e2d-e6fecec9949d",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Folder Members",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Folder Members": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "282f3ba5-35d8-4943-810e-e8e3fb56aa1c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "vFOauX8mCJoPSE6W",
+  "tags": []
+}

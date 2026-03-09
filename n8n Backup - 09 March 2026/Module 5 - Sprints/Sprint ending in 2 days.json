@@ -1,0 +1,100 @@
+{
+  "name": "Sprint ending in 2 days",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        16
+      ],
+      "id": "a58524fd-cede-43af-bc0d-25cfabfb4e3a",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "=Dear {{$json.RecipientName}}",
+        "html": "=This is a reminder that the sprint <b>{{$json.name}}</b> is scheduled to conclude in <b>2 days</b>.\n\n<b>Sprint Status</b>\n* Sprint Name: {{$json.name}}\n* End Date: {{$json.end_date}} {{$json.end_time}}\n* Current Status: {{$json.status}}\n\nPlease review and update the status of your sprint tasks to ensure accurate sprint closure and reporting.\n\nRegards,<b>Scrum Management Office</b>\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "0d860754-e913-4165-a4be-361bb62c23c7",
+      "name": "All Sprint Members",
+      "webhookId": "4718474e-0402-4ed9-9e09-24b45209b908",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sprint-ending-in-2-days",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "085fba16-3b07-4ba5-92bc-09bf893be886",
+      "name": "Webhook",
+      "webhookId": "70d2a415-92e2-4a3e-bb2f-237f1cd0c2ed",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "All Sprint Members": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "All Sprint Members",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ade498eb-28f6-4277-b19c-bded08a343f4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "SmJ1wRy33IxGWVK3",
+  "tags": []
+}

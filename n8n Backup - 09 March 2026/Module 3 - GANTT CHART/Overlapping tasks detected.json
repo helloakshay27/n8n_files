@@ -1,0 +1,100 @@
+{
+  "name": "Overlapping tasks detected",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "operlapping-tasks-detected",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "9a804873-69b0-4fd9-9bb5-4a5a2b96085e",
+      "name": "Webhook",
+      "webhookId": "88a4d81b-d5de-4cb7-bb44-9a744557cd3b",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        16
+      ],
+      "id": "1d3f57a4-e211-4c05-b59e-687d73a020cf",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "=Dear {{$json.RecipientName}},",
+        "html": "=A potential resource conflict has been identified due to overlapping task schedules within the project plan.\n\n<b>Conflict Details</b>\n* Task A: {{$json.task_a_title}}\n* Task B: {{$json.task_b_title}}\n* Overlap Period: {{$json.overlap_start_date}} to {{$json.overlap_end_date}}\n* Impacted Resource: {{$json.resource_name}}\n\nWe recommend reviewing task dependencies, resource allocation, or schedule adjustments to mitigate execution risk.\n\nRegards,\n<b>Project Planning & Resource Management</b\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "e1580fa9-ba6c-400c-9ab9-69109458cefe",
+      "name": "PM",
+      "webhookId": "3697501c-5095-4e88-b6cf-def457d46828",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "PM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "412c3ada-a847-46b4-a2a5-8e6f83ec6637",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "7yIYZFutgalDVPZ1",
+  "tags": []
+}

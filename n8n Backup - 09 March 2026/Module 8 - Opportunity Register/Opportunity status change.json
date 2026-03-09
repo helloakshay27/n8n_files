@@ -1,0 +1,100 @@
+{
+  "name": "Opportunity status change",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        16
+      ],
+      "id": "5b82860d-3bb3-46ff-af3f-96b85b80b0b3",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "opportunity-status-change",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "d4fd10ee-9d24-465b-85a5-76bb3ddc037a",
+      "name": "Webhook",
+      "webhookId": "c513dc49-f525-4b53-83b6-a71417f7a0b9",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "Opportunity Status Updated – {{$json.title}",
+        "html": "=Dear {{$json.RecipientName}},\n\nThe status of the opportunity <b>{{$json.title}}</b> has been updated.\n\nUpdated Information:\n• Current Status: {{$json.status}}\n• Last Updated On: {{$json.updated_at}}\n\nPlease take note and proceed accordingly.\n\nRegards,\nBusiness Governance\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "225d06c4-aa0b-4104-9acc-2f7f3007128b",
+      "name": "Owner, Leadership",
+      "webhookId": "684ea46e-b8fb-446b-aa82-d9b56dc1e920",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Owner, Leadership",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owner, Leadership": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "a088ee6a-0c52-4377-ab22-fc13be0bbf6b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "LQXYOxNuWAJFSL2A",
+  "tags": []
+}

@@ -1,0 +1,100 @@
+{
+  "name": "Spillover detected",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        16
+      ],
+      "id": "1a8dc877-e75d-4e58-ac92-9060786f0ee2",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "spillover-detected",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "1860a8b2-a28e-4445-9981-de1b5b3c36ba",
+      "name": "Webhook",
+      "webhookId": "8f48b733-ba93-41ec-b32b-4a6732f81e00",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "=Dear {{$json.RecipientName}}",
+        "html": "=During sprint closure analysis, it was observed that certain tasks from the sprint <b>{{$json.name}}</b> have spilled over into the next sprint cycle.\n\n<b>Spillover Summary</b>\n* Sprint Name: {{$json.name}}\n* Number of Spillover Tasks: {{$json.spillover_task_count}}\n* Impacted Areas: {{$json.spillover_reason}}\n\nWe recommend reviewing capacity planning, task estimation, and dependencies to mitigate future spillovers.\n\nRegards,\n<b>Agile Governance & PMO</b>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "fbd4eefe-aad5-4c7f-885b-c459b440b1d2",
+      "name": "PM, Sprint Owner",
+      "webhookId": "8f814e47-1f62-43c7-b3a1-8ed850b6a866",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "PM, Sprint Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM, Sprint Owner": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "739e272c-928d-4165-ba07-5891c70b4075",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "79vhDfyDCjOfVAG5",
+  "tags": []
+}

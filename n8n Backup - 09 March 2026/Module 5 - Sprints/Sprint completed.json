@@ -1,0 +1,100 @@
+{
+  "name": "Sprint completed",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        16
+      ],
+      "id": "1d5b2df1-2d62-460d-9b22-a18fdb3c1671",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sprint-completed",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "01fb089d-6886-4e2c-bf63-e743d7451b1c",
+      "name": "Webhook",
+      "webhookId": "01861548-18d1-4d59-9ee2-1291aeecad40",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "=Dear {{$json.RecipientName}}",
+        "html": "=The sprint <b>{{$json.name}}</b> has been successfully completed.\n\n<b>Sprint Summary</b>\n* Sprint Name: {{$json.name}}\n* Project ID: {{$json.project_id}}\n* Sprint Duration: {{$json.start_date}} to {{$json.end_date}}\n* Final Status: {{$json.status}}\n\nYou may now review the sprint outcomes, performance metrics, and reports from the sprint dashboard.\n\nRegards,\n<b>Agile Delivery & Reporting Team</b>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "d1d89398-5005-43a9-a2e5-7e2dd2e51e47",
+      "name": "Sprint Team",
+      "webhookId": "b4d7ffad-9a2d-49c9-b941-0335c2471c9a",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Sprint Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sprint Team": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "55e4944e-cb4e-447e-b67d-6b36aa4ef186",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "yYe1eplQZBJK0Ur4",
+  "tags": []
+}

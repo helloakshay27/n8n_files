@@ -1,0 +1,99 @@
+{
+  "name": "Task Inactivity (no update for 3 days)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "task-inactivity",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -432,
+        -144
+      ],
+      "id": "336b0b3f-b04b-470d-88cf-54478de6853a",
+      "name": "Webhook",
+      "webhookId": "2ad6cc43-a612-4a42-864e-d67b2bc2797a",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "=No Recent Update on Task: {{$json.title}}",
+        "html": "=Dear {{$json.RecipientName}},\n\nWe noticed that there has been no update on the task <b>{{$json.title}}</b> for the past <b>3 days</b>.\n\n<b>Task Snapshot</b>\n* Task Title: {{$json.title}}\n* Current Status: {{$json.status}}\n* Last Updated On: {{$json.updated_at}}\n* Responsible Owner: {{$json.responsible_person_name}}\n\nPlease review the task and update the status or add comments to avoid potential delays.\n\nRegards,\n<b>PMO – Task Governance</b>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -112,
+        -96
+      ],
+      "id": "2843ca97-b6ca-446d-b0b1-c25ac1a88903",
+      "name": "Task Owner, PM",
+      "webhookId": "ee070c71-f118-42d2-bcbd-5c969ad2943b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        144,
+        16
+      ],
+      "id": "0c0c4804-1dc5-4402-9b86-a772cde7345c",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Task Owner, PM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Owner, PM": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "829fe5f5-dbcb-43d2-ba8d-af97d8ff14e3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "FQBtO2WM87R74rFX",
+  "tags": []
+}

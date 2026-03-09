@@ -1,0 +1,164 @@
+{
+  "name": "Rustomjee BigQuery Category - Booking- 1 - within first 30 days from the site visit",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {},
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -288,
+        -64
+      ],
+      "id": "f7c2923f-5b5f-47c3-9b00-c1b2ecad1650",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_sv_oppr LIMIT 1000\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        -160,
+        -288
+      ],
+      "id": "f6adb52b-c760-4fbe-9d9c-9f515b96c5ac",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_booking LIMIT 1000",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        192,
+        -240
+      ],
+      "id": "0c44d206-5467-422e-909a-9e255131a484",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = [];\n\nfor (const item of items) {\n\n  output.push({\n    json: {\n      customer_mobile: item.json.customer_mobile,\n      customer_name: item.json.customer_name,\n      points: 1000,\n      reason: \"Booking within 30 days of Site Visit\",\n      booking_date: item.json.Booking_Date,\n      sv_date: item.json.SV_Date__c,\n      booking_id: item.json.X18_Digit_Booking_ID__c\n    }\n  });\n\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        48
+      ],
+      "id": "80e38bd5-9e86-489b-8811-4416e8c45a4a",
+      "name": "Code in JavaScript3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT\n  KUNNR AS customer_id,\n  COALESCE(Account_Mobile_Number__c, Account_Mobile_1__c, Mobile_Number__c, PrimaryMobileNumber__c) AS customer_mobile,\n  CONCAT(First_Name__c, ' ', Last_Name__c) AS customer_name,\n  Booking_Date,\n  SV_Date__c,\n  Opportunity_ID__c,\n  X18_Digit_Booking_ID__c,\n  Project_Text__c\nFROM `powerbi-implementation.dataWarehouse_prod.sales_booking`\nWHERE Booking_Date IS NOT NULL\nAND SV_Date__c IS NOT NULL\nAND Status__c = 'Processed'\nAND DATE_DIFF(\n      DATE(Booking_Date),\n      DATE(SV_Date__c),\n      DAY\n    ) BETWEEN 0 AND 30\nAND COALESCE(Account_Mobile_Number__c, Account_Mobile_1__c, Mobile_Number__c, PrimaryMobileNumber__c) IS NOT NULL",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        -32
+      ],
+      "id": "9e6f8325-24bc-48d4-ad73-d2dec74bf9e0",
+      "name": "Query to fetch details of person done booking within first 30 days from the site visit",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Query to fetch details of person done booking within first 30 days from the site visit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        []
+      ]
+    },
+    "Query to fetch details of person done booking within first 30 days from the site visit": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "2b8ad0a1-ec0c-42d6-9467-32898302df58",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "XRBcpeompu0RsEOc",
+  "tags": []
+}

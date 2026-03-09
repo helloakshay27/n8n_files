@@ -1,0 +1,161 @@
+{
+  "name": "Task Assigned",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "task-assigned",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        384,
+        -304
+      ],
+      "id": "883f2760-6d54-4377-814f-49e72003a627",
+      "name": "Webhook",
+      "webhookId": "5de15c59-e86b-4b91-b644-763d36e00ab4",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.responsible_person_email}}\n",
+        "subject": "=New Task Assigned: {{$json.task_title}}\n\n\n",
+        "html": "=Dear {{$json.responsible_person_first_name}}{{$json.responsible_person_last_name}},\n\nYou have been assigned a new task requiring your attention.\n\nTask Details\n* Task Title: {{$json.task_title}}\n* Description: {{$json.description}}\n* Status: {{$json.status}}\n* Priority: {{$json.priority}}\n* Assigned To: {{$json.responsible_person_first_name}}{{$json.responsible_person_first_name}}\n\nPlease begin execution and keep the task status updated.\n\nRegards,\nTask Management System\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        -272
+      ],
+      "id": "a60ec748-9e7f-452c-a122-661c0b5e7ebb",
+      "name": "Task Owner",
+      "webhookId": "8c21ec8e-b0d0-4411-bf36-6d2f28733a4f",
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        352,
+        -48
+      ],
+      "id": "59e444a3-a435-403f-a4f0-c62f08865dfb",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.id            AS task_id,\n  t.title         AS task_title,\n  t.description,\n  t.status,\n  t.priority,\n  t.target_date,\n  t.created_at    AS task_created_at,\n\n  -- responsible person\n  u.id            AS responsible_person_id,\n  u.firstname     AS responsible_person_first_name,\n  u.lastname      AS responsible_person_last_name,\n  u.email         AS responsible_person_email\n\nFROM task_managements t\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\nWHERE\n  t.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -192,
+        -256
+      ],
+      "id": "63239da3-a6a0-4a04-be3c-b426f936cb5d",
+      "name": "Fetch the created annd assigned tasks in pas 1 hr",
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -464,
+        0
+      ],
+      "id": "02b3b8a5-4308-4563-8305-9f069f9c3722",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Owner": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch the created annd assigned tasks in pas 1 hr": {
+      "main": [
+        [
+          {
+            "node": "Task Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch the created annd assigned tasks in pas 1 hr",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "8d3e6e63-d353-4603-935b-36a845b28941",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "Tbg6CMO2DAYXJFf8",
+  "tags": []
+}

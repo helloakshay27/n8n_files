@@ -1,0 +1,151 @@
+{
+  "name": "To-do assigned",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        288,
+        -64
+      ],
+      "id": "1dd523c6-e872-4127-aa44-8c4f28c75670",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "to-do-assigned",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "0366f5a2-ee44-4047-8e37-59b719256028",
+      "name": "Webhook",
+      "webhookId": "7980b848-ed02-4685-bcf5-cac06a66da3f",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{ $json.todo_owner_email }}",
+        "subject": "= New To-Do Assigned – {{$json.todo_title}}\n",
+        "emailFormat": "=html",
+        "html": "=Dear {{$json.todo_owner_firstname}} {{$json.todo_owner_lastname}},\n\nA new to-do item has been assigned to you.\n\nTo-Do Details:\n• Title: {{$json.todo_title}}\n• Target Date: {{$json.target_date}}\n\nPlease ensure timely completion.\n\nRegards,\nTask System\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        -160
+      ],
+      "id": "376e700b-4fe8-4845-ac7a-8817131cebe9",
+      "name": "User",
+      "webhookId": "a8086996-e288-4b3d-9268-29f4db56f99c",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.id            AS todo_id,\n  t.title         AS todo_title,\n  t.status        AS todo_status,\n  t.target_date,\n  t.created_at,\n\n  u.email         AS todo_owner_email,\n  u.firstname     AS todo_owner_firstname,\n  u.lastname      AS todo_owner_lastname\n\nFROM todos t\n\nJOIN spree_users u\n  ON u.id = t.user_id\n\nWHERE\n  t.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -192,
+        -224
+      ],
+      "id": "5a36be65-fb42-40a3-836b-d258106430b9",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -480,
+        -304
+      ],
+      "id": "541cee2a-c26c-4ed1-9e27-562b2a794c0c",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "User": {
+      "main": [
+        []
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "53464ce1-2763-44b3-8291-a553e6b6c7ff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "1UoWWUVDamBaFeis",
+  "tags": []
+}

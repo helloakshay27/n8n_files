@@ -1,0 +1,197 @@
+{
+  "name": "Task overdue",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "task-overdue",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -656,
+        -288
+      ],
+      "id": "2e6e6933-ef62-45dd-ac5d-cf9b7126bb30",
+      "name": "Webhook",
+      "webhookId": "9e0ab543-664f-415f-8a2b-1175eb0f8fd7",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        224,
+        -144
+      ],
+      "id": "f43546de-0738-4383-a872-30cc16485c4c",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.id                       AS task_id,\n  t.title                    AS task_title,\n  t.target_date              AS task_due_date,\n  t.status                   AS task_status,\n\n  -- overdue calculation\n  TIMESTAMPDIFF(\n    DAY,\n    DATE(t.target_date),\n    DATE(UTC_TIMESTAMP())\n  )                           AS overdue_days,\n\n  -- responsible person (task owner)\n  rp.email                   AS task_owner_email,\n  rp.firstname               AS task_owner_firstname,\n  rp.lastname                AS task_owner_lastname,\n\n  -- project\n  pm.id                      AS project_id,\n  pm.title                   AS project_title,\n\n  -- project manager\n  pmo.email                  AS project_manager_email,\n  pmo.firstname              AS project_manager_firstname,\n  pmo.lastname              AS project_manager_lastname\n\nFROM task_managements t\n\n-- task owner (responsible person)\nJOIN spree_users rp\n  ON rp.id = t.responsible_person_id\n\n-- project\nJOIN project_managements pm\n  ON pm.id = t.project_management_id\n\n-- project manager\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nWHERE\n  DATE(t.target_date) < DATE(UTC_TIMESTAMP())   -- overdue\n  AND t.status NOT IN ('completed', 'closed');  -- ignore completed tasks\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -320,
+        -224
+      ],
+      "id": "e18fe543-61dc-4068-bd5b-751c64705878",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -624,
+        -80
+      ],
+      "id": "55ee4250-e5c8-45b8-8b34-9c65e8eab8d4",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.task_owner_email}}",
+        "subject": "=Task Overdue: Immediate Attention Required – {{$json.task_title}}",
+        "html": "=\n\nDear {{$json.project_manager_firstname}},\n\nThe task <b>{{$json.task_title}}</b> has exceeded its planned due date and is currently overdue.\n\n<b>Overdue Details</b>\n* Task Title: {{$json.task_title}}\n* Due Date: {{$json.task_due_date}}\n* Overdue By: {{$json.overdue_days}} days\n* Current Status: {{$json.task_status}}\n\nPlease update the task with completion details or provide a revised plan to avoid escalation.\n\nRegards,\nPMO – Escalation Desk\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -224
+      ],
+      "id": "5a126c9a-76a4-4d43-93c8-ba75592f827c",
+      "name": "PM",
+      "webhookId": "edef3932-8417-4244-aafe-e74cf1c2d948",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.project_manager_email}}",
+        "subject": "=Task Overdue: Immediate Attention Required – {{$json.task_title}}",
+        "html": "=\n\nDear {{$json.task_owner_firstname}} {{$json.task_owner_lastname}},\n\nThe task <b>{{$json.task_title}}</b> has exceeded its planned due date and is currently overdue.\n\n<b>Overdue Details</b>\n* Task Title: {{$json.task_title}}\n* Due Date: {{$json.task_due_date}}\n* Overdue By: {{$json.overdue_days}} days\n* Current Status: {{$json.task_status}}\n\nPlease update the task with completion details or provide a revised plan to avoid escalation.\n\nRegards,\nPMO – Escalation Desk\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "a8458e43-1a72-4169-a0ea-8f53baff6955",
+      "name": "Task Owner",
+      "webhookId": "ae3d2a6b-f49d-4da7-94f9-b1535347c2d8",
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "PM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Task Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Owner": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "f7e2b5e7-5c1f-47d1-a928-87e6dfc66e9d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "UOTvutil94hkYEEr",
+  "tags": []
+}

@@ -1,0 +1,138 @@
+{
+  "name": "Automated LinkedIn posts with AI-generated content using OpenAI GPT",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression"
+            }
+          ]
+        }
+      },
+      "id": "f6b4c8d0-1234-4567-8901-234567890abc",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "position": [
+        352,
+        464
+      ],
+      "webhookId": "",
+      "typeVersion": 1.1
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.choices[0].text }}",
+        "additionalFields": {
+          "visibility": "public"
+        }
+      },
+      "id": "e5f6g7h8-9012-3456-7890-123456789012",
+      "name": "LinkedIn Post",
+      "type": "n8n-nodes-base.linkedIn",
+      "position": [
+        960,
+        320
+      ],
+      "retryOnFail": {
+        "enabled": true,
+        "maxRetries": 3,
+        "waitBetween": 1000
+      },
+      "typeVersion": 1,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {},
+      "id": "m7n8o9p0-1234-5678-9012-345678901234",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        352,
+        256
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "groqApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "Hasb",
+              "value": "={{$json. }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        704,
+        320
+      ],
+      "id": "6f731980-2946-4637-819c-872d25485677",
+      "name": "HTTP Request",
+      "credentials": {
+        "groqApi": {
+          "id": "3OfG31BmCquwAi1c",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ee4a0893-0422-4e32-98b3-5da66d6b43ac",
+  "meta": {
+    "templateId": "7521",
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "55WrfIFC5jKCGuon",
+  "tags": []
+}

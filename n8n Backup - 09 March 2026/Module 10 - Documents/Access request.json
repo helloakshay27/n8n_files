@@ -1,0 +1,100 @@
+{
+  "name": "Access request",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        16
+      ],
+      "id": "3285a38b-0fe7-4544-baa2-eab202f32e03",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "folder-owner",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "2843951b-4da6-4410-a9b8-7a32e7549d1f",
+      "name": "Webhook",
+      "webhookId": "e851c2c9-4d51-4dbb-887c-b56f1bff32f0",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "=Access Request Received – {{$json.file_name}}",
+        "html": "=Dear {{$json.RecipientName}},\n\n{{$json.requester_name}} has requested access to the following document or folder.\n\nDetails:\n• Name: {{$json.file_name}}\n• Requested On: {{$json.created_at}}\n\nPlease approve or reject the request at the earliest.\n\nRegards,\nDocument Access Management\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "03f3f14f-137e-4f3d-9695-2c988e4f96cd",
+      "name": "Folder Owner",
+      "webhookId": "084c7cbd-0585-43fb-881f-cb2699cfbfe0",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Folder Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Folder Owner": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "8a7711ca-b825-49c3-afc6-3d1c1a572bbd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "gp0dQxjO07U3Daku",
+  "tags": []
+}

@@ -1,0 +1,108 @@
+{
+  "name": "My Sub-workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst find = (type) =>\n  items.find(i => i.json.promptType === type)?.json?.content || \"\";\n\nconst videoSummary          = find(\"videoSummary\");\nconst userGuide             = find(\"userGuide\");\nconst productOverview       = find(\"productOverview\");\nconst productDescription    = find(\"productDescription\");\nconst researchReport        = find(\"researchReport\");\nconst communicationStrategy = find(\"communicationStrategy\");\nconst onePager              = find(\"onePager\");\nconst elevatorPitch         = find(\"elevatorPitch\");\nconst industryFeatureList   = find(\"industryFeatureList\");\nconst marketingScript       = find(\"marketingScript\");\nconst storyboard            = find(\"storyboard\");\nconst screenplay            = find(\"screenplay\");\n\nreturn [{\n  json: {\n    productName: items[0]?.json?.productName || \"Product\",\n\n    // Individual fields (for placeholders or selective use)\n    videoSummary,\n    userGuide,\n    productOverview,\n    productDescription,\n    researchReport,\n    communicationStrategy,\n    onePager,\n    elevatorPitch,\n    industryFeatureList,\n    marketingScript,\n    storyboard,\n    screenplay,\n\n    // Full combined document (for single insert into Google Doc)\n    fullDocument: `\nVIDEO SUMMARY\n${videoSummary}\n\nUSER GUIDE\n${userGuide}\n\nPRODUCT OVERVIEW\n${productOverview}\n\nPRODUCT DESCRIPTION\n${productDescription}\n\nRESEARCH REPORT\n${researchReport}\n\nCOMMUNICATION STRATEGY\n${communicationStrategy}\n\nONE PAGER\n${onePager}\n\nELEVATOR PITCH\n${elevatorPitch}\n\nINDUSTRY FEATURE LIST\n${industryFeatureList}\n\nMARKETING SCRIPT\n${marketingScript}\n\nSTORYBOARD\n${storyboard}\n\nSCREENPLAY\n${screenplay}\n    `.trim()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5264,
+        -16
+      ],
+      "id": "791d04b5-cbcd-4856-a9e7-118165a1e9b9",
+      "name": "Code in JavaScript7"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9883fa13-148b-4ff6-867f-0fad063d7cf5",
+              "name": "videoSummary_firstItem",
+              "value": "={{ $('Code in JavaScript7').first().json.videoSummary }}",
+              "type": "string"
+            },
+            {
+              "id": "b821c174-b484-4997-ac75-f3e118a06ed6",
+              "name": "userGuide_firstItem",
+              "value": "={{ $('Code in JavaScript7').first().json.userGuide }}",
+              "type": "string"
+            },
+            {
+              "id": "52306964-9d14-45d1-919b-aaadad24791b",
+              "name": "productOverview_firstItem",
+              "value": "={{ $('Code in JavaScript7').first().json.productOverview }}",
+              "type": "string"
+            },
+            {
+              "id": "fdbe9262-fd34-4ffc-95d2-1c6b8990d54e",
+              "name": "productName",
+              "value": "={{ $json.productName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5472,
+        -16
+      ],
+      "id": "010f067e-0ae0-49b8-8419-1def7dd31269",
+      "name": "Return"
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "d8c2b0c6-2b4a-4d3b-b27e-236e6e1c20d6",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        5056,
+        -16
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript7": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "21326c7a-628a-4ff5-88ff-f150ce1a77e3",
+  "meta": {
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "fXPirgB5thEQqlko",
+  "tags": []
+}

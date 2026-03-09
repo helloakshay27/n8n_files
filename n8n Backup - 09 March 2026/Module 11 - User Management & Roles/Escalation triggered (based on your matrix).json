@@ -1,0 +1,100 @@
+{
+  "name": "Escalation triggered (based on your matrix)",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        16
+      ],
+      "id": "206ab75f-de33-4a32-a3a4-9c3481aa67c2",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "escalation-triggered",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "8321a28d-5e70-4a4f-8e11-7abae3c3ef8a",
+      "name": "Webhook",
+      "webhookId": "421d53f4-6764-4224-bbea-bf07a5ea71a1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "= Escalation Alert – {{$json.entity_title}}",
+        "html": "=Dear {{$json.RecipientName}},\n\nAn escalation has been triggered based on the defined escalation matrix.\n\nEscalation Details:\n• Entity: {{$json.entity_title}}\n• Type: {{$json.entity_type}}\n• Overdue By: {{$json.overdue_days}} days\n• Current Owner: {{$json.current_owner_name}}\n\nPlease intervene and guide resolution.\n\nRegards,\nPMO – Escalations\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "b57ac289-b5b1-44f3-9d15-749a4eb770d6",
+      "name": "Next level manager",
+      "webhookId": "25f737c4-5c18-4384-9804-ed025dfd14f7",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Next level manager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next level manager": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "cd1c9d12-e5fd-454d-bbe4-ae6fd2ceb757",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "fCInrx9m58VaikTa",
+  "tags": []
+}

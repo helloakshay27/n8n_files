@@ -1,0 +1,100 @@
+{
+  "name": "File updated",
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        16
+      ],
+      "id": "4690e52b-3960-49ec-a9c2-f591c8c9e4d7",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "file-updated",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -464,
+        -144
+      ],
+      "id": "24bb0558-802f-4cb5-be3b-c7b864fff7b6",
+      "name": "Webhook",
+      "webhookId": "bab5bb5a-d88e-47af-b9a3-93b81df156cd",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "= File Updated – {{$json.file_name}}",
+        "html": "=Dear {{$json.RecipientName}},\n\nThe following document has been updated.\n\nDetails:\n• File Name: {{$json.file_name}}\n• Updated By: {{$json.updated_by_name}}\n• Updated On: {{$json.updated_at}}\n\nPlease ensure you are referring to the latest version.\n\nRegards,\nDocument Control\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        -48
+      ],
+      "id": "2637a73d-08fc-4281-a697-b3b366108085",
+      "name": "Owner + Collaborators",
+      "webhookId": "f4dc065c-613e-49d8-84e6-e772fe3244a3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Owner + Collaborators",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Owner + Collaborators": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "bf163d6b-7d36-4ad0-bb16-587ac8436cc3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "St5XXq7QS6XByOBs",
+  "tags": []
+}

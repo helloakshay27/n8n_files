@@ -1,0 +1,126 @@
+{
+  "name": "Dependency resolved",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dependency-resolved",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -544,
+        -160
+      ],
+      "id": "d06301dd-929f-48ec-97a1-2d167668b946",
+      "name": "Webhook",
+      "webhookId": "2877919e-72d0-4cf3-8cf0-9933644bb04a",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        288,
+        80
+      ],
+      "id": "e42010b2-52aa-49b6-8a4f-3908cbad584e",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{ $json.dependent_task_owner_email }}",
+        "subject": "=Dependency Cleared: {{$json.title}}",
+        "html": "=Dear {{$json.RecipientName}},\n\nWe would like to inform you that a dependency blocking the task <b>{{$json.title}}</b> has been resolved.\n\n<b>Task Details</b>\n* Task Title: {{$json.title}}\n* Dependency Cleared On: {{$json.updated_at}}\n\nYou may now proceed with execution as planned. Please update progress accordingly.\n\nRegards,\n<b>Project Coordination Team</b>\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        64,
+        -224
+      ],
+      "id": "4fd29a3a-9f79-426f-ac3a-ec2a985c4288",
+      "name": "Dependent Task Owner",
+      "webhookId": "3b408d9c-a56f-425d-83b0-976e79f683c4",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH latest_task_status AS (\n  SELECT\n    tsl.*,\n    ROW_NUMBER() OVER (\n      PARTITION BY tsl.task_management_id\n      ORDER BY tsl.created_at DESC\n    ) AS rn\n  FROM task_status_logs tsl\n  WHERE tsl.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n)\n\nSELECT\n  lts.task_management_id            AS dependency_task_id,\n  dep_tm.title                      AS dependency_task_title,\n\n  td.task_id                        AS dependent_task_id,\n  dep_on_tm.title                   AS dependent_task_title,\n\n  owner.email                       AS dependent_task_owner_email,\n\n  lts.created_at                    AS dependency_completed_at\n\nFROM latest_task_status lts\n\n-- ONLY completed dependency tasks\nJOIN task_dependencies td\n  ON td.dependent_task_id = lts.task_management_id\n  AND td.active = 1\n\n-- dependency task\nJOIN task_managements dep_tm\n  ON dep_tm.id = td.dependent_task_id\n\n-- dependent task (blocked task)\nJOIN task_managements dep_on_tm\n  ON dep_on_tm.id = td.task_id\n\n-- dependent task owner\nJOIN spree_users owner\n  ON owner.id = dep_on_tm.responsible_person_id\n\nWHERE\n  lts.rn = 1\n  AND lts.status = 'completed';\n ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -224,
+        -224
+      ],
+      "id": "25de4bf0-55a6-4d56-8829-a8bc2da8b851",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Dependent Task Owner": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Dependent Task Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "8c3e12ec-ae58-4d42-b834-6f2048a73c08",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "cef8c9ed95a800214bddfac974636ee18f281f75a4bb6a9a439ad49c2d156498"
+  },
+  "id": "vWkGVgpTrHUESOFY",
+  "tags": []
+}
