@@ -1,0 +1,293 @@
+{
+  "updatedAt": "2026-03-23T12:20:14.000Z",
+  "createdAt": "2026-03-23T12:20:14.224Z",
+  "id": "kQPPhJbg9eMPVucE",
+  "name": "23rd MArc",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d3acdd69-5d2f-4382-a3c5-4fa506dc614c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sitemap-input",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -224,
+        288
+      ],
+      "id": "d79ea4a8-8f38-463e-8a76-a1a8b2026358",
+      "name": "Webhook",
+      "webhookId": "f3ca27f9-d861-4868-9820-3d4884108721"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nconst states = Array.isArray(body) ? body : JSON.parse(body);\n\n// Slim list for Gemini — no screenshots\nconst stateList = states.map((s, i) => ({\n  index: i,\n  title: s.title,\n  fullPath: s.fullPath,\n  module: s.module,\n  url: s.url,\n  bbox: s.bbox\n}));\n\n// Full data stored separately — screenshots included\n// Store as separate key so Gemini never sees screenshots\nreturn [{ json: { \n  states: stateList,\n  // Store screenshots in a lookup by index\n  screenshots: states.reduce((acc, s, i) => {\n    acc[i] = s.screenshot;\n    return acc;\n  }, {}),\n  bboxes: states.reduce((acc, s, i) => {\n    acc[i] = s.bbox;\n    return acc;\n  }, {})\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        288
+      ],
+      "id": "8a5b4d7b-7bfa-4698-b140-08cea38303d6",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAhLvtTiOsyY-9AnVwnwbdFpkdz9xAuYtw",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ contents: [{ parts: [{ text: \"You are a product demo expert. Here are \" + $json.states.length + \" screen states from FM Matrix (Facility Management SaaS).\\n\\nGroup them into logical 'How to' user journeys AND write a short 1-2 sentence tooltip for each step explaining what the user should do.\\n\\nStates:\\n\" + JSON.stringify($json.states, null, 2) + \"\\n\\nReturn ONLY valid JSON array, no markdown, no explanation:\\n[\\n  {\\n    \\\"id\\\": \\\"unique-id\\\",\\n    \\\"name\\\": \\\"How to [action]\\\",\\n    \\\"module\\\": \\\"module name\\\",\\n    \\\"description\\\": \\\"one sentence describing this flow\\\",\\n    \\\"steps\\\": [\\n      { \\\"index\\\": 0, \\\"tooltip\\\": \\\"Click the Company Hub button in the top navigation to access the company-wide feed.\\\" }\\n    ]\\n  }\\n]\" }] }] }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        352,
+        288
+      ],
+      "id": "7726738b-ff6d-4615-91f2-305e9ff10cb4",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const geminiResponse = $input.item.json;\nconst sourceData = $node[\"Code in JavaScript\"].json;\n\nlet flowsJson = '';\ntry {\n  flowsJson = geminiResponse.candidates[0].content.parts[0].text.trim();\n  flowsJson = flowsJson.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n} catch(e) {\n  throw new Error('Failed to parse Gemini response: ' + JSON.stringify(geminiResponse));\n}\n\nlet flows;\ntry {\n  flows = JSON.parse(flowsJson);\n} catch(e) {\n  throw new Error('Invalid JSON from Gemini: ' + flowsJson.substring(0, 500));\n}\n\nconst states = sourceData.states;\nconst screenshots = sourceData.screenshots;\nconst bboxes = sourceData.bboxes;\n\nconst enrichedFlows = flows.map(flow => ({\n  ...flow,\n  steps: flow.steps.map(step => {\n    // Handle both {index, tooltip} object or plain number\n    const idx = typeof step === 'object' ? step.index : step;\n    const tooltip = typeof step === 'object' ? (step.tooltip || '') : '';\n    const state = states[idx];\n    if (!state) return null;\n    return {\n      index: idx,\n      title: state.title,\n      fullPath: state.fullPath,\n      url: state.url,\n      bbox: bboxes[idx] || { x: 45, y: 45, w: 10, h: 10 },\n      screenshot: screenshots[idx],\n      tooltip: tooltip || state.title\n    };\n  }).filter(Boolean)\n})).filter(f => f.steps.length > 0);\n\nconsole.log('Total flows:', enrichedFlows.length);\nreturn enrichedFlows.map(flow => ({ json: flow }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        288
+      ],
+      "id": "6de0ddf7-6901-45e8-909a-4a1f9132eed0",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const flow = item.json;\n  const steps = Array.isArray(flow.steps) ? flow.steps : [];\n  const title = flow.name || 'Demo';\n  const fileName = title.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.html';\n\n  const stepsData = steps.map((step, i) => ({\n    index: i,\n    title: step.title || 'Step ' + (i+1),\n    tooltip: step.tooltip || step.title || 'Click to continue.',\n    bbox: step.bbox || { x: 45, y: 45, w: 10, h: 10 },\n    screenshot: step.screenshot || ''\n  }));\n\n  const html = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<title>${title}</title>\n<style>\n* { margin: 0; padding: 0; box-sizing: border-box; }\nbody { font-family: -apple-system, sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px; }\nh1 { font-size: 20px; font-weight: 600; margin-bottom: 8px; opacity: 0.9; }\n.meta { font-size: 13px; opacity: 0.4; margin-bottom: 20px; }\n.step-label { font-size: 14px; opacity: 0.7; margin-bottom: 10px; font-weight: 500; }\n.demo-wrap { position: relative; display: inline-block; }\n.demo-wrap img { display: block; width: 960px; max-width: 90vw; border-radius: 10px; box-shadow: 0 8px 40px rgba(0,0,0,0.6); }\n.ring {\n  position: absolute;\n  border: 3px solid #ff3333;\n  border-radius: 6px;\n  box-shadow: 0 0 0 4px rgba(255,51,51,0.25), 0 0 20px rgba(255,51,51,0.5);\n  pointer-events: none;\n  animation: pulse 1.5s ease-in-out infinite;\n}\n@keyframes pulse {\n  0%, 100% { box-shadow: 0 0 0 4px rgba(255,51,51,0.25), 0 0 20px rgba(255,51,51,0.5); }\n  50% { box-shadow: 0 0 0 8px rgba(255,51,51,0.1), 0 0 36px rgba(255,51,51,0.7); }\n}\n.tooltip {\n  position: absolute;\n  background: rgba(15,15,15,0.95);\n  color: #fff;\n  font-size: 13px;\n  padding: 12px 16px;\n  border-radius: 8px;\n  max-width: 240px;\n  line-height: 1.6;\n  pointer-events: none;\n  border-left: 3px solid #ff3333;\n  backdrop-filter: blur(8px);\n  box-shadow: 0 4px 20px rgba(0,0,0,0.4);\n}\n.nav { display: flex; align-items: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }\n.nav button {\n  background: rgba(255,255,255,0.1);\n  color: #fff;\n  border: 1px solid rgba(255,255,255,0.15);\n  padding: 10px 24px;\n  border-radius: 8px;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background 0.2s;\n}\n.nav button:hover { background: rgba(255,255,255,0.2); }\n.nav button:disabled { opacity: 0.3; cursor: default; }\n.nav .counter { font-size: 13px; opacity: 0.5; min-width: 60px; text-align: center; }\n.speak-btn {\n  background: rgba(255,51,51,0.15);\n  border: 1px solid rgba(255,51,51,0.4);\n  color: #ff6666;\n  padding: 8px 16px;\n  border-radius: 8px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: background 0.2s;\n}\n.speak-btn:hover { background: rgba(255,51,51,0.3); }\n.speak-btn.speaking { background: rgba(255,51,51,0.4); }\n.dots { display: flex; gap: 6px; margin-top: 14px; }\n.dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: background 0.2s; }\n.dot.active { background: #ff3333; }\n.progress { width: 960px; max-width: 90vw; height: 2px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-bottom: 12px; }\n.progress-bar { height: 100%; background: #ff3333; border-radius: 2px; transition: width 0.3s ease; }\n</style>\n</head>\n<body>\n<h1>${title}</h1>\n<div class=\"meta\">${flow.description || ''} &nbsp;·&nbsp; ${steps.length} step${steps.length !== 1 ? 's' : ''}</div>\n<div class=\"progress\"><div class=\"progress-bar\" id=\"progressBar\"></div></div>\n<div class=\"step-label\" id=\"stepLabel\"></div>\n<div class=\"demo-wrap\" id=\"demoWrap\">\n  <img id=\"screenshot\" src=\"\" alt=\"Demo screenshot\" />\n  <div class=\"ring\" id=\"ring\"></div>\n  <div class=\"tooltip\" id=\"tooltip\"></div>\n</div>\n<div class=\"nav\">\n  <button id=\"prevBtn\" onclick=\"go(-1)\" disabled>← Back</button>\n  <span class=\"counter\" id=\"counter\"></span>\n  <button id=\"nextBtn\" onclick=\"go(1)\">Next →</button>\n  <button class=\"speak-btn\" id=\"speakBtn\" onclick=\"speak()\">🔊 Listen</button>\n</div>\n<div class=\"dots\" id=\"dots\"></div>\n\n<script>\nconst steps = ${JSON.stringify(stepsData)};\nlet current = 0;\nlet speaking = false;\n\nfunction render() {\n  const s = steps[current];\n  const img = document.getElementById('screenshot');\n  const ring = document.getElementById('ring');\n  const tooltip = document.getElementById('tooltip');\n\n  img.src = 'data:image/png;base64,' + s.screenshot;\n\n  ring.style.left = s.bbox.x + '%';\n  ring.style.top = s.bbox.y + '%';\n  ring.style.width = s.bbox.w + '%';\n  ring.style.height = s.bbox.h + '%';\n\n  const tipLeft = Math.min(s.bbox.x + s.bbox.w + 1, 62);\n  tooltip.style.left = tipLeft + '%';\n  tooltip.style.top = Math.max(s.bbox.y, 2) + '%';\n  tooltip.textContent = s.tooltip;\n\n  document.getElementById('stepLabel').textContent = 'Step ' + (current+1) + ' of ' + steps.length + ': ' + s.title;\n  document.getElementById('counter').textContent = (current+1) + ' / ' + steps.length;\n  document.getElementById('prevBtn').disabled = current === 0;\n  document.getElementById('nextBtn').disabled = current === steps.length - 1;\n  document.getElementById('progressBar').style.width = ((current+1)/steps.length*100) + '%';\n\n  document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i===current));\n}\n\nfunction go(dir) {\n  window.speechSynthesis && window.speechSynthesis.cancel();\n  current = Math.max(0, Math.min(steps.length-1, current + dir));\n  render();\n}\n\nfunction speak() {\n  if (!window.speechSynthesis) return;\n  const s = steps[current];\n  const text = 'Step ' + (current+1) + ' of ' + steps.length + '. ' + s.title + '. ' + s.tooltip;\n  window.speechSynthesis.cancel();\n  const utterance = new SpeechSynthesisUtterance(text);\n  utterance.rate = 0.85;\n  utterance.pitch = 1;\n  const btn = document.getElementById('speakBtn');\n  utterance.onstart = () => btn.classList.add('speaking');\n  utterance.onend = () => btn.classList.remove('speaking');\n  window.speechSynthesis.speak(utterance);\n}\n\n// Build dots\nconst dotsEl = document.getElementById('dots');\nsteps.forEach((_, i) => {\n  const d = document.createElement('div');\n  d.className = 'dot' + (i===0?' active':'');\n  d.onclick = () => { window.speechSynthesis && window.speechSynthesis.cancel(); current = i; render(); };\n  dotsEl.appendChild(d);\n});\n\nwindow.onload = render;\n</script>\n</body>\n</html>`;\n\n  const buf = Buffer.from(html, 'utf8');\n  const binaryData = await this.helpers.prepareBinaryData(buf, fileName, 'text/html');\n\n  results.push({\n    json: {\n      title: title,\n      module: String(flow.module || ''),\n      fileName: fileName\n    },\n    binary: {\n      data: binaryData\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        288
+      ],
+      "id": "f895e465-e95a-4e30-adcf-67d56af4be89",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1F68eWUsb6rD5hDg9SNCn2zUWAjLts8oq",
+          "mode": "list",
+          "cachedResultName": "lockated-screenshots",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1F68eWUsb6rD5hDg9SNCn2zUWAjLts8oq"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1728,
+        288
+      ],
+      "id": "88259522-e599-4728-9889-36ddecb7b858",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vh52X2Zy6jXu0wTy",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: $input.item.json }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        288
+      ],
+      "id": "5833c70b-61ba-4d98-8069-29f2f8a8a96f",
+      "name": "Code in JavaScript4"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "4793e906-5741-4c7c-8e35-7401f32349ef",
+  "activeVersionId": null,
+  "versionCounter": 2,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-23T12:20:14.230Z",
+      "createdAt": "2026-03-23T12:20:14.230Z",
+      "role": "workflow:owner",
+      "workflowId": "kQPPhJbg9eMPVucE",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-24T05:45:59.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-23",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

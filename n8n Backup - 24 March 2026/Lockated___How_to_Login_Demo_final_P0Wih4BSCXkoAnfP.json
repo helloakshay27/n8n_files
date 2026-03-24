@@ -1,0 +1,372 @@
+{
+  "updatedAt": "2026-03-18T07:19:34.760Z",
+  "createdAt": "2026-03-16T06:17:38.490Z",
+  "id": "P0Wih4BSCXkoAnfP",
+  "name": "Lockated — How to Login Demo final",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const steps = [\n  { step:1, title:\"Login page\",          fileId:\"1uzgryBwk-mIwH-iawchd9W7wv2-HMQ4t\", bbox:{x:74,  y:49, w:21, h:7  } },\n  { step:2, title:\"Select organisation\", fileId:\"1JrpjcaZir66RgbJSOGXkBTA05TrpOFmL\", bbox:{x:74,  y:56, w:21, h:11 } },\n  { step:3, title:\"Enter password\",      fileId:\"1t6TZuAzEMti44gK3PSiKz-SbzzSofmtZ\", bbox:{x:74,  y:50, w:21, h:7  } },\n  { step:4, title:\"Click LOG IN\",        fileId:\"1_UirLEPdaU3eiFqKJhiA4BNr9dUUubIf\", bbox:{x:74,  y:62, w:21, h:6  } },\n  { step:5, title:\"Choose Admin View\",   fileId:\"1WzPnbKCoIRzlaI9UbZkkqBwelFlM0AUF\", bbox:{x:34,  y:27, w:22, h:36 } },\n  { step:6, title:\"Dashboard\",           fileId:\"1QNBh1AJ7L6C28kBdPKSNwUEt6X43W0Li\", bbox:{x:0.5, y:11, w:13, h:6  } }\n];\nreturn steps.map(s => ({ json: s }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f123f4b1-f137-4f44-ab8c-7fe719fc1ca1",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.fileId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        304,
+        -720
+      ],
+      "id": "9e4599e0-d108-4a49-8622-6f0057ae293a",
+      "name": "Download file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vh52X2Zy6jXu0wTy",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\n\nconst requestBody = {\n  contents: [{\n    parts: [\n      { text: `You are creating a tooltip for step ${item.step} of a product demo: \"${item.title}\".\nWrite a SHORT tooltip (max 2 sentences) explaining what this area is and what the user should do here.\nBe friendly and concise. Plain text only.` }\n    ]\n  }]\n};\n\nreturn { json: {\n  step: item.step,\n  title: item.title,\n  bbox: item.bbox,\n  fileId: item.fileId,\n  requestBody: JSON.stringify(requestBody)\n}};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        -720
+      ],
+      "id": "2e0a659d-7acb-41ab-8cf5-97c51ff9ce18",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAhLvtTiOsyY-9AnVwnwbdFpkdz9xAuYtw",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "JSON",
+        "body": "=const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const d = item.json;\n  const requestBody = {\n    contents: [{\n      parts: [\n        { text: `You are creating a tooltip for step ${d.step} of a product demo: \"${d.title}\".\nWrite a SHORT tooltip (max 2 sentences) explaining what this area is and what the user should do here.\nBe friendly and concise. Plain text only.` }\n      ]\n    }]\n  };\n  results.push({ json: {\n    step: d.step,\n    title: d.title,\n    bbox: d.bbox,\n    fileId: d.fileId,\n    requestBody: JSON.stringify(requestBody)\n  }});\n}\n\nreturn results;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        704,
+        -720
+      ],
+      "id": "c2ae4238-f5b2-4811-a0ab-98032832d468",
+      "name": "Prepare Gemini Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const geminiItem = $input.item.json;\nconst tooltip = geminiItem?.candidates?.[0]?.content?.parts?.[0]?.text || 'Click here to continue.';\n\n// Get current item index\nconst idx = $input.item.pairedItem?.item ?? 0;\n\nconst sourceItems = $('Code in JavaScript1').all();\nconst source = sourceItems[idx]?.json || sourceItems[0].json;\n\nreturn { json: {\n  step: source.step,\n  title: source.title,\n  bbox: source.bbox,\n  fileId: source.fileId,\n  tooltip: tooltip.trim()\n}};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        -720
+      ],
+      "id": "caf462c8-df5b-49cd-b7bb-cd675f19bad9",
+      "name": "Extract Tooltip"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "steps",
+        "options": {
+          "includeBinaries": false
+        }
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -720
+      ],
+      "id": "c0d029aa-1588-4052-a543-9b05f1408ab4",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst steps = [];\n\nfor (const item of items) {\n  const d = item.json;\n  \n  // Call Gemini for tooltip\n  const geminiResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAhLvtTiOsyY-9AnVwnwbdFpkdz9xAuYtw',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({\n      contents: [{ parts: [{ text: `Create a short 2-sentence tooltip for a product demo step called \"${d.title}\". Explain what it is and what the user should do. Plain text only.` }] }]\n    })\n  });\n  const tooltip = geminiResp?.candidates?.[0]?.content?.parts?.[0]?.text || 'Click here to continue.';\n\n  // Download image from Drive as base64\n  const imageResp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://drive.google.com/uc?export=download&id=${d.fileId}`,\n    encoding: 'arraybuffer',\n    returnFullResponse: true\n  });\n  const imageBase64 = Buffer.from(imageResp.body).toString('base64');\n\n  steps.push({\n    step: d.step,\n    title: d.title,\n    bbox: d.bbox,\n    fileId: d.fileId,\n    tooltip: tooltip.trim(),\n    image: imageBase64\n  });\n}\n\nreturn [{ json: { steps } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "6c683295-9d13-42fd-8b10-5a1b0a74b27a",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst steps = input.steps.sort((a,b) => a.step - b.step);\nconst stepsJson = JSON.stringify(steps);\n\nconst html = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>How to Login — Lockated</title>\n<style>\n*{margin:0;padding:0;box-sizing:border-box}\nbody{font-family:-apple-system,sans-serif;background:#111;color:#fff;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}\n.container{width:min(95vw,900px)}\n.progress{width:100%;height:3px;background:#333;border-radius:2px;margin-bottom:12px}\n.progress-fill{height:100%;background:#e53935;border-radius:2px;transition:width .4s}\n.frame{position:relative;border-radius:12px;overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,.6)}\n.frame img{width:100%;display:block}\n.ring{position:absolute;border:3px solid #e53935;border-radius:8px;animation:pulse 1.8s infinite;cursor:pointer}\n@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(229,57,53,.3)}50%{box-shadow:0 0 0 8px rgba(229,57,53,.1)}}\n.tooltip{position:absolute;background:#fff;color:#111;border-radius:10px;padding:14px 18px;min-width:220px;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:100;display:none}\n.tooltip.show{display:block;animation:fadein .2s}\n@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}\n.tooltip p{font-size:14px;line-height:1.5;margin-bottom:12px}\n.tooltip-footer{display:flex;justify-content:space-between;align-items:center}\n.counter{font-size:12px;color:#888}\n.btn{background:#e53935;color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer}\n.btn:hover{background:#c62828}\n.dots{display:flex;gap:8px;justify-content:center;margin-top:14px}\n.dot{width:8px;height:8px;border-radius:50%;background:#444;cursor:pointer;transition:all .3s}\n.dot.active{background:#e53935;transform:scale(1.3)}\n.label{text-align:center;margin-top:10px;font-size:13px;color:#666}\n.hint{text-align:center;font-size:11px;color:#444;margin-top:6px}\n</style>\n</head>\n<body>\n<div class=\"container\">\n  <div class=\"progress\"><div class=\"progress-fill\" id=\"pf\"></div></div>\n  <div class=\"frame\">\n    <img id=\"img\" src=\"\" alt=\"\">\n    <div class=\"ring\" id=\"ring\"></div>\n    <div class=\"tooltip\" id=\"tip\">\n      <p id=\"tip-text\"></p>\n      <div class=\"tooltip-footer\">\n        <span class=\"counter\" id=\"counter\"></span>\n        <button class=\"btn\" id=\"btn\">Got it →</button>\n      </div>\n    </div>\n  </div>\n  <div class=\"dots\" id=\"dots\"></div>\n  <div class=\"label\" id=\"label\"></div>\n  <div class=\"hint\">← → to navigate</div>\n</div>\n<script>\nconst steps=${stepsJson};\nlet cur=0;\nfunction render(){\n  const s=steps[cur];\n  document.getElementById('img').src='data:image/png;base64,'+s.image;\n  const r=document.getElementById('ring');\n  r.style.left=s.bbox.x+'%';r.style.top=s.bbox.y+'%';\n  r.style.width=s.bbox.w+'%';r.style.height=s.bbox.h+'%';\n  document.getElementById('tip-text').textContent=s.tooltip;\n  document.getElementById('counter').textContent='Step '+s.step+' of '+steps.length;\n  document.getElementById('label').textContent=s.title;\n  document.getElementById('pf').style.width=(s.step/steps.length*100)+'%';\n  const t=document.getElementById('tip');\n  t.classList.remove('show');\n  const below=s.bbox.y+s.bbox.h<65;\n  t.style.top=below?(s.bbox.y+s.bbox.h+1)+'%':'auto';\n  t.style.bottom=below?'auto':(100-s.bbox.y+1)+'%';\n  t.style.left=(s.bbox.x+s.bbox.w>60)?'auto':s.bbox.x+'%';\n  t.style.right=(s.bbox.x+s.bbox.w>60)?(100-s.bbox.x-s.bbox.w)+'%':'auto';\n  document.getElementById('dots').innerHTML=steps.map((_,i)=>'<div class=\"dot'+(i===cur?' active':'')+'\" onclick=\"go('+i+')\"></div>').join('');\n  setTimeout(()=>t.classList.add('show'),400);\n}\nfunction go(i){if(i>=0&&i<steps.length){cur=i;render();}}\ndocument.getElementById('ring').onclick=()=>document.getElementById('tip').classList.add('show');\ndocument.getElementById('btn').onclick=()=>{\n  if(cur<steps.length-1)go(cur+1);\n  else{document.getElementById('tip-text').textContent='🎉 Login flow complete!';document.getElementById('btn').textContent='Restart';document.getElementById('btn').onclick=()=>go(0);}\n};\ndocument.addEventListener('keydown',e=>{\n  if(e.key==='ArrowRight')go(cur+1);\n  if(e.key==='ArrowLeft')go(cur-1);\n});\nrender();\n</script>\n</body>\n</html>`;\n\nconst buf = Buffer.from(html, 'utf8');\nreturn [{binary:{data:{data:buf.toString('base64'),mimeType:'text/html',fileName:'how-to-login.html'}}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "06e4ec69-522b-45ec-834b-053a4e56c6a3",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "name": "how-to-login.html",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1F68eWUsb6rD5hDg9SNCn2zUWAjLts8oq",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        832,
+        0
+      ],
+      "id": "d1bc0f6a-a135-4b82-b333-0fa28b802ee2",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "vh52X2Zy6jXu0wTy",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "demo-generator",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "4c894494-f9aa-44f6-b677-72c3dab77b3c",
+      "name": "Webhook",
+      "webhookId": "61ef5d15-e075-453a-9d89-ae19b70d90c6"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\nconst steps = body.steps;\nconst results = [];\n\nfor (const d of steps) {\n  const geminiResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAhLvtTiOsyY-9AnVwnwbdFpkdz9xAuYtw',\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({\n      contents: [{ parts: [{ text: `Create a short 2-sentence tooltip for a product demo step called \"${d.title}\". Explain what it is and what the user should do. Plain text only.` }] }]\n    })\n  });\n  const tooltip = geminiResp?.candidates?.[0]?.content?.parts?.[0]?.text || 'Click here to continue.';\n\n  results.push({\n    step: d.step,\n    title: d.title,\n    bbox: d.bbox,\n    image: d.image,\n    tooltip: tooltip.trim()\n  });\n}\n\nreturn [{ json: { steps: results } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        0
+      ],
+      "id": "2be1a59c-93cf-4b8b-81dc-ba4619c3cc11",
+      "name": "Code in JavaScript4"
+    }
+  ],
+  "connections": {
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Prepare Gemini Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Gemini Request": {
+      "main": [
+        [
+          {
+            "node": "Extract Tooltip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Tooltip": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "95ff2610-57cd-4b89-b229-c6dba2115aa4",
+  "activeVersionId": null,
+  "versionCounter": 8,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-16T06:17:38.498Z",
+      "createdAt": "2026-03-16T06:17:38.498Z",
+      "role": "workflow:owner",
+      "workflowId": "P0Wih4BSCXkoAnfP",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-24T05:45:59.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-23",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

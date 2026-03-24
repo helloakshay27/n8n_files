@@ -1,0 +1,448 @@
+{
+  "updatedAt": "2026-03-20T11:51:08.640Z",
+  "createdAt": "2025-12-24T10:13:05.874Z",
+  "id": "Xc0BOlt0NinXhZcC",
+  "name": "Milestone overdue",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "milestone-overdue",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        128,
+        -256
+      ],
+      "id": "8e353046-4bda-439d-998d-3d7a270a291c",
+      "name": "Webhook",
+      "webhookId": "c6a14b85-6361-4540-937a-f01b1c71ac0e",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        112,
+        96
+      ],
+      "id": "e29861c6-922c-4e6a-8286-9391904cb8dd",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  m.id                    AS milestone_id,\n  m.title                 AS milestone_title,\n  m.end_date              AS milestone_end_date,\n\n  -- overdue calculation\n  DATEDIFF(CURDATE(), DATE(m.end_date)) AS overdue_days,\n\n  pm.id                   AS project_id,\n  pm.title                AS project_title,\n\n  -- milestone owner\n  mo.email                AS milestone_owner_email,\n  mo.firstname            AS milestone_owner_firstname,\n  mo.lastname             AS milestone_owner_lastname,\n\n  -- project manager\n  pmo.email               AS project_manager_email,\n  pmo.firstname           AS project_manager_firstname,\n  pmo.lastname            AS project_manager_lastname,\n\n  -- team member\n  tm.id                   AS team_user_id,\n  tm.firstname            AS team_user_first_name,\n  tm.lastname             AS team_user_last_name,\n  tm.email                AS team_user_email\n\nFROM milestones m\n\n-- milestone owner\nJOIN users mo\n  ON mo.id = m.owner_id\n\n-- project\nJOIN project_managements pm\n  ON pm.id = m.project_management_id\n\n-- project manager\nJOIN users pmo\n  ON pmo.id = pm.owner_id\n\n-- project team\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\n\n-- team members\nJOIN users tm\n  ON tm.id = ptm.user_id\n\nWHERE\n  DATE(m.end_date) < CURDATE()\n  AND (m.status IS NULL OR m.status != 'Completed');",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -432,
+        -160
+      ],
+      "id": "f3507fee-152a-45e4-9784-2a6dba68e791",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "jlXMRexTLx3v7Dee",
+          "name": "Task Management MySQL"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "monthsInterval": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -752,
+        -192
+      ],
+      "id": "265aa3ba-f062-4526-b96d-95a70ea73854",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.project_manager_email}",
+        "subject": "=Milestone Overdue: {{$json.milestone_title}}\n\n\n",
+        "html": "=<p>Dear {{$json.project_manager_firstname}} {{$json.project_manager_lastname}},</p>\n\n<p>This is to formally notify you that the milestone <b>{{$json.milestone_title}}</b> has exceeded its planned completion date and is currently overdue.</p>\n\n<p><b>Milestone Status</b><br>\n* Milestone Name: {{$json.milestone_title}}<br>\n* Planned End Date: {{$json.milestone_end_date}}<br>\n* Overdue By: {{$json.overdue_days}} days<br>\n\n<p><b>Impact & Action Required</b><br>\nThe delay may impact dependent tasks and overall project timelines. We request an immediate status update along with a recovery or mitigation plan.</p>\n\n<p>Regards,<br>\n<b>PMO – Escalation Desk</b></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -192,
+        -96
+      ],
+      "id": "a62f0f05-4b9d-4f94-a013-77991180969e",
+      "name": "PM",
+      "webhookId": "ea698c2a-375b-4cb1-9564-6c4c71d854c6",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.project_manager_email}",
+        "subject": "=Milestone Overdue: {{$json.milestone_title}}\n\n\n",
+        "html": "=<p>Dear {{$json.milestone_owner_firstname}} {{$json.milestone_owner_lastname}},</p>\n\n<p>This is to formally notify you that the milestone <b>{{$json.milestone_title}}</b> has exceeded its planned completion date and is currently overdue.</p>\n\n<p><b>Milestone Status</b><br>\n* Milestone Name: {{$json.milestone_title}}<br>\n* Planned End Date: {{$json.milestone_end_date}}<br>\n* Overdue By: {{$json.overdue_days}} days<br>\n\n<p><b>Impact & Action Required</b><br>\nThe delay may impact dependent tasks and overall project timelines. We request an immediate status update along with a recovery or mitigation plan.</p>\n\n<p>Regards,<br>\n<b>PMO – Escalation Desk</b></p>\n\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -208,
+        80
+      ],
+      "id": "f5ece4b7-d147-4cee-846e-8288cd9ce598",
+      "name": "Leadership Task Owner",
+      "webhookId": "ea698c2a-375b-4cb1-9564-6c4c71d854c6",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "PM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Leadership Task Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leadership Task Owner": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "86535831-f61a-4326-be58-6f0bb724dc14",
+  "activeVersionId": "597a9b92-b4ef-447d-8004-e9920ae2ec0d",
+  "versionCounter": 41,
+  "triggerCount": 2,
+  "shared": [
+    {
+      "updatedAt": "2025-12-24T10:13:05.877Z",
+      "createdAt": "2025-12-24T10:13:05.877Z",
+      "role": "workflow:owner",
+      "workflowId": "Xc0BOlt0NinXhZcC",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-24T05:45:59.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-23",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2025-12-26T06:34:13.189Z",
+      "createdAt": "2025-12-26T06:34:13.189Z",
+      "id": "ntOn6pa6wD5AUrNk",
+      "name": "Module 1 - Projects"
+    }
+  ],
+  "activeVersion": {
+    "updatedAt": "2026-01-02T17:00:50.000Z",
+    "createdAt": "2026-01-02T17:00:46.922Z",
+    "versionId": "597a9b92-b4ef-447d-8004-e9920ae2ec0d",
+    "workflowId": "Xc0BOlt0NinXhZcC",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "milestone-overdue",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          128,
+          -256
+        ],
+        "id": "8e353046-4bda-439d-998d-3d7a270a291c",
+        "name": "Webhook",
+        "webhookId": "c6a14b85-6361-4540-937a-f01b1c71ac0e",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{$json.project_manager_email}}, {{$json.milestone_owner_email}}",
+          "subject": "=Milestone {{$json.milestone_title}} is overdue by {{$json.overdue_days}} days.",
+          "html": "=Milestone {{$json.milestone_title}} is overdue by {{$json.overdue_days}} days.",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          -192,
+          -96
+        ],
+        "id": "a62f0f05-4b9d-4f94-a013-77991180969e",
+        "name": "PM, Leadership",
+        "webhookId": "ea698c2a-375b-4cb1-9564-6c4c71d854c6",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          112,
+          96
+        ],
+        "id": "e29861c6-922c-4e6a-8286-9391904cb8dd",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  m.id                    AS milestone_id,\n  m.title                 AS milestone_title,\n  m.end_date              AS milestone_end_date,\n\n  -- overdue calculation\n  DATEDIFF(CURDATE(), DATE(m.end_date)) AS overdue_days,\n\n  pm.id                   AS project_id,\n  pm.title                AS project_title,\n\n  -- milestone owner\n  mo.email                AS milestone_owner_email,\n\n  -- project manager\n  pmo.email               AS project_manager_email,\n\n  -- team member\n  tm.id                   AS team_user_id,\n  tm.firstname           AS team_user_first_name,\n  tm.lastname            AS team_user_last_name,\n  tm.email                AS team_user_email\n\nFROM milestones m\n\n-- milestone owner\nJOIN users mo\n  ON mo.id = m.owner_id\n\n-- project\nJOIN project_managements pm\n  ON pm.id = m.project_management_id\n\n-- project manager\nJOIN users pmo\n  ON pmo.id = pm.owner_id\n\n-- project team\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\n\n-- team members\nJOIN users tm\n  ON tm.id = ptm.user_id\n\nWHERE\n  DATE(m.end_date) < CURDATE()\n  AND (m.status IS NULL OR m.status != 'Completed');\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -432,
+          -160
+        ],
+        "id": "f3507fee-152a-45e4-9784-2a6dba68e791",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "jlXMRexTLx3v7Dee",
+            "name": "Task Management MySQL"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -752,
+          -192
+        ],
+        "id": "265aa3ba-f062-4526-b96d-95a70ea73854",
+        "name": "Schedule Trigger",
+        "alwaysOutputData": true
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "PM, Leadership": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "PM, Leadership",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "authors": "N8N Admin",
+    "name": "Version 597a9b92",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-02T17:00:50.487Z",
+        "id": 46,
+        "workflowId": "Xc0BOlt0NinXhZcC",
+        "versionId": "597a9b92-b4ef-447d-8004-e9920ae2ec0d",
+        "event": "activated",
+        "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+      }
+    ]
+  }
+}

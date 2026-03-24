@@ -1,0 +1,270 @@
+{
+  "updatedAt": "2026-03-23T12:11:06.830Z",
+  "createdAt": "2025-12-26T08:11:54.624Z",
+  "id": "FQBtO2WM87R74rFX",
+  "name": "Task Inactivity (no update for 3 days)",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "task-inactivity",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -528,
+        -240
+      ],
+      "id": "336b0b3f-b04b-470d-88cf-54478de6853a",
+      "name": "Webhook",
+      "webhookId": "2ad6cc43-a612-4a42-864e-d67b2bc2797a",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        272,
+        16
+      ],
+      "id": "0c0c4804-1dc5-4402-9b86-a772cde7345c",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -496,
+        48
+      ],
+      "id": "dd381dbd-5e9c-4813-b8f3-62fed9b9f3a4",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.id            AS task_id,\n  t.title         AS task_title,\n  t.description,\n  t.status,\n  t.priority,\n  t.target_date,\n  t.created_at    AS task_created_at,\n  t.updated_at    AS last_updated_at,\n  t.parent_id     AS parent_id,\n\n  -- Task Owner\n  rp.id           AS owner_id,\n  rp.firstname    AS owner_first_name,\n  rp.lastname     AS owner_last_name,\n  rp.email        AS owner_email,\n\n  -- Project\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  -- Project Manager\n  pmo.id          AS manager_id,\n  pmo.firstname   AS manager_first_name,\n  pmo.lastname    AS manager_last_name,\n  pmo.email       AS manager_email\n\nFROM task_managements t\n\nJOIN spree_users rp\n  ON rp.id = t.responsible_person_id\n\nJOIN project_managements pm\n  ON pm.id = t.project_management_id\n\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nWHERE\n  t.status IN ('open', 'in_progress', 'on_hold', 'overdue', 'started')\n  AND t.updated_at <= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND t.active = 1\n  AND t.parent_id IS NULL;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -240,
+        -144
+      ],
+      "id": "c66d8f7c-172e-45cf-9113-92eacd58845d",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.id            AS task_id,\n  t.title         AS task_title,\n  t.description,\n  t.status,\n  t.priority,\n  t.target_date,\n  t.created_at    AS task_created_at,\n  t.updated_at    AS last_updated_at,\n\n  -- Task Owner\n  rp.id           AS owner_id,\n  rp.firstname    AS owner_first_name,\n  rp.lastname     AS owner_last_name,\n  rp.email        AS owner_email,\n\n  -- Project\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  -- Project Manager\n  pmo.id          AS manager_id,\n  pmo.firstname   AS manager_first_name,\n  pmo.lastname    AS manager_last_name,\n  pmo.email       AS manager_email\n\nFROM task_managements t\n\nJOIN spree_users rp\n  ON rp.id = t.responsible_person_id\n\nJOIN project_managements pm\n  ON pm.id = t.project_management_id\n\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nWHERE\n  t.status IN ('open', 'in_progress', 'on_hold', 'overdue', 'started')\n  AND t.updated_at <= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND t.active = 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -192,
+        112
+      ],
+      "id": "c4d99de9-a1fb-4860-9cd7-03a4a7aaa95d",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.manager_email}}",
+        "subject": "=No Recent Update on Task: {{$json.task_title}}",
+        "html": "=Dear {{$json.manager_first_name}} {{$json.manager_last_name}},\n\nWe noticed that there has been no update on the task <b>{{$json.task_title}}</b> for the past <b>3 days</b>.\n\n<b>Task Snapshot</b>\n* Task Title: {{$json.task_title}}\n* Current Status: {{$json.status}}\n* Last Updated On: {{$json.last_updated_at}}\n* Responsible Owner: {{$json.owner_first_name}} {{$json.owner_last_name}}\n\nPlease review the task and update the status or add comments to avoid potential delays.\n\nRegards,\n<b>PMO – Task Governance</b>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        16,
+        -144
+      ],
+      "id": "2843ca97-b6ca-446d-b0b1-c25ac1a88903",
+      "name": "PM",
+      "webhookId": "ee070c71-f118-42d2-bcbd-5c969ad2943b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.owner_email}}",
+        "subject": "=No Recent Update on Task: {{$json.task_title}}",
+        "html": "=Dear {{$json.owner_first_name}} {{$json.owner_last_name}},\n\nWe noticed that there has been no update on the task <b>{{$json.task_title}}</b> for the past <b>3 days</b>.\n\n<b>Task Snapshot</b>\n* Task Title: {{$json.task_title}}\n* Current Status: {{$json.status}}\n* Last Updated On: {{$json.last_updated_at}}\n* Responsible Owner: {{$json.owner_first_name}} {{$json.owner_last_name}}\n\nPlease review the task and update the status or add comments to avoid potential delays.\n\nRegards,\n<b>PMO – Task Governance</b>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        16,
+        16
+      ],
+      "id": "b961db2f-b265-43bd-a7dd-3fbd442c01cc",
+      "name": "Task Owner",
+      "webhookId": "ee070c71-f118-42d2-bcbd-5c969ad2943b",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "PM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Task Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "65fcdb46-db18-4018-933e-877f803782c0",
+  "activeVersionId": null,
+  "versionCounter": 15,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-26T08:11:54.628Z",
+      "createdAt": "2025-12-26T08:11:54.628Z",
+      "role": "workflow:owner",
+      "workflowId": "FQBtO2WM87R74rFX",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-24T05:45:59.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-23",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

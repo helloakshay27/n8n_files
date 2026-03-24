@@ -1,0 +1,684 @@
+{
+  "updatedAt": "2026-03-16T06:10:26.990Z",
+  "createdAt": "2026-03-10T09:43:04.986Z",
+  "id": "0UCPpUixoTq77iCf",
+  "name": "Lockated Demo Generator — How to Login",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1CaomemmLQ0OPhu0QwYmgpzrnCKwlIr6J",
+          "mode": "list",
+          "cachedResultName": "CS Workflow",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1CaomemmLQ0OPhu0QwYmgpzrnCKwlIr6J"
+        },
+        "event": "watchFolderUpdated"
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d5bc1b6b-a5af-4988-b301-992e96c8ee56",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "8K9zg6ekrWyKO3bA",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "'1CaomemmLQ0OPhu0QwYmgpzrnCKwlIr6J' in parents",
+        "returnAll": true,
+        "filter": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "43915754-e9c6-4c01-a5db-cd3df9ecc87e",
+      "name": "Search files and folders",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "8K9zg6ekrWyKO3bA",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const files = items.map(i => i.json);\n\nconst video   = files.find(f => f.name.includes('.mp4'));\nconst guide   = files.find(f => f.name.includes('User Guide'));\nconst gemini  = files.find(f => f.name.includes('Gemini'));\n\nreturn [{\n  json: {\n    product_name:   'HiSociety',\n    video_url:      `https://drive.google.com/uc?export=download&id=${video.id}`,\n    guide_id:       guide.id,\n    gemini_id:      gemini.id\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        0
+      ],
+      "id": "2dad2a6e-2b32-460e-bbe8-ddc379595aac",
+      "name": "Node3"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files/{{$json.guide_id}}/export?mimeType=text/plain",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        608,
+        224
+      ],
+      "id": "09414388-5972-4f40-9ec9-be2db5306804",
+      "name": "HTTP Request",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "8K9zg6ekrWyKO3bA",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files/{{$node[\"Node3\"].json.gemini_id}}/export?mimeType=text/plain",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        608,
+        -224
+      ],
+      "id": "373604ba-7f5a-4b12-ad57-f88ea7ad700f",
+      "name": "HTTP Request1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "8K9zg6ekrWyKO3bA",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        800,
+        0
+      ],
+      "id": "7a507a04-69d6-4f17-bfc4-1403c3eec3f7",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const userGuideText = items[0].json.data;\nconst geminiText = items[1].json.data;\n\nconst prompt = \"You are a product guide automation engine. Read the two documents below and extract every step a user performs. Return ONLY valid JSON with this structure: {\\\"title\\\": \\\"guide title\\\", \\\"steps\\\": [{\\\"step_number\\\": 1, \\\"title\\\": \\\"step title\\\", \\\"action\\\": \\\"what user does\\\", \\\"where\\\": \\\"UI location\\\", \\\"narration\\\": \\\"voiceover max 15 words\\\", \\\"expected_result\\\": \\\"what appears on screen\\\"}]}\\n\\nDOCUMENT 1:\\n\" + userGuideText + \"\\n\\nDOCUMENT 2:\\n\" + geminiText;\n\nconst body = {\n  contents: [{\n    parts: [{\n      text: prompt\n    }]\n  }],\n  generationConfig: {\n    temperature: 0.2\n  }\n};\n\nreturn [{\n  json: {\n    requestBody: JSON.stringify(body)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        0
+      ],
+      "id": "526d23a1-cc4c-4c7a-91f5-11e7b38318b5",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAhLvtTiOsyY-9AnVwnwbdFpkdz9xAuYtw",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "Raw",
+        "body": "={{$json.requestBody}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1216,
+        0
+      ],
+      "id": "079850a3-ca4a-464c-8c48-a9db17389b03",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const responseText = items[0].json.candidates[0].content.parts[0].text;\n\n// Strip markdown code fences if present\nconst clean = responseText.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\nconst parsed = JSON.parse(clean);\n\nreturn [{\n  json: parsed\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1424,
+        0
+      ],
+      "id": "cb2307f1-2085-4a7d-9fde-96bae26fc0df",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const steps = items[0].json.steps;\nconst title = items[0].json.title;\n\nreturn steps.map(step => ({\n  json: {\n    product_title: title,\n    step_number: step.step_number,\n    step_title: step.title,\n    action: step.action,\n    where: step.where,\n    narration: step.narration,\n    expected_result: step.expected_result\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1632,
+        0
+      ],
+      "id": "5dce27a3-d7b5-4e66-b1bf-83eedca6827a",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://texttospeech.googleapis.com/v1/text:synthesize?key=AIzaSyAhLvtTiOsyY-9AnVwnwbdFpkdz9xAuYtw",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"input\": {\n    \"text\": \"{{$json.narration}}\"\n  },\n  \"voice\": {\n    \"languageCode\": \"en-US\",\n    \"name\": \"en-US-Neural2-F\",\n    \"ssmlGender\": \"FEMALE\"\n  },\n  \"audioConfig\": {\n    \"audioEncoding\": \"MP3\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1840,
+        0
+      ],
+      "id": "dda4153c-b26f-4e52-b925-b3ea9ebf143a",
+      "name": "HTTP Request3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ── PASTE YOUR 6 SKYVERN HTML ELEMENT TREES HERE ──────────────────────────\n// Replace each STEP_X_HTML with the HTML Element Tree copied from Skyvern\n\nconst steps = [\n  {\n    step: 1,\n    title: \"Login page\",\n    html: `<div>\n  <p id=\"AAAL\">Sign in to your account</p>\n  <label for=\"email\">Email Address</label>\n  <input placeholder=\"Enter your email address\" type=\"email\" id=\"AAAO\">\n  <button disabled=\"true\" id=\"AAAP\">Continue</button>\n</div>`\n  },\n  {\n    step: 2,\n    title: \"Enter email\",\n    html: `<div>\n\t<div>\n\t\t<svg alt=\"The SVG displays the word 'ENTRUST' in a dark gray/black color, with a stylized red 'E' logo preceding it. The logo consists of three 'E' shapes, two of which are connected and form a larger 'E' or a stylized 'E' with a circular element, and a third 'E' shape that is part of the main text but also has a circular element.\" id=\"AAAD\">\n\t\t</svg>\n\t\t<p id=\"AAAL\">Sign in to your account</p>\n\t</div>\n\t<div>\n\t\t<button id=\"AAAU\">\n\t\t\t<svg alt=\"Left arrow icon\" id=\"AAAV\">\n\t\t\t</svg>\n\t\t</button>\n\t\t<h2 id=\"AAAY\">Select Organization</h2>\n\t</div>\n\t<p>Email:<span>yash.rathod@lockated.com</span>\n</p>\n<p>Select your organization to continue :</p>\n<div id=\"AAAd\">\n\t<div id=\"AAAe\">\n\t\t<div id=\"AAAf\">\n\t\t\t<svg alt=\"A multi-story building or skyscraper with a central rectangular structure, two smaller side extensions, and four horizontal lines representing windows or floors.\" id=\"AAAg\">\n\t\t\t</svg>\n\t\t</div>\n\t\t<div id=\"AAAo\">\n\t\t\t<h3 id=\"AAAp\">Lockated Worli</h3>\n\t\t\t<p id=\"AAAq\">gophygital.work</p>\n\t\t</div>\n\t</div>\n</div>\n</div>`\n  },\n  {\n    step: 3,\n    title: \"Enter password\",\n    html: `<div>\n\t<div>\n\t\t<svg alt=\"The SVG displays the word 'ENTRUST' in a dark gray/black color, with a stylized red 'E' logo preceding it. The logo consists of three 'E' shapes, two of which are connected and form a larger 'E' or a stylized 'E' with a circular element, and a third 'E' shape that is part of the main text but also has a circular element.\" id=\"AAAD\">\n\t\t</svg>\n\t\t<p id=\"AAAL\">Sign in to your account</p>\n\t</div>\n\t<div>\n\t\t<button id=\"AAAs\">\n\t\t\t<svg alt=\"Left arrow\" id=\"AAAt\">\n\t\t\t</svg>\n\t\t</button>\n\t\t<h2 id=\"AAAw\">Enter Password</h2>\n\t</div>\n\t<div>\n\t\t<svg alt=\"Outline icon of a building with two side wings and multiple windows, representing a structure or business.\" id=\"AAA0\">\n\t\t</svg>\n\t\t<h3 id=\"AAA9\">Lockated Worli</h3>\n\t\t<p id=\"AABA\">yash.rathod@lockated.com</p>\n\t</div>\n\t<div>\n\t\t<input placeholder=\"Password\" type=\"password\" value id=\"AABD\">\n\t\t<button type=\"button\" id=\"AABF\">\n\t\t\t<svg alt=\"Stylized eye icon with an almond-shaped outline and a central circular pupil.\" id=\"AABG\">\n\t\t\t</svg>\n\t\t</button>\n\t</div>\n\t<div>By clicking Log in you are accepting our;& agree to the;.<span id=\"AABL\">Privacy Policy</span>\n\t<span id=\"AABM\">Terms & Conditions</span>\n</div>\n<button disabled=\"true\" id=\"AABN\">LOG IN</button>\n<button id=\"AABP\">Forgot your password?</button>\n</div>`\n  },\n  {\n    step: 4,\n    title: \"Select organisation\",\n    html: `<div>\n\t<div>\n\t\t<svg alt=\"The SVG displays the word 'ENTRUST' in a dark gray/black color, with a stylized red 'E' logo preceding it. The logo consists of three 'E' shapes, two of which are connected and form a larger 'E' or a stylized 'E' with a circular element, and a third 'E' shape that is part of the main text but also has a circular element.\" id=\"AAAD\">\n\t\t</svg>\n\t\t<p id=\"AAAL\">Sign in to your account</p>\n\t</div>\n\t<div>\n\t\t<button id=\"AAAs\">\n\t\t\t<svg alt=\"Left arrow\" id=\"AAAt\">\n\t\t\t</svg>\n\t\t</button>\n\t\t<h2 id=\"AAAw\">Enter Password</h2>\n\t</div>\n\t<div>\n\t\t<svg alt=\"Outline icon of a building with two side wings and multiple windows, representing a structure or business.\" id=\"AAA0\">\n\t\t</svg>\n\t\t<h3 id=\"AAA9\">Lockated Worli</h3>\n\t\t<p id=\"AABA\">yash.rathod@lockated.com</p>\n\t</div>\n\t<div>\n\t\t<input placeholder=\"Password\" type=\"password\" value=\"*********\" id=\"AABD\">\n\t\t<button type=\"button\" id=\"AABF\">\n\t\t\t<svg alt=\"Stylized eye icon with an almond-shaped outline and a central circular pupil.\" id=\"AABG\">\n\t\t\t</svg>\n\t\t</button>\n\t</div>\n\t<div>By clicking Log in you are accepting our;& agree to the;.<span id=\"AABL\">Privacy Policy</span>\n\t<span id=\"AABM\">Terms & Conditions</span>\n</div>\n<button id=\"AABN\">LOG IN</button>\n<button id=\"AABP\">Forgot your password?</button>\n</div>`\n  },\n  {\n    step: 5,\n    title: \"Select view\",\n    html: `<div>\n\t<div id=\"AABg\">\n\t\t<div id=\"AABq\">\n\t\t\t<button id=\"AABr\">Dashboard<svg id=\"AABs\">\n\t\t</svg>\n\t</button>\n\t<button id=\"AABv\">Executive Dashboard<svg id=\"AABw\">\n</svg>\n</button>\n<button id=\"AABz\">MSafe Dashboard<svg id=\"AAB0\">\n</svg>\n</button>\n</div>\n</div>\n<div id=\"AAB3\">\n\t<select type=\"button\" id=\"AAB4\">\n\t\t<svg id=\"AAB5\">\n\t\t</svg>\n\t\t<span id=\"AAC8\">Haven Infoline</span>\n\t\t<svg id=\"AACF\">\n\t\t</svg>\n\t</select>\n\t<select type=\"button\" id=\"AACH\">\n\t\t<svg id=\"AACI\">\n\t\t</svg>\n\t\t<span id=\"AAC9\">Mumbai</span>\n\t\t<svg id=\"AACM\">\n\t\t</svg>\n\t</select>\n\t<select type=\"button\" id=\"AACP\">\n\t\t<svg id=\"AACQ\">\n\t\t</svg>\n\t\t<div id=\"AAC7\">39</div>\n\t</select>\n\t<select type=\"button\" id=\"AACT\">\n\t\t<div id=\"AACU\">YR</div>\n\t</select>\n</div>\n</div>\n<div>Welcome back, Yash! Login successful.</div>\n<div>\n\t<h2>Welcome! Choose Your View</h2>\n\t<p>Select how you want to access the system</p>\n</div>\n<button id=\"AACc\">\n\t<div id=\"AACd\">\n\t\t<div id=\"AACe\">\n\t\t\t<svg id=\"AACf\">\n\t\t\t</svg>\n\t\t</div>\n\t\t<div id=\"AACh\">\n\t\t\t<h3 id=\"AACi\">Admin View</h3>\n\t\t\t<p id=\"AACj\">Full access to manage projects, sites, and all system features</p>\n\t\t</div>\n\t\t<div id=\"AACk\">\n\t\t\t<div id=\"AACl\">\n\t\t\t\t<svg id=\"AACm\">\n\t\t\t\t</svg>\n\t\t\t</div>\n\t\t</div>\n\t</div>\n</button>\n<button id=\"AACo\">\n\t<div id=\"AACp\">\n\t\t<div id=\"AACq\">\n\t\t\t<svg id=\"AACr\">\n\t\t\t</svg>\n\t\t</div>\n\t\t<div id=\"AACw\">\n\t\t\t<h3 id=\"AACx\">Employee View</h3>\n\t\t\t<p id=\"AACy\">Access your personal portal, tickets, and employee-specific features</p>\n\t\t</div>\n\t</div>\n</button>\n<button id=\"AAC0\">Continue<svg alt=\"Arrow pointing right\" id=\"AAC1\">\n</svg>\n</button>\n<p>You can switch between views anytime from the header menu<strong>Note:</strong>\n</p>`\n  },\n  {\n    step: 6,\n    title: \"Dashboard\",\n    html: `<div>\n\t<div id=\"AABg\">\n\t\t<div id=\"AABq\">\n\t\t\t<button id=\"AABr\">Dashboard<svg id=\"AABs\">\n\t\t</svg>\n\t</button>\n\t<button id=\"AABv\">Executive Dashboard<svg id=\"AABw\">\n</svg>\n</button>\n<button id=\"AABz\">MSafe Dashboard<svg id=\"AAB0\">\n</svg>\n</button>\n</div>\n</div>\n<div id=\"AAB3\">\n\t<select type=\"button\" id=\"AAB4\">\n\t\t<svg id=\"AAB5\">\n\t\t</svg>\n\t\t<span id=\"AAC8\">Haven Infoline</span>\n\t\t<svg id=\"AACF\">\n\t\t</svg>\n\t</select>\n\t<select type=\"button\" id=\"AACH\">\n\t\t<svg id=\"AACI\">\n\t\t</svg>\n\t\t<span id=\"AAC9\">Mumbai</span>\n\t\t<svg id=\"AACM\">\n\t\t</svg>\n\t</select>\n\t<select type=\"button\" id=\"AACP\">\n\t\t<svg id=\"AACQ\">\n\t\t</svg>\n\t\t<div id=\"AAC7\">39</div>\n\t</select>\n\t<select type=\"button\" id=\"AACT\">\n\t\t<div id=\"AACU\">YR</div>\n\t</select>\n</div>\n</div>\n<button id=\"AAEP\">\n\t<svg id=\"AAEQ\">\n\t</svg>\n</button>\n<h3>Maintenance</h3>\n<button title=\"Task\" id=\"AAEX\">\n\t<div id=\"AAEY\">\n\t\t<div id=\"AAEZ\">\n\t\t</div>\n\t\t<svg id=\"AAEa\">\n\t\t</svg>\n\t\t<span id=\"AAEd\">Task</span>\n\t</div>\n</button>\n<button title=\"Schedule\" id=\"AAEf\">\n\t<div id=\"AAEg\">\n\t\t<svg id=\"AAEh\">\n\t\t</svg>\n\t\t<span id=\"AAEm\">Schedule</span>\n\t</div>\n</button>\n<button title=\"Soft Services\" id=\"AAEo\">\n\t<div id=\"AAEp\">\n\t\t<svg id=\"AAEq\">\n\t\t</svg>\n\t\t<span id=\"AAEs\">Soft Services</span>\n\t</div>\n</button>\n<button title=\"Assets\" id=\"AAEu\">\n\t<div id=\"AAEv\">\n\t\t<svg id=\"AAEw\">\n\t\t</svg>\n\t\t<span id=\"AAE8\">Assets</span>\n\t</div>\n</button>\n<button title=\"Inventory\" id=\"AAFA\">\n\t<div id=\"AAFB\">\n\t\t<svg id=\"AAFC\">\n\t\t</svg>\n\t\t<span id=\"AAFH\">Inventory</span>\n\t</div>\n\t<svg id=\"AAFI\">\n\t</svg>\n</button>\n<button title=\"AMC\" id=\"AAFL\">\n\t<div id=\"AAFM\">\n\t\t<svg id=\"AAFN\">\n\t\t</svg>\n\t\t<span id=\"AAFT\">AMC</span>\n\t</div>\n</button>\n<button title=\"Attendance\" id=\"AAFV\">\n\t<div id=\"AAFW\">\n\t\t<svg id=\"AAFX\">\n\t\t</svg>\n\t\t<span id=\"AAFa\">Attendance</span>\n\t</div>\n</button>\n<button title=\"Audit\" id=\"AAFc\">\n\t<div id=\"AAFd\">\n\t\t<svg id=\"AAFe\">\n\t\t</svg>\n\t\t<span id=\"AAFh\">Audit</span>\n\t</div>\n\t<svg id=\"AAFi\">\n\t</svg>\n</button>\n<button title=\"Waste\" id=\"AAFl\">\n\t<div id=\"AAFm\">\n\t\t<svg id=\"AAFn\">\n\t\t</svg>\n\t\t<span id=\"AAFt\">Waste</span>\n\t</div>\n\t<svg id=\"AAFu\">\n\t</svg>\n</button>\n<button title=\"Survey\" id=\"AAFx\">\n\t<div id=\"AAFy\">\n\t\t<svg id=\"AAFz\">\n\t\t</svg>\n\t\t<span id=\"AAF6\">Survey</span>\n\t</div>\n\t<svg id=\"AAF7\">\n\t</svg>\n</button>\n<button title=\"M-Safe\" id=\"AAGA\">\n\t<div id=\"AAGB\">\n\t\t<svg id=\"AAGC\">\n\t\t</svg>\n\t\t<span id=\"AAGF\">M-Safe</span>\n\t</div>\n</button>\n<button title=\"Internal User (FTE)\" id=\"AAGH\">\n\t<div id=\"AAGI\">\n\t\t<svg id=\"AAGJ\">\n\t\t</svg>\n\t\t<span id=\"AAGM\">Internal User (FTE)</span>\n\t</div>\n</button>\n<button title=\"External User (NON FTE)\" id=\"AAGO\">\n\t<div id=\"AAGP\">\n\t\t<svg id=\"AAGQ\">\n\t\t</svg>\n\t\t<span id=\"AAGT\">External User (NON FTE)</span>\n\t</div>\n</button>\n<button title=\"LMC\" id=\"AAGV\">\n\t<div id=\"AAGW\">\n\t\t<svg id=\"AAGX\">\n\t\t</svg>\n\t\t<span id=\"AAGa\">LMC</span>\n\t</div>\n</button>\n<button title=\"SMT\" id=\"AAGc\">\n\t<div id=\"AAGd\">\n\t\t<svg id=\"AAGe\">\n\t\t</svg>\n\t\t<span id=\"AAGh\">SMT</span>\n\t</div>\n</button>\n<button title=\"Krcc List\" id=\"AAGj\">\n\t<div id=\"AAGk\">\n\t\t<svg id=\"AAGl\">\n\t\t</svg>\n\t\t<span id=\"AAGs\">Krcc List</span>\n\t</div>\n</button>\n<button title=\"Training List\" id=\"AAGu\">\n\t<div id=\"AAGv\">\n\t\t<svg id=\"AAGw\">\n\t\t</svg>\n\t\t<span id=\"AAG3\">Training List</span>\n\t</div>\n</button>\n<button title=\"Reportees Reassign\" id=\"AAG5\">\n\t<div id=\"AAG6\">\n\t\t<svg id=\"AAG7\">\n\t\t</svg>\n\t\t<span id=\"AAHC\">Reportees Reassign</span>\n\t</div>\n</button>\n<button title=\"Vi Miles\" id=\"AAHE\">\n\t<div id=\"AAHF\">\n\t\t<svg id=\"AAHG\">\n\t\t</svg>\n\t\t<span id=\"AAHL\">Vi Miles</span>\n\t</div>\n</button>\n<button title=\"Vehicle Details\" id=\"AAHN\">\n\t<div id=\"AAHO\">\n\t\t<svg id=\"AAHP\">\n\t\t</svg>\n\t\t<span id=\"AAHU\">Vehicle Details</span>\n\t</div>\n</button>\n<button title=\"Vehicle Check In\" id=\"AAHW\">\n\t<div id=\"AAHX\">\n\t\t<svg id=\"AAHY\">\n\t\t</svg>\n\t\t<span id=\"AAHb\">Vehicle Check In</span>\n\t</div>\n</button>\n<button title=\"Employee Deletion History\" id=\"AAHd\">\n\t<div id=\"AAHe\">\n\t\t<svg id=\"AAHf\">\n\t\t</svg>\n\t\t<span id=\"AAHj\">Employee Deletion History</span>\n\t</div>\n</button>\n<button title=\"Msafe Report\" id=\"AAHl\">\n\t<div id=\"AAHm\">\n\t\t<svg id=\"AAHn\">\n\t\t</svg>\n\t\t<span id=\"AAHr\">Msafe Report</span>\n\t</div>\n</button>\n<button title=\"Msafe Detail Report\" id=\"AAHt\">\n\t<div id=\"AAHu\">\n\t\t<svg id=\"AAHv\">\n\t\t</svg>\n\t\t<span id=\"AAHz\">Msafe Detail Report</span>\n\t</div>\n</button>\n<div id=\"AAH0\">\n\t<button id=\"AAH1\">Maintenance</button>\n\t<button id=\"AAH2\">Transitioning</button>\n\t<button id=\"AAH3\">Safety</button>\n\t<button id=\"AAH4\">Finance</button>\n\t<button id=\"AAH5\">CRM</button>\n\t<button id=\"AAH6\">Utility</button>\n\t<button id=\"AAH7\">Security</button>\n\t<button id=\"AAH8\">Value Added Services</button>\n\t<button id=\"AAH9\">Market Place</button>\n\t<button id=\"AAIA\">Master</button>\n\t<button id=\"AAIB\">Settings</button>\n</div>\n<div id=\"AADI\">\n\t<button type=\"button\" aria-selected=\"true\" id=\"AADJ\">Task List<svg id=\"AADK\">\n</svg>\n</button>\n<button type=\"button\" aria-selected=\"false\" id=\"AADR\">Calendar<svg id=\"AADS\">\n</svg>\n</button>\n<button type=\"button\" aria-selected=\"false\" id=\"AADX\">Analytics<svg id=\"AADY\">\n</svg>\n</button>\n</div>\n<div id=\"AADd\">\n\t<div id=\"AADf\">\n\t\t<div id=\"AADg\">\n\t\t\t<svg id=\"AADh\">\n\t\t\t</svg>\n\t\t</div>\n\t\t<div id=\"AADk\">\n\t\t\t<div id=\"AADl\">0</div>\n\t\t\t<div id=\"AADm\">Scheduled Tasks</div>\n\t\t</div>\n\t</div>\n\t<div id=\"AADn\">\n\t\t<div id=\"AADo\">\n\t\t\t<svg id=\"AADp\">\n\t\t\t</svg>\n\t\t</div>\n\t\t<div id=\"AADt\">\n\t\t\t<div id=\"AADu\">0</div>\n\t\t\t<div id=\"AADv\">Open Tasks</div>\n\t\t</div>\n\t</div>\n\t<div id=\"AADw\">\n\t\t<div id=\"AADx\">\n\t\t\t<svg id=\"AADy\">\n\t\t\t</svg>\n\t\t</div>\n\t\t<div id=\"AAD0\">\n\t\t\t<div id=\"AAD1\">0</div>\n\t\t\t<div id=\"AAD2\">In Progress</div>\n\t\t</div>\n\t</div>\n\t<div id=\"AAD3\">\n\t\t<div id=\"AAD4\">\n\t\t\t<svg id=\"AAD5\">\n\t\t\t</svg>\n\t\t</div>\n\t\t<div id=\"AAD8\">\n\t\t\t<div id=\"AAD9\">0</div>\n\t\t\t<div id=\"AAEA\">Closed Tasks</div>\n\t\t</div>\n\t</div>\n\t<div id=\"AAEB\">\n\t\t<div id=\"AAEC\">\n\t\t\t<svg id=\"AAED\">\n\t\t\t</svg>\n\t\t</div>\n\t\t<div id=\"AAEH\">\n\t\t\t<div id=\"AAEI\">0</div>\n\t\t\t<div id=\"AAEJ\">Overdue Tasks</div>\n\t\t</div>\n\t</div>\n\t<div>\n\t\t<div id=\"AAID\">\n\t\t\t<input type=\"text\" placeholder=\"Search tasks by checklist...\" value id=\"AAIH\">\n\t\t\t<button id=\"AAII\">\n\t\t\t\t<svg id=\"AAIJ\">\n\t\t\t\t</svg>\n\t\t\t</button>\n\t\t\t<button id=\"AAIL\">\n\t\t\t\t<svg id=\"AAIM\">\n\t\t\t\t</svg>\n\t\t\t</button>\n\t\t\t<select title=\"Columns\" type=\"button\" id=\"AAIQ\">\n\t\t\t\t<svg id=\"AAIR\">\n\t\t\t\t</svg>\n\t\t\t</select>\n\t\t</div>\n\t</div>\n\t<table>\n\t\t<thead>\n\t\t\t<tr>\n\t\t\t\t<th id=\"AAIa\">\n\t\t\t\t\t<button type=\"button\" aria-checked=\"false\" value=\"on\" aria-label=\"Select all\" id=\"AAIb\">\n\t\t\t\t\t</button>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"true\" id=\"AAIc\">\n\t\t\t\t\t<div id=\"AAId\">\n\t\t\t\t\t\t<div id=\"AAIe\">\n\t\t\t\t\t\t\t<span id=\"AAIf\">Action</span>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AAIg\">\n\t\t\t\t\t<div id=\"AAIh\">\n\t\t\t\t\t\t<div id=\"AAIi\">\n\t\t\t\t\t\t\t<span id=\"AAIj\">ID</span>\n\t\t\t\t\t\t\t<div id=\"AAIk\">\n\t\t\t\t\t\t\t\t<svg id=\"AAIl\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AAIn\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AAIw\">\n\t\t\t\t\t<div id=\"AAIx\">\n\t\t\t\t\t\t<div id=\"AAIy\">\n\t\t\t\t\t\t\t<span id=\"AAIz\">Checklist</span>\n\t\t\t\t\t\t\t<div id=\"AAI0\">\n\t\t\t\t\t\t\t\t<svg id=\"AAI1\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AAI3\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AAJC\">\n\t\t\t\t\t<div id=\"AAJD\">\n\t\t\t\t\t\t<div id=\"AAJE\">\n\t\t\t\t\t\t\t<span id=\"AAJF\">Type</span>\n\t\t\t\t\t\t\t<div id=\"AAJG\">\n\t\t\t\t\t\t\t\t<svg id=\"AAJH\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AAJJ\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AAJS\">\n\t\t\t\t\t<div id=\"AAJT\">\n\t\t\t\t\t\t<div id=\"AAJU\">\n\t\t\t\t\t\t\t<span id=\"AAJV\">Schedule</span>\n\t\t\t\t\t\t\t<div id=\"AAJW\">\n\t\t\t\t\t\t\t\t<svg id=\"AAJX\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AAJZ\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AAJi\">\n\t\t\t\t\t<div id=\"AAJj\">\n\t\t\t\t\t\t<div id=\"AAJk\">\n\t\t\t\t\t\t\t<span id=\"AAJl\">Assign to</span>\n\t\t\t\t\t\t\t<div id=\"AAJm\">\n\t\t\t\t\t\t\t\t<svg id=\"AAJn\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AAJp\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AAJy\">\n\t\t\t\t\t<div id=\"AAJz\">\n\t\t\t\t\t\t<div id=\"AAJ0\">\n\t\t\t\t\t\t\t<span id=\"AAJ1\">Status</span>\n\t\t\t\t\t\t\t<div id=\"AAJ2\">\n\t\t\t\t\t\t\t\t<svg id=\"AAJ3\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AAJ5\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AAKE\">\n\t\t\t\t\t<div id=\"AAKF\">\n\t\t\t\t\t\t<div id=\"AAKG\">\n\t\t\t\t\t\t\t<span id=\"AAKH\">Schedule For</span>\n\t\t\t\t\t\t\t<div id=\"AAKI\">\n\t\t\t\t\t\t\t\t<svg id=\"AAKJ\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AAKL\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AAKU\">\n\t\t\t\t\t<div id=\"AAKV\">\n\t\t\t\t\t\t<div id=\"AAKW\">\n\t\t\t\t\t\t\t<span id=\"AAKX\">Assets/Services</span>\n\t\t\t\t\t\t\t<div id=\"AAKY\">\n\t\t\t\t\t\t\t\t<svg id=\"AAKZ\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AAKb\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AAKk\">\n\t\t\t\t\t<div id=\"AAKl\">\n\t\t\t\t\t\t<div id=\"AAKm\">\n\t\t\t\t\t\t\t<span id=\"AAKn\">Site</span>\n\t\t\t\t\t\t\t<div id=\"AAKo\">\n\t\t\t\t\t\t\t\t<svg id=\"AAKp\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AAKr\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AAK0\">\n\t\t\t\t\t<div id=\"AAK1\">\n\t\t\t\t\t\t<div id=\"AAK2\">\n\t\t\t\t\t\t\t<span id=\"AAK3\">Location</span>\n\t\t\t\t\t\t\t<div id=\"AAK4\">\n\t\t\t\t\t\t\t\t<svg id=\"AAK5\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AAK7\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AALG\">\n\t\t\t\t\t<div id=\"AALH\">\n\t\t\t\t\t\t<div id=\"AALI\">\n\t\t\t\t\t\t\t<span id=\"AALJ\">Supplier</span>\n\t\t\t\t\t\t\t<div id=\"AALK\">\n\t\t\t\t\t\t\t\t<svg id=\"AALL\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AALN\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AALW\">\n\t\t\t\t\t<div id=\"AALX\">\n\t\t\t\t\t\t<div id=\"AALY\">\n\t\t\t\t\t\t\t<span id=\"AALZ\">Grace Time</span>\n\t\t\t\t\t\t\t<div id=\"AALa\">\n\t\t\t\t\t\t\t\t<svg id=\"AALb\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AALd\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AALm\">\n\t\t\t\t\t<div id=\"AALn\">\n\t\t\t\t\t\t<div id=\"AALo\">\n\t\t\t\t\t\t\t<span id=\"AALp\">Duration</span>\n\t\t\t\t\t\t\t<div id=\"AALq\">\n\t\t\t\t\t\t\t\t<svg id=\"AALr\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AALt\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t\t<th aria-disabled=\"false\" id=\"AAL2\">\n\t\t\t\t\t<div id=\"AAL3\">\n\t\t\t\t\t\t<div id=\"AAL4\">\n\t\t\t\t\t\t\t<span id=\"AAL5\">%</span>\n\t\t\t\t\t\t\t<div id=\"AAL6\">\n\t\t\t\t\t\t\t\t<svg id=\"AAL7\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t\t<svg id=\"AAL9\">\n\t\t\t\t\t\t\t\t</svg>\n\t\t\t\t\t\t\t</div>\n\t\t\t\t\t\t</div>\n\t\t\t\t\t</div>\n\t\t\t\t</th>\n\t\t\t</tr>\n\t\t</thead>\n\t\t<tbody>\n\t\t\t<tr>\n\t\t\t\t<td id=\"AAMK\">No scheduled tasks found</td>\n\t\t\t</tr>\n\t\t</tbody>\n\t</table>\n</div>`\n  }\n];\n\nreturn steps.map(s => ({ json: s }));"
+      },
+      "id": "8ce64eb0-d710-4c1c-bd1b-c992233f3cc6",
+      "name": "Step Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4928,
+        -2464
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAhLvtTiOsyY-9AnVwnwbdFpkdz9xAuYtw",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.requestBody }}",
+        "options": {}
+      },
+      "id": "99d989a0-a43a-49e5-83ce-8828bb155e62",
+      "name": "Gemini Annotate Step",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        5888,
+        -2464
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Collect all items and parse Gemini responses\nconst items = $input.first().json.steps;\n\nconst steps = items.map((item, i) => {\n  let annotation = {};\n  try {\n    const raw = item.json.candidates?.[0]?.content?.parts?.[0]?.text || '{}';\n    const clean = raw.replace(/```json|```/g, '').trim();\n    annotation = JSON.parse(clean);\n  } catch(e) {\n    annotation = {\n      stepTitle: `Step ${i + 1}`,\n      tooltip: 'Follow the instructions on screen.',\n      highlightElement: '',\n      elementDescription: ''\n    };\n  }\n  return {\n    step: i + 1,\n    annotation\n  };\n});\n\n// ── BUILD THE HTML DEMO ──────────────────────────────────────────────────────\nconst totalSteps = steps.length;\n\nconst stepCards = steps.map((s, i) => `\n  {\n    step: ${s.step},\n    title: ${JSON.stringify(s.annotation.stepTitle || `Step ${s.step}`)},\n    tooltip: ${JSON.stringify(s.annotation.tooltip || '')},\n    highlight: ${JSON.stringify(s.annotation.highlightElement || '')},\n    elementDesc: ${JSON.stringify(s.annotation.elementDescription || '')}\n  }`).join(',');\n\nconst html = `<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>How to Login — Lockated</title>\n<style>\n  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');\n  *{box-sizing:border-box;margin:0;padding:0}\n  body{font-family:'DM Sans',system-ui,sans-serif;background:#0e0f11;color:#e8eaf0;min-height:100vh;display:flex;flex-direction:column}\n  .hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#16181c;border-bottom:1px solid #2a2d35}\n  .hdr-left{display:flex;align-items:center;gap:10px}\n  .dot{width:8px;height:8px;border-radius:50%;background:#4f8ef7}\n  .hdr-title{font-size:14px;font-weight:500}\n  .badge{font-size:11px;color:#6b7280;background:#1e2026;border:1px solid #2a2d35;border-radius:20px;padding:3px 12px}\n  .pills{display:flex;gap:6px}\n  .pill{height:5px;min-width:28px;border-radius:3px;background:#2a2d35;cursor:pointer;transition:all .2s}\n  .pill.active{background:#4f8ef7;min-width:36px}\n  .pill.done{background:#34d399}\n  .nav{display:flex;align-items:center;gap:10px}\n  .count{font-size:12px;color:#6b7280;min-width:44px;text-align:center}\n  .btn{padding:8px 20px;border-radius:8px;border:1px solid #2a2d35;background:transparent;color:#e8eaf0;font-family:inherit;font-size:13px;cursor:pointer;transition:all .15s}\n  .btn:hover{background:#1e2026}\n  .btn.p{background:#4f8ef7;border-color:#4f8ef7;color:#fff}\n  .btn.p:hover{background:#3a7bf0}\n  .progress{height:3px;background:#2a2d35}\n  .pbar{height:100%;background:#4f8ef7;transition:width .4s ease}\n  .stage{flex:1;display:flex;align-items:stretch;gap:0;min-height:500px}\n  .dom-panel{flex:1;padding:32px;overflow-y:auto;background:#09090b;border-right:1px solid #2a2d35}\n  .dom-panel pre{font-family:'DM Mono',monospace;font-size:12px;color:#9ca3af;line-height:1.7;white-space:pre-wrap;word-break:break-word}\n  .info-panel{width:320px;padding:28px;display:flex;flex-direction:column;gap:20px;background:#16181c;flex-shrink:0}\n  .step-num{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#4f8ef7}\n  .step-title{font-size:20px;font-weight:600;line-height:1.3;margin-top:6px}\n  .tooltip-box{background:#1a1f2e;border:1px solid #4f8ef7;border-radius:10px;padding:16px}\n  .tooltip-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#4f8ef7;margin-bottom:8px}\n  .tooltip-text{font-size:13px;color:#e8eaf0;line-height:1.6}\n  .highlight-box{background:#1e2026;border:1px solid #2a2d35;border-radius:8px;padding:14px;margin-top:4px}\n  .highlight-label{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#6b7280;margin-bottom:6px}\n  .highlight-id{font-family:'DM Mono',monospace;font-size:12px;color:#fbbf24;background:#2a2200;border:1px solid #3a3000;border-radius:4px;padding:2px 8px;display:inline-block;margin-bottom:6px}\n  .highlight-desc{font-size:12px;color:#9ca3af;line-height:1.5}\n  .bottom{padding:16px 28px;background:#16181c;border-top:1px solid #2a2d35;font-size:12px;color:#6b7280;text-align:center}\n</style>\n</head>\n<body>\n\n<div class=\"hdr\">\n  <div class=\"hdr-left\">\n    <div class=\"dot\"></div>\n    <div class=\"hdr-title\">Lockated</div>\n    <div class=\"badge\">How to Login</div>\n  </div>\n  <div class=\"pills\" id=\"pills\"></div>\n  <div class=\"nav\">\n    <span class=\"count\" id=\"count\"></span>\n    <button class=\"btn\" onclick=\"prev()\">← Back</button>\n    <button class=\"btn p\" id=\"btnnext\" onclick=\"next()\">Next →</button>\n  </div>\n</div>\n\n<div class=\"progress\"><div class=\"pbar\" id=\"pbar\"></div></div>\n\n<div class=\"stage\">\n  <div class=\"dom-panel\">\n    <pre id=\"dom-view\"></pre>\n  </div>\n  <div class=\"info-panel\">\n    <div>\n      <div class=\"step-num\" id=\"step-num\"></div>\n      <div class=\"step-title\" id=\"step-title\"></div>\n    </div>\n    <div class=\"tooltip-box\">\n      <div class=\"tooltip-label\">What to do</div>\n      <div class=\"tooltip-text\" id=\"tooltip-text\"></div>\n    </div>\n    <div class=\"highlight-box\">\n      <div class=\"highlight-label\">Key element</div>\n      <div class=\"highlight-id\" id=\"highlight-id\"></div>\n      <div class=\"highlight-desc\" id=\"highlight-desc\"></div>\n    </div>\n  </div>\n</div>\n\n<div class=\"bottom\">Use ← → arrow keys or buttons to navigate &nbsp;·&nbsp; ${totalSteps} steps total</div>\n\n<script>\nconst steps = [${stepCards}];\nlet cur = 0;\n\nfunction render(i) {\n  const s = steps[i];\n  document.getElementById('pbar').style.width = ((i+1)/steps.length*100)+'%';\n  document.getElementById('count').textContent = (i+1)+' / '+steps.length;\n  document.getElementById('btnnext').textContent = i===steps.length-1 ? 'Finish ✓' : 'Next →';\n  document.getElementById('step-num').textContent = 'Step '+(i+1)+' of '+steps.length;\n  document.getElementById('step-title').textContent = s.title;\n  document.getElementById('tooltip-text').textContent = s.tooltip;\n  document.getElementById('highlight-id').textContent = s.highlight || '—';\n  document.getElementById('highlight-desc').textContent = s.elementDesc || '';\n  document.getElementById('dom-view').textContent = 'Loading DOM for step '+(i+1)+'...';\n  const pills = document.getElementById('pills');\n  pills.innerHTML = '';\n  steps.forEach((_,idx) => {\n    const p = document.createElement('div');\n    p.className = 'pill'+(idx===i?' active':idx<i?' done':'');\n    p.title = steps[idx].title;\n    p.onclick = () => { cur=idx; render(idx); };\n    pills.appendChild(p);\n  });\n}\n\nfunction prev(){if(cur>0){cur--;render(cur);}}\nfunction next(){if(cur<steps.length-1){cur++;render(cur);}else{document.getElementById('btnnext').textContent='✓ Done';}}\ndocument.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' ')next();if(e.key==='ArrowLeft')prev();});\nrender(0);\n<\\/script>\n</body>\n</html>`;\n\nconst binaryData = Buffer.from(html, 'utf8').toString('base64');\n\nreturn [{\n  json: { filename: 'how-to-login.html' },\n  binary: {\n    data: {\n      data: binaryData,\n      mimeType: 'text/html',\n      fileName: 'how-to-login.html',\n      fileExtension: 'html'\n    }\n  }\n}];"
+      },
+      "id": "1a4afbf7-9b5a-4b72-8950-efa36e97f558",
+      "name": "Build HTML Demo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6336,
+        -2464
+      ]
+    },
+    {
+      "parameters": {
+        "name": "how-to-login.html",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1CaomemmLQ0OPhu0QwYmgpzrnCKwlIr6J",
+          "mode": "list",
+          "cachedResultName": "CS Workflow",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1CaomemmLQ0OPhu0QwYmgpzrnCKwlIr6J"
+        },
+        "options": {}
+      },
+      "id": "c954d79a-db3e-44dd-bdc0-da7c92f0977c",
+      "name": "Save to Google Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        6656,
+        -2464
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "8K9zg6ekrWyKO3bA",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const step = $input.first().json;\n\nconst prompt = `You are building an interactive product demo for Lockated.\n\nStep ${step.step} of 6: ${step.title}\n\nHTML Element Tree:\n${step.html}\n\nReturn ONLY valid JSON, no markdown:\n{\"stepTitle\": \"<4-5 word action>\", \"tooltip\": \"<one clear instruction sentence>\", \"highlightElement\": \"<id of key element e.g. AAAP>\", \"elementDescription\": \"<plain English description>\"}`;\n\nreturn [{\n  json: {\n    step: step.step,\n    title: step.title,\n    html: step.html,\n    requestBody: JSON.stringify({\n      contents: [{ parts: [{ text: prompt }] }],\n      generationConfig: { maxOutputTokens: 300, temperature: 0.1 }\n    })\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5616,
+        -2464
+      ],
+      "id": "f84061d2-27a5-491d-bd4b-356e8d322521",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "steps",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        6096,
+        -2464
+      ],
+      "id": "49cb69b2-d435-489e-b5ac-536b9f30d567",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "=={{ \"demo\" + $json.step + \".png\" }}",
+          "mode": "id"
+        },
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        5360,
+        -2464
+      ],
+      "id": "d6a3a1e0-accd-4e47-a7b6-2aebd99da146",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "8K9zg6ekrWyKO3bA",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "=Search File/Folder Name",
+        "filter": {
+          "driveId": {
+            "__rl": true,
+            "value": "My Drive",
+            "mode": "list",
+            "cachedResultName": "My Drive",
+            "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+          },
+          "whatToSearch": "all",
+          "fileTypes": [
+            "application/vnd.google-apps.photo"
+          ]
+        },
+        "options": {
+          "fields": []
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        5136,
+        -2464
+      ],
+      "id": "67c1a0b3-169b-46c0-90fe-7f36feb6e0b0",
+      "name": "Search files and folders1",
+      "executeOnce": false,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "8K9zg6ekrWyKO3bA",
+          "name": "Google Drive account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Node3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Node3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step Data": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini Annotate Step": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build HTML Demo": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Gemini Annotate Step",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Build HTML Demo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders1": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "8fbce2d7-6ae0-4eb2-b834-55185a34c8c6",
+  "activeVersionId": null,
+  "versionCounter": 9,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-10T09:43:04.992Z",
+      "createdAt": "2026-03-10T09:43:04.992Z",
+      "role": "workflow:owner",
+      "workflowId": "0UCPpUixoTq77iCf",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-24T05:45:59.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-23",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}
