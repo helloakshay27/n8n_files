@@ -1,0 +1,391 @@
+{
+  "updatedAt": "2026-03-20T10:39:45.460Z",
+  "createdAt": "2025-12-26T08:26:04.972Z",
+  "id": "yQkcmCwlQ9nqiJbM",
+  "name": "New Issue Created",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-issue-created",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -544,
+        -16
+      ],
+      "id": "2ecb8541-e08d-47a3-a297-c31fb2e9ddfc",
+      "name": "Webhook",
+      "webhookId": "dd274af3-5a0c-434e-9ad0-f4f1740248f1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        272,
+        48
+      ],
+      "id": "dc634266-7898-43bb-901f-bfb02df9ed2c",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  i.*,\n  i.id                    AS issue_id,\n  i.title                 AS issue_title,\n  i.created_at            AS issue_created_at,\n  i.status                AS issue_status,\n  i.priority              AS issue_priority,\n\n  pm.id                   AS project_id,\n  pm.title                AS project_title,\n\n  -- issue owner\n  io.email                AS issue_owner_email,\n  io.firstname            AS issue_owner_firstname,\n  io.lastname             AS issue_owner_lastname,\n\n  -- project manager\n  pmo.email               AS project_manager_email,\n  pmo.firstname           AS project_manager_firstname,\n  pmo.lastname            AS project_manager_lastname,\n\n  -- created by user\n  cb.firstname            AS created_by_firstname,\n  cb.lastname             AS created_by_lastname\n\nFROM issues i\n\n-- issue owner\nJOIN spree_users io\n  ON io.id = i.responsible_person_id\n\n-- project\nJOIN project_managements pm\n  ON pm.id = i.project_management_id\n\n-- project manager\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\n-- created by user\nLEFT JOIN spree_users cb\n  ON cb.id = i.created_by_id\n\nWHERE\n  i.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -240,
+        -224
+      ],
+      "id": "587d3156-9743-4ae8-af6d-dd3d16d0d4c2",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -480,
+        -224
+      ],
+      "id": "a52d12c5-8a9f-4994-8510-f4ff89c38bd2",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{$json.issue_owner_email}},{{$json.project_manager_email}}\n",
+        "subject": "=New Issue Logged: {{$json.issue_title}}\n\n",
+        "html": "=<p>Dear {{$json.project_manager_firstname}} {{$json.project_manager_lastname}},</p>\n\n<p>An issue has been logged in the system and assigned for review and resolution.</p>\n\n<p><b>Issue Details</b><br>\n* Issue Title: {{$json.issue_title}}<br>\n* Description: {{$json.description}}<br>\n* Issue Type: {{$json.issue_type}}<br>\n* Priority: {{$json.issue_priority}}<br>\n* Current Status: {{$json.issue_status}}<br>\n* Related Project ID: {{$json.project_id}}<br>\n* Linked Task ID: {{$json.task_management_id}}<br>\n* Created By: {{$json.created_by_firstname}} {{$json.created_by_lastname}}<br>\n* Created On: {{$json.created_at}}</p>\n\n<p>Please review the issue details and initiate corrective action as appropriate.</p>\n\n<p>Regards,<br>\n<b>Issue & Quality Management System</b></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        64,
+        -208
+      ],
+      "id": "36b3cdce-4034-4610-9a56-9d6c9d40325b",
+      "name": "PM",
+      "webhookId": "e9ff97d5-8be6-4232-ad97-473c3f4b6725",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{$json.issue_owner_email}},{{$json.project_manager_email}}\n",
+        "subject": "=New Issue Logged: {{$json.issue_title}}\n\n",
+        "html": "=<p>Dear {{$json.issue_owner_firstname}} {{$json.issue_owner_lastname}},</p>\n\n<p>An issue has been logged in the system and assigned for review and resolution.</p>\n\n<p><b>Issue Details</b><br>\n* Issue Title: {{$json.issue_title}}<br>\n* Description: {{$json.description}}<br>\n* Issue Type: {{$json.issue_type}}<br>\n* Priority: {{$json.issue_priority}}<br>\n* Current Status: {{$json.issue_status}}<br>\n* Related Project ID: {{$json.project_id}}<br>\n* Linked Task ID: {{$json.task_management_id}}<br>\n* Created By: {{$json.created_by_firstname}} {{$json.created_by_lastname}}<br>\n* Created On: {{$json.created_at}}</p>\n\n<p>Please review the issue details and initiate corrective action as appropriate.</p>\n\n<p>Regards,<br>\n<b>Issue & Quality Management System</b></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -32,
+        -32
+      ],
+      "id": "36e5895c-5560-42d9-b70e-cfcc56dc9a9d",
+      "name": "Issue Owner",
+      "webhookId": "e9ff97d5-8be6-4232-ad97-473c3f4b6725",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "PM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Issue Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM": {
+      "main": [
+        []
+      ]
+    },
+    "Issue Owner": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "49533f0d-4fac-4b80-9beb-5c8383585be4",
+  "activeVersionId": "d9b50d43-8951-40d9-8f79-a5c4142a6649",
+  "versionCounter": 33,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-26T08:26:04.974Z",
+      "createdAt": "2025-12-26T08:26:04.974Z",
+      "role": "workflow:owner",
+      "workflowId": "yQkcmCwlQ9nqiJbM",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-26T13:35:54.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-25",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-01-07T08:39:37.000Z",
+    "createdAt": "2026-01-07T08:39:35.572Z",
+    "versionId": "d9b50d43-8951-40d9-8f79-a5c4142a6649",
+    "workflowId": "yQkcmCwlQ9nqiJbM",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "new-issue-created",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -464,
+          -144
+        ],
+        "id": "2ecb8541-e08d-47a3-a297-c31fb2e9ddfc",
+        "name": "Webhook",
+        "webhookId": "dd274af3-5a0c-434e-9ad0-f4f1740248f1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          272,
+          48
+        ],
+        "id": "dc634266-7898-43bb-901f-bfb02df9ed2c",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{$json.issue_owner_email}},{{$json.project_manager_email}}\n",
+          "subject": "=Issue {{$json.issue_title}} has been created",
+          "html": "=Hello,\n\nA new issue has been created.\n\nIssue: {{$json.issue_title}}\nProject: {{$json.project_title}}\nPriority: {{$json.issue_priority}}\nStatus: {{$json.issue_status}}\n\nPlease review it at your earliest convenience.\n\nThanks\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          80,
+          -96
+        ],
+        "id": "36b3cdce-4034-4610-9a56-9d6c9d40325b",
+        "name": "Issue Owner, PM",
+        "webhookId": "e9ff97d5-8be6-4232-ad97-473c3f4b6725",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  i.id                    AS issue_id,\n  i.title                 AS issue_title,\n  i.created_at            AS issue_created_at,\n  i.status                AS issue_status,\n  i.priority              AS issue_priority,\n\n  pm.id                   AS project_id,\n  pm.title                AS project_title,\n\n  -- issue owner\n  io.email                AS issue_owner_email,\n\n  -- project manager\n  pmo.email               AS project_manager_email\n\nFROM issues i\n\n-- issue owner\nJOIN spree_users io\n  ON io.id = i.responsible_person_id\n\n-- project\nJOIN project_managements pm\n  ON pm.id = i.project_management_id\n\n-- project manager\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nWHERE\n  i.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE;\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -240,
+          -224
+        ],
+        "id": "587d3156-9743-4ae8-af6d-dd3d16d0d4c2",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Issue Owner, PM": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Issue Owner, PM",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "N8N Admin",
+    "name": "Version d9b50d43",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-07T08:39:37.708Z",
+        "id": 55,
+        "workflowId": "yQkcmCwlQ9nqiJbM",
+        "versionId": "d9b50d43-8951-40d9-8f79-a5c4142a6649",
+        "event": "activated",
+        "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+      }
+    ]
+  }
+}

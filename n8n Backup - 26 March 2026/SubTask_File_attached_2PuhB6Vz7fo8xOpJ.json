@@ -1,0 +1,235 @@
+{
+  "updatedAt": "2026-03-23T12:55:50.519Z",
+  "createdAt": "2026-03-20T16:09:56.517Z",
+  "id": "2PuhB6Vz7fo8xOpJ",
+  "name": "SubTask File attached",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "file-attached",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -320,
+        224
+      ],
+      "id": "71d34ca3-3d57-4054-ba99-46ae6a05fc90",
+      "name": "Webhook",
+      "webhookId": "120b15fa-9cae-4746-be93-6e82547dc828",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        464,
+        160
+      ],
+      "id": "b6ead511-7273-41db-85af-1d1c57f44a70",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.task_owner_email}}",
+        "subject": "=File Attached to Task: {{$json.task_title}}",
+        "html": "=<p>Dear {{$json.task_owner_firstname}} {{$json.task_owner_lastname}},</p>\n\n<p>A file has been added to the task <b>{{$json.task_title}}</b>.</p>\n\n<p><b>Attachment Details</b><br>\n* Task Title: {{$json.task_title}}<br>\n* File Name: {{$json.file_name}}<br>\n* Uploaded On: {{$json.file_added_at}}</p>\n\n<p>Please review the attached document as part of task execution.</p>\n\n<p>Regards,<br>\n<b>Document & Task Management System</b></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        32
+      ],
+      "id": "023060b3-0c3f-4dff-8d7a-d290de721ddc",
+      "name": "Task Owner",
+      "webhookId": "c32cf3da-943a-40fb-93c1-ae2a1deff5dc",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  af.id                    AS attachment_id,\n  af.document_file_name    AS file_name,\n  af.document_content_type AS file_type,\n  af.created_at            AS file_added_at,\n\n  t.id                     AS task_id,\n  t.title                  AS task_title,\n\n  u.id                     AS task_owner_id,\n  u.email                  AS task_owner_email,\n  u.firstname              AS task_owner_firstname,\n  u.lastname               AS task_owner_lastname\nFROM attachfiles af\nJOIN task_managements t\n  ON t.id = af.relation_id\n AND af.relation = 'TaskManagement'\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\nWHERE\n  af.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND af.active = 1\n  AND t.parent_id IS NOT NULL;  -- ✅ only subtasks",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a8d7dc24-26af-4df3-92bb-4fc080e48004",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -352,
+        16
+      ],
+      "id": "0f23e942-0f74-406d-a441-ce13fa86cee9",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM attachfiles ORDER BY created_at DESC LIMIT 5;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -112,
+        144
+      ],
+      "id": "a262c372-22a2-4ba3-b8d4-069e2fefafef",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Task Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "a1b1b5c9-3c5f-4cbc-b21d-e37e7402016c",
+  "activeVersionId": null,
+  "versionCounter": 6,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T16:09:56.523Z",
+      "createdAt": "2026-03-20T16:09:56.523Z",
+      "role": "workflow:owner",
+      "workflowId": "2PuhB6Vz7fo8xOpJ",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-26T13:35:54.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-25",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}
