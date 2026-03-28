@@ -1,0 +1,368 @@
+{
+  "updatedAt": "2026-03-23T12:55:29.417Z",
+  "createdAt": "2026-03-20T16:10:30.283Z",
+  "id": "H9oyqLxZnYVmXPnp",
+  "name": "SubTask Comment added",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "comment-added",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -208,
+        336
+      ],
+      "id": "9c95ab97-f887-4066-9981-8c91c1742719",
+      "name": "Webhook",
+      "webhookId": "df596d4b-2f8e-4611-8108-b0113b508053",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        768,
+        352
+      ],
+      "id": "658d95d2-71bc-4ab9-ac29-6cdad2c93db5",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.recipient_email}}",
+        "subject": "=New Comment Added on Task: {{$json.task_title}}",
+        "html": "=<p>Dear {{$json.recipient_firstname}} {{$json.recipient_lastname}},</p>\n\n<p>A new comment has been added to the task <b>{{$json.task_title}}</b> for your review.</p>\n\n<p>Comment Details:<br>\n* Task Title: {{$json.task_title}}<br>\n* Commented By: {{$json.commented_by_firstname}} {{$json.commented_by_lastname}}<br>\n* Comment:<br>\n“{{$json.comment_body}}”</p>\n\n<p>Please review and respond if any action is required.</p>\n\n<p>Regards,<br>\n<b>Task Collaboration System</b></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        352
+      ],
+      "id": "76d9dc63-da44-4bf3-9976-2c7a70d5487d",
+      "name": "Task Owner & Comment Participants",
+      "webhookId": "74173fa7-a1c9-442c-b79b-89761d60264e",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  c.id                         AS comment_id,\n  c.body                       AS comment_body,\n  c.created_at                 AS comment_created_at,\n  c.commentor_id               AS commented_by_id,\n\n  commenter.firstname          AS commented_by_firstname,\n  commenter.lastname           AS commented_by_lastname,\n  commenter.email              AS commented_by_email,\n\n  t.id                         AS task_id,\n  t.title                      AS task_title,\n\n  owner.firstname              AS task_owner_firstname,\n  owner.lastname               AS task_owner_lastname,\n  owner.email                  AS task_owner_email,\n\n  u.id                         AS mentioned_user_id,\n  u.firstname                  AS mentioned_user_firstname,\n  u.lastname                   AS mentioned_user_lastname,\n  u.email                      AS mentioned_user_email\n\nFROM comments c\n\nJOIN task_managements t\n  ON t.id = c.commentable_id\n AND c.commentable_type = 'TaskManagement'\n\nJOIN spree_users owner\n  ON owner.id = t.responsible_person_id\n\nLEFT JOIN spree_users commenter\n  ON commenter.id = c.commentor_id\n\nLEFT JOIN spree_users u\n  ON c.body REGEXP CONCAT('\\\\@\\\\[.*\\\\]\\\\(', u.id, '\\\\)')\n\nWHERE\n  c.created_at >= UTC_TIMESTAMP() - INTERVAL 20 MINUTE\n  AND t.parent_id IS NOT NULL;   -- ✅ only comments on subtasks",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "81d2e520-7433-4397-9d58-59579d506152",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nlet emails = [];\n\nitems.forEach(item => {\n  const base = item.json; // current comment\n  const recipientsMap = new Map();\n\n  // Add task owner\n  if (base.task_owner_email) {\n    recipientsMap.set(base.task_owner_email, {\n      email: base.task_owner_email,\n      firstname: base.task_owner_firstname,\n      lastname: base.task_owner_lastname,\n    });\n  }\n\n  // Add mentioned users\n  if (base.mentioned_user_email) {\n    recipientsMap.set(base.mentioned_user_email, {\n      email: base.mentioned_user_email,\n      firstname: base.mentioned_user_firstname || '',\n      lastname: base.mentioned_user_lastname || '',\n    });\n  }\n\n  // Push unique recipients per comment\n  for (const recipient of recipientsMap.values()) {\n    emails.push({\n      json: {\n        task_id: base.task_id,\n        task_title: base.task_title,\n        comment_id: base.comment_id,\n        comment_body: base.comment_body,\n        commented_by_firstname: base.commented_by_firstname,\n        commented_by_lastname: base.commented_by_lastname,\n        recipient_email: recipient.email,\n        recipient_firstname: recipient.firstname,\n        recipient_lastname: recipient.lastname,\n      }\n    });\n  }\n});\n\nreturn emails;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        32
+      ],
+      "id": "403f5098-b7c5-4cbd-80b4-e0383a7eafeb",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "aa69c22d-17a1-4d34-a4d6-11ad614e475a",
+              "leftValue": "={{ $json.mentioned_user_ids.length > 0 }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e423eef7-607e-4b29-a0a0-7b0f815c3508",
+              "leftValue": "={{ $json.mentioned_user_ids.length > 0 }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        464,
+        64
+      ],
+      "id": "28440d3a-58fa-4ae5-a021-c0a95dcda1af",
+      "name": "If",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  id,\n  email\nFROM spree_users\nWHERE id IN ({{ $json.mentioned_user_ids.join(',') }});\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        720,
+        16
+      ],
+      "id": "435e1895-bb7f-41e9-b9d4-b68e49f242ed",
+      "name": "Execute a SQL query2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\n// first item always contains task data\nconst taskData = items[0].json;\n\n// collect mentioned user emails (if any)\nconst mentionedEmails = items\n  .map(i => i.json.email)\n  .filter(email => email && email.includes('@')); // removes null\n\n// build recipient list\nconst recipients = [\n  taskData.task_owner_email,\n  ...mentionedEmails\n];\n\n// remove nulls + duplicates\nconst uniqueRecipients = [...new Set(recipients.filter(Boolean))];\n\nreturn [{\n  json: {\n    task_id: taskData.task_id,\n    task_title: taskData.task_title,\n    comment_body: taskData.comment_body,\n    all_recipients: uniqueRecipients\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        352
+      ],
+      "id": "aa639e50-c029-4790-b00b-e3a2a7b6be97",
+      "name": "Code in JavaScript1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -224,
+        112
+      ],
+      "id": "3f127a94-9821-4c86-a80f-f1ff67c153de",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM comments;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -16,
+        256
+      ],
+      "id": "508cfe98-c7cd-4165-b355-32beecdbdb1e",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Task Owner & Comment Participants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "b018c4d5-a5d1-4fb0-a5ec-0be22c76450e",
+  "activeVersionId": null,
+  "versionCounter": 7,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T16:10:30.288Z",
+      "createdAt": "2026-03-20T16:10:30.288Z",
+      "role": "workflow:owner",
+      "workflowId": "H9oyqLxZnYVmXPnp",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-28T03:51:57.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-27",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

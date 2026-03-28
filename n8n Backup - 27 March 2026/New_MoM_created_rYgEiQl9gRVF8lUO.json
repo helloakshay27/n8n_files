@@ -1,0 +1,464 @@
+{
+  "updatedAt": "2026-01-12T11:03:22.100Z",
+  "createdAt": "2025-12-26T08:41:45.430Z",
+  "id": "rYgEiQl9gRVF8lUO",
+  "name": "New MoM created",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        304,
+        48
+      ],
+      "id": "d76673c2-6a83-42b7-970a-d5fbac405967",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-Mom-created",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -528,
+        -160
+      ],
+      "id": "8e520f58-f2ff-41c5-baa1-e90ed0bdf021",
+      "name": "Webhook",
+      "webhookId": "e3596f6a-e006-4df1-9027-4172551df482",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{ $json.attendee_email}}",
+        "subject": "= Minutes of Meeting Published – {{$json.title}}\n",
+        "html": "=Dear {{$json.RecipientName}},\n\nThe Minutes of Meeting (MoM) for the meeting titled <b>{{$json.title}}</b>, held on {{$json.meeting_date}}, have been formally published.\n\nMeeting Summary:\n• Meeting Title: {{$json.title}}\n• Date & Time: {{$json.meeting_date}}\n• Organized By: {{$json.created_by_name}}\n\nPlease review key discussions, decisions taken, and assigned action items.\n\nAccess MoM:\n{{$json.mom_url}}\n\nRegards,\nMeeting Governance Office\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        112,
+        -48
+      ],
+      "id": "12f5dd7d-4cb0-4cb4-9166-016ab09d8588",
+      "name": "Attendees",
+      "webhookId": "eed3ea72-b72f-413b-b7b7-75ca5001f09e",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  md.id            AS mom_id,\n  md.title         AS mom_title,\n  md.meeting_date,\n  md.created_at    AS mom_created_at,\n\n  ma.id            AS attendee_id,\n  ma.name          AS attendee_name,\n  su.email         AS attendee_email\n\nFROM mom_details md\n\nJOIN mom_attendees ma\n  ON ma.mom_detail_id = md.id\n  AND ma.attendees_type = 'FmUser'\n\nJOIN spree_users su\n  ON su.id = ma.attendees_id\n\nWHERE\n  md.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND su.email IS NOT NULL\n  AND su.email != '';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -112,
+        -144
+      ],
+      "id": "57ede7f4-0811-48a4-a092-c1ba07b53e39",
+      "name": "Execute a SQL query2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -320,
+        32
+      ],
+      "id": "453f9dfa-58cd-4ec9-a0d1-edfac87b15ee",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM mom_tasks ORDER BY created_at DESC limit 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -368,
+        -336
+      ],
+      "id": "3d19e68f-22e7-4cef-991d-7ddb3c9b5bd1",
+      "name": "Show Tables",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM mom_details order  by created_at DESC limit 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -128,
+        -304
+      ],
+      "id": "45fbeafc-0de7-4bdd-8ac7-25feef643a18",
+      "name": "MOM Details",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Attendees": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query2": {
+      "main": [
+        [
+          {
+            "node": "Attendees",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "0d54f96b-ab16-4726-a09b-d7d979bf52f6",
+  "activeVersionId": "61501638-ea2a-4f6d-9b67-3c8d8a7fb8ef",
+  "versionCounter": 47,
+  "triggerCount": 2,
+  "shared": [
+    {
+      "updatedAt": "2025-12-26T08:41:45.434Z",
+      "createdAt": "2025-12-26T08:41:45.434Z",
+      "role": "workflow:owner",
+      "workflowId": "rYgEiQl9gRVF8lUO",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-28T03:51:57.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-27",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-01-09T06:51:07.000Z",
+    "createdAt": "2026-01-09T06:51:04.993Z",
+    "versionId": "61501638-ea2a-4f6d-9b67-3c8d8a7fb8ef",
+    "workflowId": "rYgEiQl9gRVF8lUO",
+    "nodes": [
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          304,
+          48
+        ],
+        "id": "d76673c2-6a83-42b7-970a-d5fbac405967",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "new-Mom-created",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -528,
+          -160
+        ],
+        "id": "8e520f58-f2ff-41c5-baa1-e90ed0bdf021",
+        "name": "Webhook",
+        "webhookId": "e3596f6a-e006-4df1-9027-4172551df482",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{ $json.attendee_email}}",
+          "subject": "=MoM for meeting on {{$json.meeting_date}} published",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          112,
+          -48
+        ],
+        "id": "12f5dd7d-4cb0-4cb4-9166-016ab09d8588",
+        "name": "Attendees",
+        "webhookId": "eed3ea72-b72f-413b-b7b7-75ca5001f09e",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  md.id            AS mom_id,\n  md.title         AS mom_title,\n  md.meeting_date,\n  md.created_at    AS mom_created_at,\n\n  ma.id            AS attendee_id,\n  ma.name          AS attendee_name,\n  su.email         AS attendee_email\n\nFROM mom_details md\n\nJOIN mom_attendees ma\n  ON ma.mom_detail_id = md.id\n  AND ma.attendees_type = 'FmUser'\n\nJOIN spree_users su\n  ON su.id = ma.attendees_id\n\nWHERE\n  md.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND su.email IS NOT NULL\n  AND su.email != '';\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -112,
+          -144
+        ],
+        "id": "57ede7f4-0811-48a4-a092-c1ba07b53e39",
+        "name": "Execute a SQL query2",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -320,
+          32
+        ],
+        "id": "453f9dfa-58cd-4ec9-a0d1-edfac87b15ee",
+        "name": "Schedule Trigger",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "Show tables;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -368,
+          -336
+        ],
+        "id": "3d19e68f-22e7-4cef-991d-7ddb3c9b5bd1",
+        "name": "Show Tables",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * FROM mom_details order  by created_at DESC limit 1;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -128,
+          -304
+        ],
+        "id": "45fbeafc-0de7-4bdd-8ac7-25feef643a18",
+        "name": "MOM Details",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Attendees": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query2": {
+        "main": [
+          [
+            {
+              "node": "Attendees",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "N8N Admin",
+    "name": "Version 61501638",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-09T06:51:07.142Z",
+        "id": 70,
+        "workflowId": "rYgEiQl9gRVF8lUO",
+        "versionId": "61501638-ea2a-4f6d-9b67-3c8d8a7fb8ef",
+        "event": "activated",
+        "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+      }
+    ]
+  }
+}

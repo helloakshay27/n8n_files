@@ -1,0 +1,264 @@
+{
+  "updatedAt": "2026-03-23T12:50:25.730Z",
+  "createdAt": "2026-03-20T16:13:49.275Z",
+  "id": "ZnkVRNERj3a7ZhrJ",
+  "name": "SubTask moved in Kanban (To Do → In Progress)",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "task-moved-in-kanban",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bad4c292-96bf-450c-abb1-a819129e38d7",
+      "name": "Webhook",
+      "webhookId": "90e28b99-32b5-4674-b3da-38c7889fec3b",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.project_manager_email}}",
+        "subject": "=Task Started: {{$json.task_title}}\n\n",
+        "html": "=<p>Dear {{$json.project_manager_firstname}} {{$json.project_manager_lastname}},</p>\n\n<p>The task <b>{{$json.task_title}}</b> has been moved to <b>In Progress</b>, indicating that work has commenced.</p>\n\n<p><b>Task Details</b><br>\n* Task Title: {{$json.task_title}}<br>\n* Started By: {{$json.started_by_firstname}} {{$json.started_by_lastname}}<br>\n* Current Status: {{$json.new_task_status}}<br>\n* Project: {{$json.project_title}}</p>\n\n<p>This update is shared for visibility and tracking purposes.</p>\n\n<p>Regards,<br>\nProject Monitoring Team</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -240,
+        64
+      ],
+      "id": "fea1d612-7eab-4a21-b8dd-dbe84632672d",
+      "name": "PM",
+      "webhookId": "ae807e0d-a553-41ea-9374-fe4557ded8be",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        16,
+        176
+      ],
+      "id": "08290856-5659-44ee-b2bc-d93a8a052f09",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH latest_task_status AS (\n  SELECT\n    tsl.*,\n    ROW_NUMBER() OVER (\n      PARTITION BY tsl.task_management_id\n      ORDER BY tsl.created_at DESC\n    ) AS rn\n  FROM task_status_logs tsl\n  WHERE tsl.created_at >= UTC_TIMESTAMP() - INTERVAL 40 MINUTE\n)\n\nSELECT\n  lts.id                 AS task_status_log_id,\n  lts.status             AS new_task_status,\n  lts.created_at         AS status_changed_at,\n  lts.created_by_id      AS started_by,\n\n  su.firstname           AS started_by_firstname,\n  su.lastname            AS started_by_lastname,\n  su.email               AS started_by_email,\n\n  tm.id                  AS task_id,\n  tm.title               AS task_title,\n\n  tm.parent_id           AS parent_task_id,\n\n  pm.id                  AS project_id,\n  pm.title               AS project_title,\n\n  pm_owner.email         AS project_manager_email,\n  pm_owner.firstname     AS project_manager_firstname,\n  pm_owner.lastname      AS project_manager_lastname\n\nFROM latest_task_status lts\n\nLEFT JOIN task_managements tm\n  ON tm.id = lts.task_management_id\n\nLEFT JOIN task_managements parent_tm\n  ON parent_tm.id = tm.parent_id\n\n-- 🔥 KEY FIX: take project from self OR parent\nLEFT JOIN project_managements pm\n  ON pm.id = COALESCE(\n    tm.project_management_id,\n    parent_tm.project_management_id\n  )\n\nLEFT JOIN spree_users pm_owner\n  ON pm_owner.id = pm.owner_id\n\nLEFT JOIN spree_users su\n  ON su.id = lts.created_by_id\n\nWHERE lts.rn = 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -512,
+        32
+      ],
+      "id": "ef766d19-bb32-4a8d-8c9f-54cbf216d0e3",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -704,
+        160
+      ],
+      "id": "7ebae6f7-52da-43a3-96d7-0d17ec6a627f",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM task_status_logs;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -464,
+        240
+      ],
+      "id": "6472e608-5535-4cbb-81e4-9c3113ea23a8",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH latest_task_status AS (\n  SELECT\n    tsl.*,\n    ROW_NUMBER() OVER (\n      PARTITION BY tsl.task_management_id\n      ORDER BY tsl.created_at DESC\n    ) AS rn\n  FROM task_status_logs tsl\n  WHERE tsl.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n)\n\nSELECT\n  lts.id                 AS task_status_log_id,\n  lts.status             AS new_task_status,\n  lts.created_at         AS status_changed_at,\n  lts.created_by_id      AS started_by,\n\n  su.firstname           AS started_by_firstname,\n  su.lastname            AS started_by_lastname,\n  su.email               AS started_by_email,\n\n  tm.id                  AS task_id,\n  tm.title               AS task_title,\n\n  tm.parent_id           AS parent_task_id,\n\n  pm.id                  AS project_id,\n  pm.title               AS project_title,\n\n  pm_owner.email         AS project_manager_email,\n  pm_owner.firstname     AS project_manager_firstname,\n  pm_owner.lastname      AS project_manager_lastname\n\nFROM latest_task_status lts\n\nLEFT JOIN task_managements tm\n  ON tm.id = lts.task_management_id\n\nLEFT JOIN task_managements parent_tm\n  ON parent_tm.id = tm.parent_id\n\n-- 🔥 KEY FIX: take project from self OR parent\nLEFT JOIN project_managements pm\n  ON pm.id = COALESCE(\n    tm.project_management_id,\n    parent_tm.project_management_id\n  )\n\nLEFT JOIN spree_users pm_owner\n  ON pm_owner.id = pm.owner_id\n\nLEFT JOIN spree_users su\n  ON su.id = lts.created_by_id\n\nWHERE lts.rn = 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -528,
+        -112
+      ],
+      "id": "12bef6fa-ed4f-4100-a29b-114c22c0ec4a",
+      "name": "Execute a SQL query2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "PM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "28738f54-31bd-4e5d-974f-9f6a40203457",
+  "activeVersionId": null,
+  "versionCounter": 5,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T16:13:49.278Z",
+      "createdAt": "2026-03-20T16:13:49.278Z",
+      "role": "workflow:owner",
+      "workflowId": "ZnkVRNERj3a7ZhrJ",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-28T03:51:57.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-27",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}
