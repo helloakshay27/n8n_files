@@ -1,0 +1,415 @@
+{
+  "updatedAt": "2026-01-23T13:34:44.843Z",
+  "createdAt": "2026-01-21T07:17:48.973Z",
+  "id": "57CpN2DembTnX7FN",
+  "name": "Phase 3 New Wallet Trigger Rules",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -816,
+        80
+      ],
+      "id": "54c24379-fc7f-44a5-8154-9bece567ce2b",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const map = {};\n\nfor (const item of $input.all()) {\n  const { user_id, status } = item.json;\n\n  if (!map[user_id]) {\n    map[user_id] = {\n      user_id,\n      total: 0,\n      completed: 0\n    };\n  }\n\n  map[user_id].total++;\n\n  if (status === 'completed') {\n    map[user_id].completed++;\n  }\n}\n\nconst output = [];\n\nfor (const userId in map) {\n  const u = map[userId];\n\n  const ratio =\n    u.total > 0 ? u.completed / u.total : 0;\n\n  output.push({\n    json: {\n      user_id: u.user_id,\n      total_todos: u.total,\n      completed_todos: u.completed,\n      ratio: ratio\n    }\n  });\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -544,
+        112
+      ],
+      "id": "bf301ebe-9f00-4dac-ae52-7305651194d3",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.id AS todo_id,\n  t.user_id,\n  t.status,\n  DATE(t.created_at) AS todo_date\nFROM todos t\nWHERE DATE(t.created_at) = CURDATE();\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -656,
+        -96
+      ],
+      "id": "b0b4daa6-4499-4746-8cbe-166eeb35c83d",
+      "name": "Get Today's ToDos",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const DAILY_TODO_POOL = 1000;\n\nreturn $input.all().map(item => {\n  const { user_id, ratio } = item.json;\n\n  const points = Math.round(DAILY_TODO_POOL * ratio);\n\n  return {\n    json: {\n      user_id,\n      points,\n      remark: `Daily To-Do completion score: ${Math.round(ratio * 100)}%`\n    }\n  };\n});\n\n// const DAILY_TODO_POOL = 1000;\n\n// return $input.all().map(item => {\n//   const { user_id, ratio } = item.json;\n\n//   const points = Math.round(DAILY_TODO_POOL * ratio);\n\n//   return {\n//     json: {\n//       user_id,\n//       reward_date: new Date().toISOString().slice(0, 10), // YYYY-MM-DD\n//       points,\n//       remark: `Daily To-Do completion score: ${Math.round(ratio * 100)}%`\n//     }\n//   };\n// });\n\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        -128
+      ],
+      "id": "fe29e751-635b-4048-ae6c-299837674d56",
+      "name": "Code in JavaScript1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "14579195-842b-4d3e-9334-81c11377f820",
+              "leftValue": "={{ $json.points }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -304,
+        176
+      ],
+      "id": "b6dabf54-305a-49a2-9009-5d54a716137f",
+      "name": "If",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SHOW CREATE TABLE wallet_transactions;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -640,
+        528
+      ],
+      "id": "a0d4d83f-4480-4fc4-82c6-63bb68190339",
+      "name": "Execute a SQL query2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO wallet_transactions (\n  transaction_type,\n  amount,\n  booked_member_id,\n  wallet_id,\n  resource_type,\n  resource_id,\n  remarks,\n  earned_at,\n  point_type,\n  created_at,\n  updated_at\n)\nVALUES (\n  'credit',\n  778,\n  87989,\n  (\n    SELECT id\n    FROM wallets\n    WHERE user_id = 87989\n    LIMIT 1\n  ),\n  'Todo',\n  CURDATE(),\n  'Daily To-Do completion score: 78%',\n  UTC_TIMESTAMP(),\n  'daily_todo',\n  UTC_TIMESTAMP(),\n  UTC_TIMESTAMP()\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        112,
+        -80
+      ],
+      "id": "29df1b0e-e754-4dcb-b067-bd6a67cf80d1",
+      "name": "Insert Into Wallet Transaction",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE wallets\nSET\n  credited_amount = credited_amount + {{ $json.points }},\n  available_amount = available_amount + {{ $json.points }},\n  updated_at = UTC_TIMESTAMP()\nWHERE user_id = {{ $json.user_id }};\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        112,
+        128
+      ],
+      "id": "e9934de0-32b3-4e52-abe1-b84a96a54bb0",
+      "name": "Update Wallet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id\nFROM wallet_transactions\nWHERE\n  resource_type = 'DailyTodo'\n  AND resource_id = '{{ $json.reward_date }}'\n  AND booked_member_id = {{ $json.user_id }}\n  AND point_type = 'daily_todo'\nLIMIT 1;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -208,
+        -208
+      ],
+      "id": "87267bbc-a1fc-49da-a599-234d25061226",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "139f8a9d-0a07-427c-9870-0ad585a54234",
+              "leftValue": "={{$items().length}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -192,
+        -32
+      ],
+      "id": "16535740-5b5f-4578-be8d-281778cd6549",
+      "name": "If1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "\nSELECT * FROM task_managements ORDER BY created_at DESC LIMIT 5;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -672,
+        -272
+      ],
+      "id": "53e8cf9f-f830-4db6-b764-df775b7e5498",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Today's ToDos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Today's ToDos": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Insert Into Wallet Transaction",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Update Wallet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "715f73c3-62ab-46a4-beb3-6c1e94715b83",
+  "activeVersionId": null,
+  "versionCounter": 17,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-21T07:17:48.976Z",
+      "createdAt": "2026-01-21T07:17:48.976Z",
+      "role": "workflow:owner",
+      "workflowId": "57CpN2DembTnX7FN",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-29T03:55:50.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-28",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

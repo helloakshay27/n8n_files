@@ -1,0 +1,234 @@
+{
+  "updatedAt": "2026-03-11T08:21:30.686Z",
+  "createdAt": "2026-03-07T08:00:56.142Z",
+  "id": "LkDBoivPjmmQ67gs",
+  "name": "Rustomjee BigQuery Category - EOI Benefits- 1 - Opp Object & field is \" Launch category\"  equal to EOI Plus Stage is Booking con",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {},
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -288,
+        -64
+      ],
+      "id": "873e6ae8-a7e0-49c7-b783-b6ebeaf14833",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT *\nFROM powerbi-implementation.dataWarehouse_prod.eoi_benefits LIMIT 50;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        -240
+      ],
+      "id": "f1868cbd-cdcb-4737-829a-b9f7de9be0a0",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_leads \n  WHERE LeadSource = \"Loyalty\"",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        -240
+      ],
+      "id": "f69fde9d-067c-4bef-93cb-6d8b3f145a10",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n\n  return {\n    json: {\n      customer_mobile: item.json.customer_mobile,\n      customer_name: item.json.Name,\n      email: item.json.Account_Email__c,\n      points: 1000,\n      reason: \"EOI Booking Reward\"\n    }\n  };\n\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        48
+      ],
+      "id": "28710865-7b22-42ad-96fa-f2c87868dc68",
+      "name": "Code in JavaScript3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT\n  Name,\n  Account_Email__c,\n  COALESCE(Account_Mobile_1__c, Account_Mobile_Number__c) AS customer_mobile,\n  Launch_Category__c,\n  StageName\nFROM `powerbi-implementation.dataWarehouse_prod.eoi_benefits`\nWHERE Launch_Category__c = 'EOI'\nAND COALESCE(Account_Mobile_1__c, Account_Mobile_Number__c) IS NOT NULL",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        -32
+      ],
+      "id": "d6e6004c-5485-4008-88ff-38b086cc0a7e",
+      "name": "Query to fetch details of EOI Benefits",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Query to fetch details of EOI Benefits",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        []
+      ]
+    },
+    "Query to fetch details of EOI Benefits": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "7864b7a0-c51c-4b82-a7cd-a002ec22d717",
+  "activeVersionId": null,
+  "versionCounter": 35,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-07T08:00:56.147Z",
+      "createdAt": "2026-03-07T08:00:56.147Z",
+      "role": "workflow:owner",
+      "workflowId": "LkDBoivPjmmQ67gs",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-29T03:55:50.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-28",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}
