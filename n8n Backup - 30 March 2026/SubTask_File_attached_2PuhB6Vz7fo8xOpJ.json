@@ -1,0 +1,235 @@
+{
+  "updatedAt": "2026-03-29T09:28:52.781Z",
+  "createdAt": "2026-03-20T16:09:56.517Z",
+  "id": "2PuhB6Vz7fo8xOpJ",
+  "name": "SubTask File attached",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "file-attached",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -320,
+        224
+      ],
+      "id": "71d34ca3-3d57-4054-ba99-46ae6a05fc90",
+      "name": "Webhook",
+      "webhookId": "120b15fa-9cae-4746-be93-6e82547dc828",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        464,
+        160
+      ],
+      "id": "b6ead511-7273-41db-85af-1d1c57f44a70",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.task_owner_email}}",
+        "subject": "=File Attached to Task: {{$json.subtask_title}}",
+        "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.task_owner_firstname}} {{$json.task_owner_lastname}},\n  </p>\n\n  <p>\n    A file has been added to the task <b>{{$json.subtask_title}}</b>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Attachment Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_name}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Type</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_type}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Uploaded On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_added_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_created_on}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_end_on}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Parent Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.parent_task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/tasks/{{$json.subtask_id}}\" target=\"_blank\">\n          View Task Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the attached document as part of task execution.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Document & Task Management System</strong>\n  </p>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        32
+      ],
+      "id": "023060b3-0c3f-4dff-8d7a-d290de721ddc",
+      "name": "Task Owner",
+      "webhookId": "c32cf3da-943a-40fb-93c1-ae2a1deff5dc",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  -- =========================\n  -- ATTACHMENT\n  -- =========================\n  af.id                    AS attachment_id,\n  af.document_file_name    AS file_name,\n  af.document_content_type AS file_type,\n  af.created_at            AS file_added_at,\n\n  -- =========================\n  -- SUBTASK\n  -- =========================\n  t.id                     AS subtask_id,\n  t.title                  AS subtask_title,\n  t.created_at             AS subtask_created_on,\n  t.target_date            AS subtask_end_on,\n  t.parent_id              AS parent_task_id,\n\n  -- =========================\n  -- PARENT TASK\n  -- =========================\n  pt.title                 AS parent_task_title,\n\n  -- =========================\n  -- MILESTONE (via parent)\n  -- =========================\n  m.id                     AS milestone_id,\n  m.title                  AS milestone_title,\n\n  -- =========================\n  -- PROJECT (via milestone OR parent)\n  -- =========================\n  pm.id                    AS project_id,\n  pm.title                 AS project_title,\n\n  -- =========================\n  -- TASK OWNER\n  -- =========================\n  u.id                     AS task_owner_id,\n  u.email                  AS task_owner_email,\n  u.firstname              AS task_owner_firstname,\n  u.lastname               AS task_owner_lastname\n\nFROM attachfiles af\n\n-- Subtask\nJOIN task_managements t\n  ON t.id = af.relation_id\n AND af.relation = 'TaskManagement'\n\n-- Task owner\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\n-- Parent task\nLEFT JOIN task_managements pt\n  ON pt.id = t.parent_id\n\n-- Milestone via parent task\nLEFT JOIN milestones m\n  ON m.id = pt.milestone_id\n\n-- Project via milestone OR parent task (IMPORTANT FIX)\nLEFT JOIN project_managements pm\n  ON pm.id = COALESCE(\n       m.project_management_id,\n       pt.project_management_id\n     )\n\nWHERE\n  af.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND af.active = 1\n  AND t.parent_id IS NOT NULL;  -- only subtasks",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a8d7dc24-26af-4df3-92bb-4fc080e48004",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -352,
+        16
+      ],
+      "id": "0f23e942-0f74-406d-a441-ce13fa86cee9",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM attachfiles ORDER BY created_at DESC LIMIT 5;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -112,
+        144
+      ],
+      "id": "a262c372-22a2-4ba3-b8d4-069e2fefafef",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Task Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "fa1f6645-3414-4a44-be5b-ea12f7e0e19d",
+  "activeVersionId": null,
+  "versionCounter": 7,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-20T16:09:56.523Z",
+      "createdAt": "2026-03-20T16:09:56.523Z",
+      "role": "workflow:owner",
+      "workflowId": "2PuhB6Vz7fo8xOpJ",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-30T08:28:08.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-29",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

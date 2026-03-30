@@ -1,0 +1,2116 @@
+{
+  "updatedAt": "2026-03-16T06:10:37.400Z",
+  "createdAt": "2026-03-05T12:31:06.118Z",
+  "id": "mf2wHnG8G0P5y83t",
+  "name": "Customer Support Workflow",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "incoming-call",
+        "options": {}
+      },
+      "id": "9dc6cbc2-8df4-4668-bef6-fa9f24c46998",
+      "name": "📞 Trigger: Incoming Call (Webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        6976,
+        1152
+      ],
+      "webhookId": "d22ef5ad-511b-4667-a6bd-5ad2623efb3f"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "ab0c8d9a-09c8-4abc-b13b-e69a5fe4a8dd",
+      "name": "📧 Trigger: Incoming Email",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        6976,
+        1552
+      ]
+    },
+    {
+      "parameters": {
+        "path": "whatsapp-message",
+        "options": {}
+      },
+      "id": "3d29f5ad-7989-4fa0-80c0-4b4a36dd88dc",
+      "name": "💬 Trigger: WhatsApp Message",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        6976,
+        1952
+      ],
+      "webhookId": "ebfbe131-65dc-476d-b9ce-52941248d3af"
+    },
+    {
+      "parameters": {},
+      "id": "340d9aa5-f423-4df0-a3db-173a94983f6d",
+      "name": "⚙️ Trigger: Operations / Manual",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        7760,
+        2272
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/audio/transcriptions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "whisper-1"
+            },
+            {
+              "name": "file",
+              "value": "={{ $json.audioFileUrl }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1cfbf4cd-4941-4bbe-bd2a-5b9d92a57aa0",
+      "name": "🤖 AI [1] Transcribe Call Audio (Whisper)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        7264,
+        1152
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GsFdBxTrPDslI4ul",
+          "name": "Header Auth account Rustomjee"
+        }
+      },
+      "notes": "PRIORITY 1 — Sends call audio to OpenAI Whisper (or Deepgram) for speech-to-text transcription before any routing logic."
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a customer support triage assistant. Analyse the call transcript and return ONLY a JSON object with these keys: { \"issueType\": \"query|issue|feedback\", \"techType\": \"tech|non-tech\", \"nonTechType\": \"billing|training|escalation|cancellation|other\", \"urgency\": \"low|medium|high\", \"suggestedSPOC\": \"team_name\", \"summary\": \"one line summary\" }. No other text.",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.transcript }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "48c29afb-eaf4-4b00-a723-1627e0b2758e",
+      "name": "🤖 AI [2] Classify Call Intent & Route",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        7568,
+        1152
+      ],
+      "notes": "PRIORITY 1 — Reads transcript, outputs: channel=call, type=query|issue|feedback, subtype=tech|non-tech|billing|training, urgency=low|medium|high, suggestedSPOC"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a customer support triage assistant. Analyse the email and return ONLY a JSON object: { \"issueType\": \"query|issue|feedback\", \"techType\": \"tech|non-tech\", \"nonTechType\": \"billing|training|escalation|other\", \"urgency\": \"low|medium|high\", \"customerName\": \"\", \"company\": \"\", \"summary\": \"one line summary\", \"suggestedSPOC\": \"team_name\" }. No other text.",
+              "role": "system"
+            },
+            {
+              "content": "Subject: {{ $json.subject }}\n\nBody: {{ $json.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f9714e20-4a85-41d2-b9d3-391ab7af4526",
+      "name": "🤖 AI [2] Classify Email Intent & Route",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        7264,
+        1552
+      ],
+      "notes": "PRIORITY 1 — Reads email subject + body, classifies intent, extracts customer details, suggests SPOC."
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a customer support triage assistant. Analyse the WhatsApp message and return ONLY a JSON object: { \"issueType\": \"query|issue|feedback\", \"canBotResolve\": true|false, \"urgency\": \"low|medium|high\", \"suggestedReply\": \"auto-reply text if canBotResolve is true\", \"summary\": \"one line summary\", \"suggestedSPOC\": \"team_name\" }. No other text.",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "799e8a40-1f7e-41ef-b947-43acfe599298",
+      "name": "🤖 AI [2] Classify WhatsApp Intent & Route",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        7264,
+        1952
+      ],
+      "notes": "PRIORITY 1 — Reads WhatsApp message, classifies intent, decides if bot can resolve or needs human handoff."
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a support knowledge base assistant. Given the customer issue summary, check if there is a standard resolution. Return ONLY JSON: { \"canResolve\": true|false, \"resolution\": \"step-by-step fix or empty string\", \"confidence\": 0.0-1.0 }. Only set canResolve=true if confidence > 0.85.",
+              "role": "system"
+            },
+            {
+              "content": "Issue summary: {{ $json.summary }}\nIssue type: {{ $json.issueType }}\nProduct: {{ $json.product }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e152bc8d-d254-42d5-aaf7-cbca1713a3d8",
+      "name": "🤖 AI [3] Knowledge Base Lookup (FCR Check)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        7872,
+        1152
+      ],
+      "notes": "PRIORITY 2 — Before creating a ticket, checks if the issue matches a known resolution in the knowledge base. If yes, resolves immediately (First Call Resolution) without SPOC involvement."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ JSON.parse($json.choices[0].message.content).canResolve }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "9cdcb959-fd5c-4308-88db-d4806bcdefee",
+      "name": "FCR: Can AI Resolve Without SPOC?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        8176,
+        1152
+      ],
+      "notes": "Branches: YES → send resolution to customer and close ticket. NO → proceed to SPOC assignment."
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a support routing assistant. Given the ticket details and current team availability, assign the best SPOC. Return ONLY JSON: { \"assignedSPOC\": \"name\", \"team\": \"tech|billing|training|accounts\", \"reason\": \"one line reason\", \"estimatedTAT\": \"Xhrs\" }.",
+              "role": "system"
+            },
+            {
+              "content": "Ticket: {{ $json.summary }}\nUrgency: {{ $json.urgency }}\nType: {{ $json.issueType }}\nTeam availability: {{ $json.teamAvailability }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6b8acc20-eaba-4484-9b14-41adaabc5396",
+      "name": "🤖 AI [4] Smart SPOC Assignment",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        8368,
+        1376
+      ],
+      "notes": "PRIORITY 2 — Uses ticket urgency, type, product, and team availability data to recommend the best SPOC. Replace the static 'Assigned to SPOC' node."
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a friendly customer support bot for our company. Your job is to: 1) Greet the customer, 2) Collect: Name, Company, Site, and description of their issue, 3) Try to resolve common queries using your knowledge, 4) If unresolved, say a human agent will follow up. Keep replies short and conversational. Return your reply as plain text.",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "82950869-775b-4f9f-a1be-2fb38d3e15d9",
+      "name": "🤖 AI [5] WhatsApp Auto-Reply / Bot Conversation",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        7568,
+        1952
+      ],
+      "notes": "PRIORITY 1 — Handles the WhatsApp conversation end-to-end: greets customer, collects Name/Company/Site/Description through natural conversation, and either resolves or hands off to human."
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a customer support email assistant. Write a professional acknowledgement email. Include: confirmation of receipt, a one-line summary of their issue, the assigned team, and expected TAT. Sign off as 'Support Team'. Return only the email body text.",
+              "role": "system"
+            },
+            {
+              "content": "Customer issue: {{ $json.summary }}\nAssigned team: {{ $json.team }}\nTAT: {{ $json.estimatedTAT }}\nCustomer name: {{ $json.customerName }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9603f011-7a1b-4a58-8b1e-1d7d8235cd82",
+      "name": "🤖 AI [5] Email Auto-Acknowledgement",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        7568,
+        1552
+      ],
+      "notes": "PRIORITY 2 — Sends an intelligent acknowledgement email that confirms receipt, summarises the issue back to the customer, states the TAT, and names the assigned SPOC team."
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a support ticket documentation assistant. Given the conversation history, write concise structured ticket notes. Return ONLY JSON: { \"problem\": \"\", \"stepsTaken\": \"\", \"resolution\": \"\", \"followUpNeeded\": true|false, \"followUpNote\": \"\" }.",
+              "role": "system"
+            },
+            {
+              "content": "Conversation: {{ $json.conversationHistory }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cbbb3e05-2811-475d-a014-f9e7579ce425",
+      "name": "🤖 AI [6] Auto-Summarise Ticket Notes",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        8912,
+        1584
+      ],
+      "notes": "PRIORITY 2 — After resolution, AI reads the full conversation thread and writes structured ticket notes: problem, steps taken, resolution, follow-up needed."
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a quality assurance assistant for a customer support team. Score this resolved ticket. Return ONLY JSON: { \"resolutionScore\": 0-10, \"tatScore\": 0-10, \"toneScore\": 0-10, \"completenessScore\": 0-10, \"overallScore\": 0-10, \"needsHumanReview\": true|false, \"reviewReason\": \"\" }. Flag needsHumanReview=true if overallScore < 7.",
+              "role": "system"
+            },
+            {
+              "content": "Ticket notes: {{ $json.ticketNotes }}\nResolution: {{ $json.resolution }}\nTAT promised: {{ $json.estimatedTAT }}\nTAT actual: {{ $json.actualTAT }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "91a00587-f560-46e5-a301-ac5f80c5e91c",
+      "name": "🤖 AI [7] Automated QA Scoring",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        9232,
+        1536
+      ],
+      "notes": "PRIORITY 3 — Replaces manual QA review. Scores every resolved ticket on: resolution quality, TAT adherence, communication tone, and completeness. Only flags tickets scoring below threshold for human QA review."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ JSON.parse($json.choices[0].message.content).needsHumanReview }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "id": "fce905b3-d036-490b-b429-8d62bc3937d2",
+      "name": "QA: Needs Human Review?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        9600,
+        1584
+      ],
+      "notes": "If AI QA score < 7, routes to human reviewer. Otherwise auto-closes."
+    },
+    {
+      "parameters": {
+        "operation": "message"
+      },
+      "id": "c3fe839e-1078-45ff-b8a5-e77a4a6fb1a4",
+      "name": "Notify QA Team for Human Review",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        9856,
+        1360
+      ],
+      "webhookId": "889a13bb-3d73-4692-9453-0360d8ee3d5e"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You are a feedback analysis assistant. Analyse this customer feedback. Return ONLY JSON: { \"sentiment\": \"positive|neutral|negative|critical\", \"theme\": \"bug|feature-request|complaint|compliment|billing|other\", \"urgency\": \"low|medium|high\", \"routeTo\": \"product-team|escalation|tech-team|recognition\", \"summary\": \"one line\" }.",
+              "role": "system"
+            },
+            {
+              "content": "={{ $json.feedbackText }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "361279ae-a5c1-49df-ae5b-ba073317ac46",
+      "name": "🤖 AI [8] Feedback Sentiment & Theme Analysis",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1,
+      "position": [
+        8352,
+        1776
+      ],
+      "notes": "PRIORITY 3 — Analyses customer feedback for sentiment, urgency, and theme. Routes critical complaints to escalation, feature requests to product team, and positive feedback to the team recognition channel."
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ JSON.parse($json.choices[0].message.content).routeTo }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "escalation"
+            },
+            {
+              "value2": "product-team",
+              "output": 1
+            },
+            {
+              "value2": "tech-team",
+              "output": 2
+            },
+            {
+              "value2": "recognition",
+              "output": 3
+            }
+          ]
+        }
+      },
+      "id": "4d875403-0a36-43db-8085-5c020beb7615",
+      "name": "Route Feedback by Theme",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        8768,
+        1744
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-helpdesk.example.com/api/tickets",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "7388fd91-28a6-445d-8882-a7cc27eccab9",
+      "name": "Create Ticket in CRM / Helpdesk",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        8768,
+        1296
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GsFdBxTrPDslI4ul",
+          "name": "Header Auth account Rustomjee"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "message"
+      },
+      "id": "266e8a03-e0a1-4a63-8d37-e8fb7dad4184",
+      "name": "Notify SPOC via Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        9072,
+        1296
+      ],
+      "webhookId": "283a7a52-5e57-4a9e-a82b-20a4976991ba"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-messaging-api.example.com/send",
+        "options": {}
+      },
+      "id": "c018f9d5-a806-4eaa-bf1e-ad5571b29326",
+      "name": "Send FCR Resolution to Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        8464,
+        1040
+      ],
+      "notes": "Sends the AI-generated resolution directly to the customer via their channel (call callback / email / WhatsApp)."
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://your-helpdesk.example.com/api/tickets/{{ $json.ticketId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "16004d86-06d9-4b65-a655-cc5289c8b7bc",
+      "name": "Close & Tag Ticket",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        10144,
+        1632
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://your-helpdesk.example.com/api/tickets/{{ $json.ticketId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "a747368a-1636-4c83-bf40-dac90878c610",
+      "name": "Update Final Status in CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        10576,
+        1456
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.callType }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "inbound"
+            },
+            {
+              "value2": "outbound",
+              "output": 1
+            }
+          ]
+        }
+      },
+      "id": "d6c8dc84-c3bc-4867-b373-d43f99e8bb65",
+      "name": "Calls: Inbound or Outbound?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        4464,
+        4000
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "channel",
+              "value": "call-inbound"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f6b1570e-a741-40e8-9028-6ce2ec3987cb",
+      "name": "IVR (Interactive Voice Response)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        4768,
+        3904
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.callStatus }}",
+              "value2": "answered"
+            }
+          ]
+        }
+      },
+      "id": "dbcefb28-800d-445e-8fc8-2f9e022d85a7",
+      "name": "Calls: Answered?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        5072,
+        3904
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "ticketNote",
+              "value": "Call unanswered - scheduled callback"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6450a5f6-3c58-4838-9d18-f54d55d04241",
+      "name": "Call Unanswered → Update Ticket Notes",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        5264,
+        3568
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "callback_pending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d3431ee9-c108-4482-9dfc-e06109ccd2f8",
+      "name": "Call Back Pending",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        5568,
+        3568
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "customerName",
+              "value": "={{ $json.name }}"
+            },
+            {
+              "name": "company",
+              "value": "={{ $json.company }}"
+            },
+            {
+              "name": "site",
+              "value": "={{ $json.site }}"
+            },
+            {
+              "name": "description",
+              "value": "={{ $json.description }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6f3a40ba-ef91-4361-aca7-684464aa7b81",
+      "name": "Capture Call Details\n(Name, Company, Site, Description)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        5344,
+        3856
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.issueType }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "query"
+            },
+            {
+              "value2": "issue",
+              "output": 1
+            },
+            {
+              "value2": "feedback",
+              "output": 2
+            }
+          ]
+        }
+      },
+      "id": "19280d73-a8ca-4251-81a0-c72417bd2724",
+      "name": "Calls: Query / Issue / Feedback?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        5664,
+        4000
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "resolution",
+              "value": "first_call_resolved"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bc9733eb-54f1-474e-bae9-ec259aaab7c2",
+      "name": "First Call Resolution",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        5968,
+        3856
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.techType }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "tech"
+            },
+            {
+              "value2": "non-tech",
+              "output": 1
+            }
+          ]
+        }
+      },
+      "id": "d93ee1ac-4078-42fd-a042-c38b9bfb28a2",
+      "name": "Issue: Tech or Non-Tech?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        6048,
+        4080
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.nonTechType }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "billing"
+            },
+            {
+              "value2": "training",
+              "output": 1
+            }
+          ]
+        }
+      },
+      "id": "c2cdcc27-0706-42b9-a174-9d0a8ce68851",
+      "name": "Non-Tech: Billing / Training / Other?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        6288,
+        4080
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "ticketType",
+              "value": "outbound"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "118b64fe-4a86-463c-be9d-75089bbe70bf",
+      "name": "Outbound: Create Ticket",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        4768,
+        4096
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.emailSource }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "official"
+            },
+            {
+              "value2": "direct-support",
+              "output": 1
+            },
+            {
+              "value2": "support-toggle",
+              "output": 2
+            },
+            {
+              "value2": "contact-us",
+              "output": 3
+            }
+          ]
+        }
+      },
+      "id": "288731e9-cb5d-4bca-bcaf-23498733149d",
+      "name": "Email: Source?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        4464,
+        4304
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "emailType",
+              "value": "official"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "656fcb5c-99b9-42b9-8f74-74e67a9b45a9",
+      "name": "Official Email ID Received",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        4832,
+        4448
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "ticketStatus",
+              "value": "created"
+            },
+            {
+              "name": "channel",
+              "value": "email"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "81beaa58-b8ce-4cab-9136-91c66740afbc",
+      "name": "Email: Ticket Created",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        5072,
+        4304
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "assignedTo",
+              "value": "={{ $json.spoc }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5f5bf65d-ba67-45d0-9dc8-f7fa4951dc23",
+      "name": "Email: Assigned to SPOC",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        5360,
+        4304
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.waSource }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "direct-support"
+            },
+            {
+              "value2": "personal",
+              "output": 1
+            }
+          ]
+        }
+      },
+      "id": "807803f7-4f87-403d-a99e-25d560907bf4",
+      "name": "WhatsApp: Direct or Personal?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        4464,
+        4608
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "botResponse",
+              "value": "auto_reply_sent"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "41b5ce55-397d-47a3-ba0f-0ab6ba748e5f",
+      "name": "WhatsApp: Bot Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        4736,
+        4672
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "step",
+              "value": "product_selection"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1706962b-2b23-46bf-a62d-ccdb8247939a",
+      "name": "WhatsApp: Product Selection",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        5040,
+        4672
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "step",
+              "value": "sub_product_selection"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e79232d7-e26a-4f3e-b5ff-bbf83eb6df36",
+      "name": "WhatsApp: Sub-Product Selection",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        5328,
+        4672
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "step",
+              "value": "capturing_details"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "caa176b1-9c16-4baa-aa45-df137e70f711",
+      "name": "WhatsApp: Capture Details",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        5632,
+        4672
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "ticketStatus",
+              "value": "created"
+            },
+            {
+              "name": "channel",
+              "value": "whatsapp"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6f9450f5-ebfe-48b9-87bd-d354d4f10781",
+      "name": "WhatsApp: Ticket Created",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        5936,
+        4672
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "assignedTo",
+              "value": "={{ $json.spoc }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8002887d-0145-439b-bdae-31fba4d9d5ed",
+      "name": "WhatsApp: Assigned to SPOC",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        6240,
+        4672
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "action",
+              "value": "forwarded_to_support_number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e51f48fb-4c92-432e-9161-f6e25bff6def",
+      "name": "WhatsApp Personal → Forward to Support Number",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        4736,
+        4880
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "message"
+      },
+      "id": "fdd5d124-5eb8-489f-a494-dff79b19ef4f",
+      "name": "Notify SPOC via Slack / Email",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2,
+      "position": [
+        7232,
+        3920
+      ],
+      "webhookId": "228dfb2c-dbfb-485c-a3fb-a3d14aa3c999"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://your-helpdesk.example.com/api/tickets/{{ $json.ticketId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "47d73c8e-5ec8-41dd-8653-02e5bd3753f7",
+      "name": "Update Ticket with Notes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        7216,
+        4912
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "GsFdBxTrPDslI4ul",
+          "name": "Header Auth account Rustomjee"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://your-helpdesk.example.com/api/tickets/{{ $json.ticketId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "20f006c7-c861-405b-9454-bc0be0542092",
+      "name": "Close Ticket & Tag Resolution",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        7440,
+        4496
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "qaStatus",
+              "value": "pending_qa_review"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "80d26df8-20b6-4b9f-a86e-2023d89e8569",
+      "name": "QA / Quality Check",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        7792,
+        4352
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://your-helpdesk.example.com/api/tickets/{{ $json.ticketId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "aa3647ec-1d62-4c07-8ba9-5c235ffbb0b4",
+      "name": "Update Final Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        8064,
+        4352
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "assignedDept",
+              "value": "tech"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cfb640e6-8695-4d0c-be2a-36c0dab13b1d",
+      "name": "Tech Department: Update Status",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        6368,
+        3872
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "assignedDept",
+              "value": "accounts"
+            },
+            {
+              "name": "tatConfirmed",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4ccbe9c7-b5d5-4337-8ec0-77c7a3b3552b",
+      "name": "Accounts: Confirm & TAT",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        6976,
+        4272
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "feedbackForwarded",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "11544af8-4013-4cb4-9307-dccac62ea3ee",
+      "name": "Feedback: Forward to Product Team",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        5952,
+        4304
+      ]
+    },
+    {
+      "parameters": {
+        "path": "incoming-call",
+        "options": {}
+      },
+      "id": "ebc9f11e-8b42-4721-b25e-3b07b7630be1",
+      "name": "📞 Trigger: Incoming Call (Webhook)1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        4160,
+        4000
+      ],
+      "webhookId": "d9eaf0da-4995-4e9f-b741-b727751d3c45"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "a5232015-9ed3-4d0c-9e1d-b505cff5db31",
+      "name": "📧 Trigger: Incoming Email1",
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        4160,
+        4304
+      ]
+    },
+    {
+      "parameters": {
+        "path": "whatsapp-message",
+        "options": {}
+      },
+      "id": "fbf56da7-55b9-4d4d-9ccd-f724964ab15e",
+      "name": "💬 Trigger: WhatsApp Message1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        4160,
+        4608
+      ],
+      "webhookId": "c57ff42a-3300-42ee-b80e-3e498393763e"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://your-helpdesk.example.com/api/tickets",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "3deed154-11f7-44ca-a0db-04a5710924fe",
+      "name": "Create Ticket in CRM / Helpdesk1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        6912,
+        3440
+      ]
+    }
+  ],
+  "connections": {
+    "📞 Trigger: Incoming Call (Webhook)": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [1] Transcribe Call Audio (Whisper)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI [1] Transcribe Call Audio (Whisper)": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [2] Classify Call Intent & Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI [2] Classify Call Intent & Route": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [3] Knowledge Base Lookup (FCR Check)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI [3] Knowledge Base Lookup (FCR Check)": {
+      "main": [
+        [
+          {
+            "node": "FCR: Can AI Resolve Without SPOC?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FCR: Can AI Resolve Without SPOC?": {
+      "main": [
+        [
+          {
+            "node": "Send FCR Resolution to Customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🤖 AI [4] Smart SPOC Assignment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send FCR Resolution to Customer": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [6] Auto-Summarise Ticket Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Trigger: Incoming Email": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [2] Classify Email Intent & Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI [2] Classify Email Intent & Route": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [5] Email Auto-Acknowledgement",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI [5] Email Auto-Acknowledgement": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [4] Smart SPOC Assignment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💬 Trigger: WhatsApp Message": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [2] Classify WhatsApp Intent & Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI [2] Classify WhatsApp Intent & Route": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [5] WhatsApp Auto-Reply / Bot Conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI [5] WhatsApp Auto-Reply / Bot Conversation": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [4] Smart SPOC Assignment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Trigger: Operations / Manual": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [4] Smart SPOC Assignment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI [4] Smart SPOC Assignment": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket in CRM / Helpdesk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Ticket in CRM / Helpdesk": {
+      "main": [
+        [
+          {
+            "node": "Notify SPOC via Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify SPOC via Slack": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [6] Auto-Summarise Ticket Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI [6] Auto-Summarise Ticket Notes": {
+      "main": [
+        [
+          {
+            "node": "🤖 AI [7] Automated QA Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI [7] Automated QA Scoring": {
+      "main": [
+        [
+          {
+            "node": "QA: Needs Human Review?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QA: Needs Human Review?": {
+      "main": [
+        [
+          {
+            "node": "Notify QA Team for Human Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Close & Tag Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify QA Team for Human Review": {
+      "main": [
+        [
+          {
+            "node": "Close & Tag Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Close & Tag Ticket": {
+      "main": [
+        [
+          {
+            "node": "Update Final Status in CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🤖 AI [8] Feedback Sentiment & Theme Analysis": {
+      "main": [
+        [
+          {
+            "node": "Route Feedback by Theme",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calls: Inbound or Outbound?": {
+      "main": [
+        [
+          {
+            "node": "IVR (Interactive Voice Response)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Outbound: Create Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IVR (Interactive Voice Response)": {
+      "main": [
+        [
+          {
+            "node": "Calls: Answered?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calls: Answered?": {
+      "main": [
+        [
+          {
+            "node": "Capture Call Details\n(Name, Company, Site, Description)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Unanswered → Update Ticket Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Unanswered → Update Ticket Notes": {
+      "main": [
+        [
+          {
+            "node": "Call Back Pending",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Capture Call Details\n(Name, Company, Site, Description)": {
+      "main": [
+        [
+          {
+            "node": "Calls: Query / Issue / Feedback?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calls: Query / Issue / Feedback?": {
+      "main": [
+        [
+          {
+            "node": "First Call Resolution",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Issue: Tech or Non-Tech?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Feedback: Forward to Product Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Issue: Tech or Non-Tech?": {
+      "main": [
+        [
+          {
+            "node": "Tech Department: Update Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Non-Tech: Billing / Training / Other?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Non-Tech: Billing / Training / Other?": {
+      "main": [
+        [
+          {
+            "node": "Accounts: Confirm & TAT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Ticket in CRM / Helpdesk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "First Call Resolution": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket with Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email: Source?": {
+      "main": [
+        [
+          {
+            "node": "Official Email ID Received",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email: Ticket Created",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email: Ticket Created",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email: Ticket Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Official Email ID Received": {
+      "main": [
+        [
+          {
+            "node": "Email: Ticket Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email: Ticket Created": {
+      "main": [
+        [
+          {
+            "node": "Email: Assigned to SPOC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email: Assigned to SPOC": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket in CRM / Helpdesk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp: Direct or Personal?": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp: Bot Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WhatsApp Personal → Forward to Support Number",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp: Bot Response": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp: Product Selection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp: Product Selection": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp: Sub-Product Selection",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp: Sub-Product Selection": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp: Capture Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp: Capture Details": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp: Ticket Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp: Ticket Created": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp: Assigned to SPOC",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp: Assigned to SPOC": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket in CRM / Helpdesk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp Personal → Forward to Support Number": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp: Bot Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify SPOC via Slack / Email": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket with Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Ticket with Notes": {
+      "main": [
+        [
+          {
+            "node": "Close Ticket & Tag Resolution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Close Ticket & Tag Resolution": {
+      "main": [
+        [
+          {
+            "node": "QA / Quality Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QA / Quality Check": {
+      "main": [
+        [
+          {
+            "node": "Update Final Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tech Department: Update Status": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket in CRM / Helpdesk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Accounts: Confirm & TAT": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket in CRM / Helpdesk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feedback: Forward to Product Team": {
+      "main": [
+        [
+          {
+            "node": "Update Ticket with Notes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Outbound: Create Ticket": {
+      "main": [
+        [
+          {
+            "node": "Create Ticket in CRM / Helpdesk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📞 Trigger: Incoming Call (Webhook)1": {
+      "main": [
+        [
+          {
+            "node": "Calls: Inbound or Outbound?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Trigger: Incoming Email1": {
+      "main": [
+        [
+          {
+            "node": "Email: Source?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💬 Trigger: WhatsApp Message1": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp: Direct or Personal?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Ticket in CRM / Helpdesk1": {
+      "main": [
+        [
+          {
+            "node": "Notify SPOC via Slack / Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "8253b6cf-1ebd-4705-af74-84253ab69c92",
+  "activeVersionId": null,
+  "versionCounter": 4,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-05T12:31:06.123Z",
+      "createdAt": "2026-03-05T12:31:06.123Z",
+      "role": "workflow:owner",
+      "workflowId": "mf2wHnG8G0P5y83t",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-30T08:28:08.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-29",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-03-05T12:05:57.189Z",
+      "createdAt": "2026-03-05T12:05:57.189Z",
+      "id": "ZLx8RPaePxy6EtJM",
+      "name": "ai-enhanced"
+    },
+    {
+      "updatedAt": "2026-03-05T11:58:09.575Z",
+      "createdAt": "2026-03-05T11:58:09.575Z",
+      "id": "iwhQzjCylcZUVk9H",
+      "name": "customer-support"
+    }
+  ],
+  "activeVersion": null
+}
