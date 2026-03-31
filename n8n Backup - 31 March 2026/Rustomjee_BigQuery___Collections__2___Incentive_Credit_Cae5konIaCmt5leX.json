@@ -1,0 +1,467 @@
+{
+  "updatedAt": "2026-03-29T18:13:47.354Z",
+  "createdAt": "2026-02-25T10:17:50.464Z",
+  "id": "Cae5konIaCmt5leX",
+  "name": "Rustomjee BigQuery - Collections- 2 - Incentive Credit",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {},
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9aa9cc85-7d7e-4e24-acaa-605244be711d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.collections_demand_groupby LIMIT 50\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        -208
+      ],
+      "id": "e3b7d9e1-cf27-42ea-8101-f88713a96e25",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// return items\n//   .map(item => {\n//     const demandDate = new Date(item.json.FKDAT);\n//     const paymentDate = new Date(item.json.PAY_DATE);\n\n//     const diffDays = (paymentDate - demandDate) / (1000 * 60 * 60 * 24);\n\n//     if (diffDays >= 0 && diffDays <= 5) {\n//       return {\n//         json: {\n//           customer_id: item.json.KUNNR,\n//           demand_date: item.json.FKDAT,\n//           payment_date: item.json.PAY_DATE,\n//           diff_days: diffDays,\n//           points: 6000,\n//           rule: \"Paid within 5 days\"\n//         }\n//       };\n//     }\n\n//     return null;\n//   })\n//   .filter(Boolean);\n\nreturn items\n  .map(item => {\n    const demandDate = new Date(item.json.FKDAT);\n    const paymentDate = new Date(item.json.PAY_DATE);\n\n    const diffDays = (paymentDate - demandDate) / (1000 * 60 * 60 * 24);\n\n    if (diffDays >= 0 && diffDays <= 5) {\n\n      const customerId = item.json.KUNNR;\n      const rule = \"Paid within 5 days\";\n      const paymentDateStr = item.json.PAY_DATE;\n\n      const reference_id = `${customerId}_6000_${paymentDateStr}`;\n\n      return {\n        json: {\n          customer_id: customerId,\n          mobile_number: item.json.MOBILE || null,\n\n          demand_date: item.json.FKDAT,\n          payment_date: paymentDateStr,\n          diff_days: diffDays,\n\n          points: 6000,\n          rule: rule,\n\n          transaction_type: \"CREDIT\",\n\n          reference_id: reference_id,\n\n          workflow_name: \"wallet_incentive_workflow\",\n          execution_id: $execution.id,\n\n          request_payload: {\n            customer_id: customerId,\n            demand_date: item.json.FKDAT,\n            payment_date: paymentDateStr,\n            diff_days: diffDays,\n            points: 6000,\n            rule: rule\n          }\n        }\n      };\n    }\n\n    return null;\n  })\n  .filter(Boolean);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        -16
+      ],
+      "id": "d920f2d2-35f6-4c27-a674-a1a416be03b0",
+      "name": "Adding 6000 Incentive for the payment within 5 days",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT\n  KUNNR,\n  FKDAT,\n  PAY_DATE,\n  paid_status\nFROM\n  `powerbi-implementation.dataWarehouse_prod.collections_demand_groupby`\nWHERE\n  paid_status IN ('Fully Paid', 'Partially Paid')\n  AND FKDAT IS NOT NULL\n  AND PAY_DATE IS NOT NULL",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        80
+      ],
+      "id": "551ab040-82a1-40a4-b5e5-3cd72bd80922",
+      "name": "Fetching Details of the Fully and Partially Paid Customers",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_leads \n  WHERE LeadSource = \"Loyalty\"",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        496,
+        -256
+      ],
+      "id": "f5352482-932a-4772-9b00-963633aaec92",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"customer_code\": \"{{ $json.customer_id }}\",\n  \"amount\": {{ $json.points }},\n  \"remarks\": \"{{ $json.rule }}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        864,
+        -96
+      ],
+      "id": "feeccf5e-95fc-47f3-a544-c8f8856522a5",
+      "name": "HTTP Request",
+      "alwaysOutputData": true,
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items\n  .map(item => {\n    const demandDate = new Date(item.json.FKDAT);\n    const paymentDate = new Date(item.json.PAY_DATE);\n\n    const diffDays = (paymentDate - demandDate) / (1000 * 60 * 60 * 24);\n\n    if (diffDays > 5 && diffDays <= 10) {\n      return {\n        json: {\n          customer_id: item.json.KUNNR,\n          demand_date: item.json.FKDAT,\n          payment_date: item.json.PAY_DATE,\n          diff_days: diffDays,\n          points: 3000, // 👈 example, change as needed\n          rule: \"Paid within 10 days\"\n        }\n      };\n    }\n\n    return null;\n  })\n  .filter(Boolean);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        224
+      ],
+      "id": "ae4d95d8-ccbd-469c-9752-5759ab3356b3",
+      "name": "Adding 3000 Incentive for the payment within 10 days",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8b311af8-f014-4910-b04d-608e1847c9a0",
+              "name": "customer_id",
+              "value": "{{$json.customer_id}}",
+              "type": "string"
+            },
+            {
+              "id": "751ef75e-fe0a-4f82-ac88-6434d2a0629b",
+              "name": "points",
+              "value": "={{$json.points}}",
+              "type": "number"
+            },
+            {
+              "id": "b1145a55-a695-4cfa-81d1-79f7f51abc14",
+              "name": "rule",
+              "value": "={{$json.rule}}",
+              "type": "string"
+            },
+            {
+              "id": "38f3dae0-4ba1-4391-a7f6-5af5b6f2fcbe",
+              "name": "=reference_id",
+              "value": "={{$json.reference_id}}",
+              "type": "string"
+            },
+            {
+              "id": "dcf52459-b151-4db8-b465-7a890da209c6",
+              "name": "transaction_type",
+              "value": "={{$json.transaction_type}}",
+              "type": "string"
+            },
+            {
+              "id": "9045fe70-369a-4af3-bc3a-3780061fbae0",
+              "name": "status",
+              "value": "={{$json.statusCode >= 200 && $json.statusCode < 300 ? \"SUCCESS\" : \"FAILED\"}}",
+              "type": "string"
+            },
+            {
+              "id": "fc9a41e4-3d87-47ef-bec1-ec7679e81d0a",
+              "name": "status_code",
+              "value": "={{$json.statusCode || $json.error?.status || 500}}",
+              "type": "number"
+            },
+            {
+              "id": "2a2f8faa-b24f-46c3-ae66-201da970f5db",
+              "name": "transaction_id",
+              "value": "={{$json.body?.transaction_id || null}}",
+              "type": "string"
+            },
+            {
+              "id": "a6029dde-70bd-44d7-a004-ff1e9d317785",
+              "name": "error_message",
+              "value": "={{$json.body?.error || $json.error?.message?.split(\"\\n\")[0]}}",
+              "type": "string"
+            },
+            {
+              "id": "ab7c1a10-7953-4d1e-bbe1-ae422f4bc70e",
+              "name": "request_payload",
+              "value": "={{$json}}",
+              "type": "object"
+            },
+            {
+              "id": "44f2b0f0-8e91-439f-aec5-a355e2705ff9",
+              "name": "response_payload",
+              "value": "={{$json}}",
+              "type": "object"
+            },
+            {
+              "id": "96ed068c-7dc1-4cbf-9384-4abcdde9eb86",
+              "name": "execution_id",
+              "value": "{{$json.execution_id}}",
+              "type": "string"
+            },
+            {
+              "id": "d4fdcaae-ae9c-4296-96fb-eb4ac2c8c591",
+              "name": "created_at",
+              "value": "={{new Date().toISOString()}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1040,
+        64
+      ],
+      "id": "927f9288-a278-4c19-8c70-22236fc7e915",
+      "name": "Edit Fields",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO wallet_transaction_logs (\n    customer_id,\n    points,\n    rule,\n    reference_id,\n    transaction_type,\n    status,\n    status_code,\n    transaction_id,\n    error_message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    {{$json.customer_id ? `'${$json.customer_id}'` : 'NULL'}},\n    {{$json.points || 0}},\n    {{$json.rule ? `'${$json.rule}'` : 'NULL'}},\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    {{$json.transaction_type ? `'${$json.transaction_type}'` : 'NULL'}},\n    {{$json.status ? `'${$json.status}'` : 'NULL'}},\n    {{$json.status_code || 500}},\n    {{$json.transaction_id ? `'${$json.transaction_id}'` : 'NULL'}},\n    {{$json.error_message ? `'${$json.error_message.replace(/'/g, \"''\")}'` : 'NULL'}},\n    {{$json.request_payload ? `'${JSON.stringify($json.request_payload).replace(/'/g, \"''\")}'` : 'NULL'}},\n    {{$json.response_payload ? `'${JSON.stringify($json.response_payload).replace(/'/g, \"''\")}'` : 'NULL'}},\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    {{$json.created_at ? `'${$json.created_at}'` : 'NOW()'}}\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1328,
+        -144
+      ],
+      "id": "a2eeec7e-6d6c-4dcd-9726-30aacda4da22",
+      "name": "Execute a SQL query2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "b50IVtOHRFxnli6C",
+          "name": "Postgres n8n_db"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT customer_id, status, error_message\nFROM wallet_transaction_logs\nORDER BY id DESC;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1312,
+        240
+      ],
+      "id": "e056c227-35b1-448c-aa1e-aa7f2c0552ac",
+      "name": "Execute a SQL query3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "b50IVtOHRFxnli6C",
+          "name": "Postgres n8n_db"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetching Details of the Fully and Partially Paid Customers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        []
+      ]
+    },
+    "Fetching Details of the Fully and Partially Paid Customers": {
+      "main": [
+        [
+          {
+            "node": "Adding 6000 Incentive for the payment within 5 days",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Adding 3000 Incentive for the payment within 10 days",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adding 6000 Incentive for the payment within 5 days": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "72e405b0-ffc9-4bc5-bda2-513cf2213cd7",
+  "activeVersionId": null,
+  "versionCounter": 24,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-25T10:17:50.466Z",
+      "createdAt": "2026-02-25T10:17:50.466Z",
+      "role": "workflow:owner",
+      "workflowId": "Cae5konIaCmt5leX",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-31T05:10:30.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-30",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

@@ -1,0 +1,356 @@
+{
+  "updatedAt": "2026-03-20T09:56:01.460Z",
+  "createdAt": "2025-12-26T08:14:18.640Z",
+  "id": "vWkGVgpTrHUESOFY",
+  "name": "Dependency resolved",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dependency-resolved",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -608,
+        -128
+      ],
+      "id": "d06301dd-929f-48ec-97a1-2d167668b946",
+      "name": "Webhook",
+      "webhookId": "2877919e-72d0-4cf3-8cf0-9933644bb04a",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        288,
+        80
+      ],
+      "id": "e42010b2-52aa-49b6-8a4f-3908cbad584e",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{ $json.dependent_task_owner_email }}",
+        "subject": "=Dependency Cleared: {{$json.title}}",
+        "html": "=<p>Dear {{$json.RecipientName}},</p>\n\n<p>We would like to inform you that a dependency blocking the task <b>{{$json.title}}</b> has been resolved.</p>\n\n<p><b>Task Details</b><br>\n* Task Title: {{$json.title}}<br>\n* Dependency Cleared On: {{$json.updated_at}}</p>\n\n<p>You may now proceed with execution as planned. Please update progress accordingly.</p>\n\n<p>Regards,<br>\n<b>Project Coordination Team</b></p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        64,
+        -224
+      ],
+      "id": "4fd29a3a-9f79-426f-ac3a-ec2a985c4288",
+      "name": "Dependent Task Owner",
+      "webhookId": "3b408d9c-a56f-425d-83b0-976e79f683c4",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH latest_task_status AS (\n  SELECT\n    tsl.*,\n    ROW_NUMBER() OVER (\n      PARTITION BY tsl.task_management_id\n      ORDER BY tsl.created_at DESC\n    ) AS rn\n  FROM task_status_logs tsl\n  WHERE tsl.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n)\n\nSELECT\n  lts.task_management_id            AS dependency_task_id,\n  dep_tm.title                      AS dependency_task_title,\n\n  td.task_id                        AS dependent_task_id,\n  dep_on_tm.title                   AS dependent_task_title,\n\n  owner.email                       AS dependent_task_owner_email,\n\n  lts.created_at                    AS dependency_completed_at\n\nFROM latest_task_status lts\n\n-- ONLY completed dependency tasks\nJOIN task_dependencies td\n  ON td.dependent_task_id = lts.task_management_id\n  AND td.active = 1\n\n-- dependency task\nJOIN task_managements dep_tm\n  ON dep_tm.id = td.dependent_task_id\n\n-- dependent task (blocked task)\nJOIN task_managements dep_on_tm\n  ON dep_on_tm.id = td.task_id\n\n-- dependent task owner\nJOIN spree_users owner\n  ON owner.id = dep_on_tm.responsible_person_id\n\nWHERE\n  lts.rn = 1\n  AND lts.status = 'completed';\n ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -224,
+        -224
+      ],
+      "id": "25de4bf0-55a6-4d56-8829-a8bc2da8b851",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "daysInterval": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -480,
+        16
+      ],
+      "id": "8df3e9f8-8f2b-4297-a516-1afe724e5a84",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Dependent Task Owner": {
+      "main": [
+        []
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Dependent Task Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ee793397-7f06-42ec-ae15-fae1d2cec702",
+  "activeVersionId": "11e3d40b-97d1-4030-93ab-ea035ef5269e",
+  "versionCounter": 31,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2025-12-26T08:14:18.642Z",
+      "createdAt": "2025-12-26T08:14:18.642Z",
+      "role": "workflow:owner",
+      "workflowId": "vWkGVgpTrHUESOFY",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-03-31T05:10:30.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-30",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-01-08T12:03:18.000Z",
+    "createdAt": "2026-01-08T12:03:16.342Z",
+    "versionId": "11e3d40b-97d1-4030-93ab-ea035ef5269e",
+    "workflowId": "vWkGVgpTrHUESOFY",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "dependency-resolved",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -544,
+          -160
+        ],
+        "id": "d06301dd-929f-48ec-97a1-2d167668b946",
+        "name": "Webhook",
+        "webhookId": "2877919e-72d0-4cf3-8cf0-9933644bb04a",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          288,
+          80
+        ],
+        "id": "e42010b2-52aa-49b6-8a4f-3908cbad584e",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{ $json.dependent_task_owner_email }}",
+          "subject": "=Dependency cleared for Task {{$json.dependent_task_title}}",
+          "html": "=Hello,\n\nThe dependency task “{{$json.dependency_task_title}}” has been completed.\n\nYou can now proceed with your task:\n“{{$json.dependent_task_title}}”\n\nDependency cleared on: {{$json.dependency_completed_at}}\n\nRegards,\nPMS System\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          64,
+          -224
+        ],
+        "id": "4fd29a3a-9f79-426f-ac3a-ec2a985c4288",
+        "name": "Dependent Task Owner",
+        "webhookId": "3b408d9c-a56f-425d-83b0-976e79f683c4",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "WITH latest_task_status AS (\n  SELECT\n    tsl.*,\n    ROW_NUMBER() OVER (\n      PARTITION BY tsl.task_management_id\n      ORDER BY tsl.created_at DESC\n    ) AS rn\n  FROM task_status_logs tsl\n  WHERE tsl.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n)\n\nSELECT\n  lts.task_management_id            AS dependency_task_id,\n  dep_tm.title                      AS dependency_task_title,\n\n  td.task_id                        AS dependent_task_id,\n  dep_on_tm.title                   AS dependent_task_title,\n\n  owner.email                       AS dependent_task_owner_email,\n\n  lts.created_at                    AS dependency_completed_at\n\nFROM latest_task_status lts\n\n-- ONLY completed dependency tasks\nJOIN task_dependencies td\n  ON td.dependent_task_id = lts.task_management_id\n  AND td.active = 1\n\n-- dependency task\nJOIN task_managements dep_tm\n  ON dep_tm.id = td.dependent_task_id\n\n-- dependent task (blocked task)\nJOIN task_managements dep_on_tm\n  ON dep_on_tm.id = td.task_id\n\n-- dependent task owner\nJOIN spree_users owner\n  ON owner.id = dep_on_tm.responsible_person_id\n\nWHERE\n  lts.rn = 1\n  AND lts.status = 'completed';\n ",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -224,
+          -224
+        ],
+        "id": "25de4bf0-55a6-4d56-8829-a8bc2da8b851",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Dependent Task Owner": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Dependent Task Owner",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "N8N Admin",
+    "name": "Version 11e3d40b",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-08T12:03:18.607Z",
+        "id": 64,
+        "workflowId": "vWkGVgpTrHUESOFY",
+        "versionId": "11e3d40b-97d1-4030-93ab-ea035ef5269e",
+        "event": "activated",
+        "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+      }
+    ]
+  }
+}
