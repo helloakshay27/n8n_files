@@ -1,0 +1,284 @@
+{
+  "updatedAt": "2026-03-09T11:03:26.859Z",
+  "createdAt": "2026-03-03T16:44:30.584Z",
+  "id": "AwaiJYGfVEg1wXs0",
+  "name": "Rustomjee BigQuery Category - Booking - To incentivise spot booking - File already shared, File name is booking",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {},
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -288,
+        32
+      ],
+      "id": "b21bb04b-8b61-4292-8a88-af157b4fb5e6",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_booking LIMIT 1000\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        176,
+        -240
+      ],
+      "id": "29e836e3-06cd-4814-9b3c-e5f4b92101ab",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_leads \n  WHERE LeadSource = \"Loyalty\"",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        -240
+      ],
+      "id": "f71340b5-f661-4d55-8201-433c6c96c085",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = [];\n\nfor (const item of $input.all()) {\n\n  const row = item.json;\n\n  const mobile =\n    row.Account_Mobile_Number__c ||\n    row.Account_Mobile_1__c ||\n    row.Mobile_Number__c ||\n    null;\n\n  if (!mobile) continue;\n\n  const svDate = row.SV_Date__c ? new Date(row.SV_Date__c) : null;\n\n  let bookingDate = null;\n\n  if (row.Booking_Date) {\n    bookingDate = new Date(row.Booking_Date);\n  } else if (row.SM_Next_Action_Date__c) {\n    bookingDate = new Date(row.SM_Next_Action_Date__c);\n  }\n\n  if (!svDate || !bookingDate) continue;\n\n  output.push({\n    json: {\n      mobile: mobile,\n      customer_id: row.KUNNR || null,\n      sv_date: svDate,\n      booking_date: bookingDate,\n      booking_id: row.X18_Digit_Booking_ID__c,\n      project: row.Project_Name,\n      status: row.Status__c\n    }\n  });\n\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        -48
+      ],
+      "id": "98510b5a-547f-4b3b-b365-6d567a9c2f44",
+      "name": "Code in JavaScript3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT\n  Account_Mobile_Number__c,\n  Account_Mobile_1__c,\n  Mobile_Number__c,\n  SV_Date__c,\n  Booking_Date,\n  SM_Next_Action_Date__c,\n  KUNNR,\n  X18_Digit_Booking_ID__c,\n  Project_Name,\n  Status__c\nFROM `powerbi-implementation.dataWarehouse_prod.sales_booking`\nWHERE SV_Date__c IS NOT NULL",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        -112,
+        -112
+      ],
+      "id": "3fc8208d-8a7e-4476-ab99-da8aeece9610",
+      "name": "Query to fetch details of Booking - File already shared, File name is Booking",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = [];\n\n// maximum reward amount (can be changed later easily)\nconst MAX_REWARD = 1000;\n\nfor (const item of $input.all()) {\n\n  const sv = new Date(item.json.sv_date);\n  const booking = new Date(item.json.booking_date);\n\n  const diffDays = Math.floor((booking - sv) / (1000 * 60 * 60 * 24));\n\n  let percentage = 0;\n  let reward_type = \"\";\n\n  if (diffDays === 0) {\n    percentage = 1.0; // 100%\n    reward_type = \"Spot Offer (100%)\";\n  } \n  else if (diffDays > 0 && diffDays <= 7) {\n    percentage = 0.75; // 75%\n    reward_type = \"Within 7 Days (75%)\";\n  } \n  else if (diffDays > 7 && diffDays <= 15) {\n    percentage = 0.50; // 50%\n    reward_type = \"Within 15 Days (50%)\";\n  }\n\n  if (percentage > 0) {\n\n    const reward = Math.round(MAX_REWARD * percentage);\n\n    output.push({\n      json: {\n        ...item.json,\n        days_difference: diffDays,\n        reward_points: reward,\n        reward_percentage: percentage * 100,\n        reward_type: reward_type\n      }\n    });\n\n  }\n\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        16
+      ],
+      "id": "bd494317-d44a-463f-9242-1d74dd67e2da",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n\n  return {\n    json: {\n\n      customer_mobile: item.json.mobile,\n\n      customer_id: item.json.customer_id,\n\n      points: item.json.reward_points,\n\n      reward_type: item.json.reward_type,\n\n      reason: \"Booking incentive based on SV timing\",\n\n      booking_id: item.json.booking_id,\n\n      project: item.json.project,\n\n      created_at: new Date().toISOString()\n\n    }\n  };\n\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        -64
+      ],
+      "id": "5403bfba-d7c8-4d33-b0af-0c6eea427e76",
+      "name": "Code in JavaScript1",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Query to fetch details of Booking - File already shared, File name is Booking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        []
+      ]
+    },
+    "Query to fetch details of Booking - File already shared, File name is Booking": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "09b620f4-8748-4235-993a-90d40e23c1ee",
+  "activeVersionId": null,
+  "versionCounter": 34,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-03T16:44:30.592Z",
+      "createdAt": "2026-03-03T16:44:30.592Z",
+      "role": "workflow:owner",
+      "workflowId": "AwaiJYGfVEg1wXs0",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-04-02T05:37:01.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-04-01",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

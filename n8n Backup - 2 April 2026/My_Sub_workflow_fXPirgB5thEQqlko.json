@@ -1,0 +1,295 @@
+{
+  "updatedAt": "2026-03-02T10:11:56.857Z",
+  "createdAt": "2026-03-02T10:11:56.857Z",
+  "id": "fXPirgB5thEQqlko",
+  "name": "My Sub-workflow",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const items = $input.all();\n\nconst find = (type) =>\n  items.find(i => i.json.promptType === type)?.json?.content || \"\";\n\nconst videoSummary          = find(\"videoSummary\");\nconst userGuide             = find(\"userGuide\");\nconst productOverview       = find(\"productOverview\");\nconst productDescription    = find(\"productDescription\");\nconst researchReport        = find(\"researchReport\");\nconst communicationStrategy = find(\"communicationStrategy\");\nconst onePager              = find(\"onePager\");\nconst elevatorPitch         = find(\"elevatorPitch\");\nconst industryFeatureList   = find(\"industryFeatureList\");\nconst marketingScript       = find(\"marketingScript\");\nconst storyboard            = find(\"storyboard\");\nconst screenplay            = find(\"screenplay\");\n\nreturn [{\n  json: {\n    productName: items[0]?.json?.productName || \"Product\",\n\n    // Individual fields (for placeholders or selective use)\n    videoSummary,\n    userGuide,\n    productOverview,\n    productDescription,\n    researchReport,\n    communicationStrategy,\n    onePager,\n    elevatorPitch,\n    industryFeatureList,\n    marketingScript,\n    storyboard,\n    screenplay,\n\n    // Full combined document (for single insert into Google Doc)\n    fullDocument: `\nVIDEO SUMMARY\n${videoSummary}\n\nUSER GUIDE\n${userGuide}\n\nPRODUCT OVERVIEW\n${productOverview}\n\nPRODUCT DESCRIPTION\n${productDescription}\n\nRESEARCH REPORT\n${researchReport}\n\nCOMMUNICATION STRATEGY\n${communicationStrategy}\n\nONE PAGER\n${onePager}\n\nELEVATOR PITCH\n${elevatorPitch}\n\nINDUSTRY FEATURE LIST\n${industryFeatureList}\n\nMARKETING SCRIPT\n${marketingScript}\n\nSTORYBOARD\n${storyboard}\n\nSCREENPLAY\n${screenplay}\n    `.trim()\n  }\n}];",
+        "notice": ""
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5264,
+        -16
+      ],
+      "id": "791d04b5-cbcd-4856-a9e7-118165a1e9b9",
+      "name": "Code in JavaScript7"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9883fa13-148b-4ff6-867f-0fad063d7cf5",
+              "name": "videoSummary_firstItem",
+              "value": "={{ $('Code in JavaScript7').first().json.videoSummary }}",
+              "type": "string"
+            },
+            {
+              "id": "b821c174-b484-4997-ac75-f3e118a06ed6",
+              "name": "userGuide_firstItem",
+              "value": "={{ $('Code in JavaScript7').first().json.userGuide }}",
+              "type": "string"
+            },
+            {
+              "id": "52306964-9d14-45d1-919b-aaadad24791b",
+              "name": "productOverview_firstItem",
+              "value": "={{ $('Code in JavaScript7').first().json.productOverview }}",
+              "type": "string"
+            },
+            {
+              "id": "fdbe9262-fd34-4ffc-95d2-1c6b8990d54e",
+              "name": "productName",
+              "value": "={{ $json.productName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5472,
+        -16
+      ],
+      "id": "010f067e-0ae0-49b8-8419-1def7dd31269",
+      "name": "Return"
+    },
+    {
+      "id": "d8c2b0c6-2b4a-4d3b-b27e-236e6e1c20d6",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        5056,
+        -16
+      ],
+      "parameters": {
+        "inputSource": "passthrough"
+      }
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript7": {
+      "main": [
+        [
+          {
+            "node": "Return",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "21326c7a-628a-4ff5-88ff-f150ce1a77e3",
+  "activeVersionId": "21326c7a-628a-4ff5-88ff-f150ce1a77e3",
+  "versionCounter": 14,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-02T10:11:56.860Z",
+      "createdAt": "2026-03-02T10:11:56.860Z",
+      "role": "workflow:owner",
+      "workflowId": "fXPirgB5thEQqlko",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-04-02T05:37:01.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-04-01",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-02T10:11:56.861Z",
+    "createdAt": "2026-03-02T10:11:56.861Z",
+    "versionId": "21326c7a-628a-4ff5-88ff-f150ce1a77e3",
+    "workflowId": "fXPirgB5thEQqlko",
+    "nodes": [
+      {
+        "parameters": {
+          "mode": "runOnceForAllItems",
+          "language": "javaScript",
+          "jsCode": "const items = $input.all();\n\nconst find = (type) =>\n  items.find(i => i.json.promptType === type)?.json?.content || \"\";\n\nconst videoSummary          = find(\"videoSummary\");\nconst userGuide             = find(\"userGuide\");\nconst productOverview       = find(\"productOverview\");\nconst productDescription    = find(\"productDescription\");\nconst researchReport        = find(\"researchReport\");\nconst communicationStrategy = find(\"communicationStrategy\");\nconst onePager              = find(\"onePager\");\nconst elevatorPitch         = find(\"elevatorPitch\");\nconst industryFeatureList   = find(\"industryFeatureList\");\nconst marketingScript       = find(\"marketingScript\");\nconst storyboard            = find(\"storyboard\");\nconst screenplay            = find(\"screenplay\");\n\nreturn [{\n  json: {\n    productName: items[0]?.json?.productName || \"Product\",\n\n    // Individual fields (for placeholders or selective use)\n    videoSummary,\n    userGuide,\n    productOverview,\n    productDescription,\n    researchReport,\n    communicationStrategy,\n    onePager,\n    elevatorPitch,\n    industryFeatureList,\n    marketingScript,\n    storyboard,\n    screenplay,\n\n    // Full combined document (for single insert into Google Doc)\n    fullDocument: `\nVIDEO SUMMARY\n${videoSummary}\n\nUSER GUIDE\n${userGuide}\n\nPRODUCT OVERVIEW\n${productOverview}\n\nPRODUCT DESCRIPTION\n${productDescription}\n\nRESEARCH REPORT\n${researchReport}\n\nCOMMUNICATION STRATEGY\n${communicationStrategy}\n\nONE PAGER\n${onePager}\n\nELEVATOR PITCH\n${elevatorPitch}\n\nINDUSTRY FEATURE LIST\n${industryFeatureList}\n\nMARKETING SCRIPT\n${marketingScript}\n\nSTORYBOARD\n${storyboard}\n\nSCREENPLAY\n${screenplay}\n    `.trim()\n  }\n}];",
+          "notice": ""
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5264,
+          -16
+        ],
+        "id": "791d04b5-cbcd-4856-a9e7-118165a1e9b9",
+        "name": "Code in JavaScript7"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "9883fa13-148b-4ff6-867f-0fad063d7cf5",
+                "name": "videoSummary_firstItem",
+                "value": "={{ $('Code in JavaScript7').first().json.videoSummary }}",
+                "type": "string"
+              },
+              {
+                "id": "b821c174-b484-4997-ac75-f3e118a06ed6",
+                "name": "userGuide_firstItem",
+                "value": "={{ $('Code in JavaScript7').first().json.userGuide }}",
+                "type": "string"
+              },
+              {
+                "id": "52306964-9d14-45d1-919b-aaadad24791b",
+                "name": "productOverview_firstItem",
+                "value": "={{ $('Code in JavaScript7').first().json.productOverview }}",
+                "type": "string"
+              },
+              {
+                "id": "fdbe9262-fd34-4ffc-95d2-1c6b8990d54e",
+                "name": "productName",
+                "value": "={{ $json.productName }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          5472,
+          -16
+        ],
+        "id": "010f067e-0ae0-49b8-8419-1def7dd31269",
+        "name": "Return"
+      },
+      {
+        "id": "d8c2b0c6-2b4a-4d3b-b27e-236e6e1c20d6",
+        "typeVersion": 1.1,
+        "name": "Start",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          5056,
+          -16
+        ],
+        "parameters": {
+          "inputSource": "passthrough"
+        }
+      }
+    ],
+    "connections": {
+      "Start": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript7": {
+        "main": [
+          [
+            {
+              "node": "Return",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "N8N Admin",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-02T10:11:56.985Z",
+        "id": 72,
+        "workflowId": "fXPirgB5thEQqlko",
+        "versionId": "21326c7a-628a-4ff5-88ff-f150ce1a77e3",
+        "event": "activated",
+        "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+      }
+    ]
+  }
+}
