@@ -1,0 +1,445 @@
+{
+  "updatedAt": "2026-03-31T08:31:58.193Z",
+  "createdAt": "2025-12-26T08:30:09.536Z",
+  "id": "wJtg75lBfGX4HW2n",
+  "name": "Issue resolved",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "issue-resolved",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -576,
+        -48
+      ],
+      "id": "99fdd192-317e-4725-bb2d-0a4ce12bdac4",
+      "name": "Webhook",
+      "webhookId": "83f06387-8f77-416a-8671-a313485c8e1c",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        256,
+        16
+      ],
+      "id": "6b6c4431-8258-46b1-817e-3dd29a9a75cc",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  i.*,\n  i.id                        AS issue_id,\n  i.title                     AS issue_title,\n  i.status                    AS issue_status,\n  i.updated_at                AS issue_updated_at,\n  i.responsible_person_id     AS issue_owner_id,\n\n  -- issue owner / responsible person details\n  io.firstname                AS issue_owner_firstname,\n  io.lastname                 AS issue_owner_lastname,\n  io.email                    AS issue_owner_email,\n\n  pm.id                       AS project_id,\n  pm.title                    AS project_title,\n\n  -- project manager\n  pmo.email                   AS project_manager_email,\n  pmo.firstname               AS project_manager_firstname,\n  pmo.lastname                AS project_manager_lastname,\n\n  -- issue reporter (created by)\n  reporter.email              AS reporter_email,\n  reporter.firstname          AS reporter_firstname,\n  reporter.lastname           AS reporter_lastname,\n\n  -- linked task info\n  t.id                        AS task_id,\n  t.title                     AS task_title,\n  t.responsible_person_id     AS task_owner_id,\n  tp.firstname                AS task_owner_firstname,\n  tp.lastname                 AS task_owner_lastname,\n  tp.email                    AS task_owner_email,\n\n  -- milestone info\n  m.id                        AS milestone_id,\n  m.title                     AS milestone_title\n\nFROM issues i\n\n-- project\nJOIN project_managements pm\n  ON pm.id = i.project_management_id\n\n-- project manager\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\n-- issue reporter\nJOIN spree_users reporter\n  ON reporter.id = i.created_by_id\n\n-- issue owner / responsible person\nJOIN spree_users io\n  ON io.id = i.responsible_person_id\n\n-- linked task (optional)\nLEFT JOIN task_managements t\n  ON t.id = i.task_management_id\n\nLEFT JOIN spree_users tp\n  ON tp.id = t.responsible_person_id\n\n-- milestone (optional)\nLEFT JOIN milestones m\n  ON m.id = i.milestone_id\n\nWHERE\n  i.status IN ('completed', 'closed')\n  AND i.updated_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND i.updated_at > i.created_at;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -192,
+        -256
+      ],
+      "id": "10229d6f-12dc-46e8-851a-3d0d109b0662",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -496,
+        -272
+      ],
+      "id": "31f15259-2835-4e24-9121-2979d1a9a9cc",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{$json.project_manager_email}}\n",
+        "subject": "=Issue marked as resolved : {{$json.issue_title}}",
+        "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>Dear {{$json.project_manager_firstname}} {{$json.project_manager_lastname}},</p>\n\n  <p>We are pleased to inform you that the issue <b>{{$json.title}}</b> has been successfully resolved.</p>\n\n  <h3 style=\"color: #27ae60;\">Resolution Summary</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Type</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_type}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Severity / Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Linked Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.task_title || 'N/A'}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Resolved By</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.issue_owner_firstname}} {{$json.issue_owner_lastname}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/issues/{{$json.id}}\" target=\"_blank\">\n          View Issue Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p>Please review the resolution details. If you have any concerns, feel free to reopen the issue as needed.</p>\n\n  <p>Regards,<br>\n  <b>Issue Resolution & Quality Team</b></p>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        -208
+      ],
+      "id": "e336d7ba-c274-44e7-8f76-ea9d39d58f7e",
+      "name": "PM",
+      "webhookId": "75afec8b-0120-4482-a457-e6223661930e",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{$json.reporter_email}}\n",
+        "subject": "=Issue I marked as resolved : {{$json.title}}",
+        "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>Dear {{$json.reporter_firstname}} {{$json.reporter_lastname}},</p>\n\n  <p>We are pleased to inform you that the issue <b>{{$json.title}}</b> has been successfully resolved.</p>\n\n  <h3 style=\"color: #27ae60;\">Resolution Summary</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Type</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_type}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Severity / Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Linked Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.task_title || 'N/A'}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Resolved By</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.issue_owner_firstname}} {{$json.issue_owner_lastname}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/issues/{{$json.id}}\" target=\"_blank\">\n          View Issue Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p>Please review the resolution details. If you have any concerns, feel free to reopen the issue as needed.</p>\n\n  <p>Regards,<br>\n  <b>Issue Resolution & Quality Team</b></p>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "10186066-a7ca-4fd1-8eda-4af5d454b9f2",
+      "name": "Reporter",
+      "webhookId": "75afec8b-0120-4482-a457-e6223661930e",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{$json.issue_owner_email}}\n",
+        "subject": "=Issue marked as resolved : {{$json.title}}",
+        "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>Dear {{$json.issue_owner_firstname}} {{$json.issue_owner_lastname}},</p>\n\n  <p>We are pleased to inform you that the issue <b>{{$json.title}}</b> has been successfully resolved.</p>\n\n  <h3 style=\"color: #27ae60;\">Resolution Summary</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Type</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_type}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Severity / Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Linked Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.task_title || 'N/A'}} (ID: {{$json.task_id || 'N/A'}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Resolved By</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.issue_owner_firstname}} {{$json.issue_owner_lastname}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/issues/{{$json.id}}\" target=\"_blank\">\n          View Issue Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p>Please review the resolution details. If you have any concerns, feel free to reopen the issue as needed.</p>\n\n  <p>Regards,<br>\n  <b>Issue Resolution & Quality Team</b></p>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        160
+      ],
+      "id": "d159033d-4b1b-46e4-9b4b-ba29c7e1db86",
+      "name": "Issue Owner",
+      "webhookId": "75afec8b-0120-4482-a457-e6223661930e",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "PM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reporter",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Issue Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PM": {
+      "main": [
+        []
+      ]
+    },
+    "Reporter": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "63a4f29b-d3d7-48f5-9001-cd831d65de88",
+  "activeVersionId": "adf33b7f-8ac4-4c5c-b6a2-dda9d17a4334",
+  "versionCounter": 42,
+  "triggerCount": 2,
+  "shared": [
+    {
+      "updatedAt": "2025-12-26T08:30:09.538Z",
+      "createdAt": "2025-12-26T08:30:09.538Z",
+      "role": "workflow:owner",
+      "workflowId": "wJtg75lBfGX4HW2n",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-04-08T07:51:24.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-04-07",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-01-07T09:56:09.000Z",
+    "createdAt": "2026-01-07T09:56:05.154Z",
+    "versionId": "adf33b7f-8ac4-4c5c-b6a2-dda9d17a4334",
+    "workflowId": "wJtg75lBfGX4HW2n",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "issue-resolved",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -464,
+          -144
+        ],
+        "id": "99fdd192-317e-4725-bb2d-0a4ce12bdac4",
+        "name": "Webhook",
+        "webhookId": "83f06387-8f77-416a-8671-a313485c8e1c",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          256,
+          16
+        ],
+        "id": "6b6c4431-8258-46b1-817e-3dd29a9a75cc",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{$json.project_manager_email}},{{$json.reporter_email}}\n",
+          "subject": "=Issue {{$json.issue_title}} marked as resolved",
+          "html": "=Hello,\n\nThe issue “{{$json.issue_title}}” has been marked as resolved.\n\nProject: {{$json.project_title}}\nResolved at: {{$json.issue_updated_at}}\n\nRegards,\nPMS System\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          48,
+          -208
+        ],
+        "id": "e336d7ba-c274-44e7-8f76-ea9d39d58f7e",
+        "name": "Reporter, PM",
+        "webhookId": "75afec8b-0120-4482-a457-e6223661930e",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  i.id                AS issue_id,\n  i.title             AS issue_title,\n  i.status            AS issue_status,\n  i.updated_at        AS issue_updated_at,\n\n  pm.id               AS project_id,\n  pm.title            AS project_title,\n\n  -- project manager\n  pmo.email           AS project_manager_email,\n\n  -- issue reporter (created by)\n  reporter.email      AS reporter_email\n\nFROM issues i\n\n-- project\nJOIN project_managements pm\n  ON pm.id = i.project_management_id\n\n-- project manager\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\n-- issue reporter\nJOIN spree_users reporter\n  ON reporter.id = i.created_by_id\n\nWHERE\n  i.status IN ('resolved', 'closed')\n  AND i.updated_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND i.updated_at > i.created_at;\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -192,
+          -256
+        ],
+        "id": "10229d6f-12dc-46e8-851a-3d0d109b0662",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -336,
+          48
+        ],
+        "id": "31f15259-2835-4e24-9121-2979d1a9a9cc",
+        "name": "Schedule Trigger"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reporter, PM": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Reporter, PM",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "N8N Admin",
+    "name": "Version adf33b7f",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-07T09:56:09.062Z",
+        "id": 61,
+        "workflowId": "wJtg75lBfGX4HW2n",
+        "versionId": "adf33b7f-8ac4-4c5c-b6a2-dda9d17a4334",
+        "event": "activated",
+        "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+      }
+    ]
+  }
+}

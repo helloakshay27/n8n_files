@@ -1,0 +1,653 @@
+{
+  "updatedAt": "2026-02-03T06:27:35.280Z",
+  "createdAt": "2026-02-03T02:59:48.471Z",
+  "id": "AyK1piK31r7caqGb",
+  "name": "5000 Based Implementation",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -992,
+        -112
+      ],
+      "id": "878958e2-a04e-4500-9f05-ebe25a890f7a",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.id AS task_id,\n  t.responsible_person_id AS user_id,\n  DATE(t.completed_at) AS completed_date\nFROM task_managements t\nWHERE\n  t.status = 'completed'\n  AND DATE(t.completed_at) = CURDATE()\n  AND NOT EXISTS (\n    SELECT 1\n    FROM wallet_transactions wt\n    WHERE wt.resource_type = 'TaskManagement'\n      AND wt.resource_id = t.id\n      AND wt.point_type = 'daily_variable'\n  );\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -752,
+        464
+      ],
+      "id": "5680eff3-c1cc-459c-8cdf-c51680b0ca86",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  wt.booked_member_id AS user_id,\n  IFNULL(SUM(wt.amount), 0) AS credited_today\nFROM wallet_transactions wt\nWHERE\n  wt.point_type = 'daily_variable'\n  AND DATE(wt.created_at) = CURDATE()\nGROUP BY wt.booked_member_id;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -1008,
+        432
+      ],
+      "id": "5aae540d-433f-4690-b4ab-f2291cf2fa70",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// CONFIG\nconst YEARLY_VARIABLE = 120000;\nconst WORKING_DAYS = 24;\n\n// CALCULATIONS\nconst monthlyVariable = YEARLY_VARIABLE / 12;   // 10000\nconst dailyBucket = monthlyVariable * 0.5;      // 5000\nconst dailyCap = dailyBucket / WORKING_DAYS;    // 208.33\n\n// INPUTS\nconst completedTasks = $input.all(0).map(i => i.json); // Node 2\nconst creditedRows = $input.all(1).map(i => i.json);   // Node 3\n\n// Build credited map\nconst creditedMap = {};\nfor (const row of creditedRows) {\n  creditedMap[row.user_id] = Number(row.credited_today || 0);\n}\n\nconst output = [];\n\nfor (const task of completedTasks) {\n  const userId = task.user_id;\n  const taskId = task.task_id;\n\n  const alreadyCredited = creditedMap[userId] || 0;\n  const remaining = dailyCap - alreadyCredited;\n\n  if (remaining <= 0) continue;\n\n  output.push({\n    json: {\n      user_id: userId,\n      task_id: taskId,\n      points: Number(remaining.toFixed(2)),\n      remark: 'Daily variable task reward'\n    }\n  });\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        448
+      ],
+      "id": "e2ba8e75-48f5-4f49-82dd-dfcb4290da31",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const DAILY_CAP = 208.33;\nconst TASK_PERCENT = 0.20;\nconst DAILY_TASK_MAX = DAILY_CAP * TASK_PERCENT; // 41.66\n\nconst items = $input.all();\n\nconst assignedMap = {};\nconst completedMap = {};\n\nfor (const item of items) {\n  const data = item.json;\n\n  if (data.total_tasks_today !== undefined) {\n    assignedMap[data.user_id] = Number(data.total_tasks_today);\n  }\n\n  if (data.completed_tasks_today !== undefined) {\n    completedMap[data.user_id] = Number(data.completed_tasks_today);\n  }\n}\n\nconst output = [];\n\nfor (const userId in assignedMap) {\n  const total = assignedMap[userId];\n  const done = completedMap[userId] || 0;\n\n  if (!total || total <= 0 || done <= 0) continue;\n\n  const ratio = done / total;\n  const points = Math.min(\n    DAILY_TASK_MAX,\n    Number((ratio * DAILY_TASK_MAX).toFixed(2))\n  );\n\n  if (points <= 0) continue;\n\n  output.push({\n    json: {\n      user_id: Number(userId),\n      points,\n      remark: `Daily task completion: ${done}/${total}`\n    }\n  });\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -272,
+        -160
+      ],
+      "id": "4fa6ed0e-4b79-43bf-8662-d1799c2074fa",
+      "name": "Code in JavaScript1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -496,
+        -176
+      ],
+      "id": "45b4e84e-2e18-4b5c-933a-ce72a8135804",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bf55c290-cee1-4aa8-9e2d-9ade6abe420a",
+              "leftValue": "={{ $json.points }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -48,
+        -240
+      ],
+      "id": "7bfd576e-e5d4-4bdc-8b35-feebce757b44",
+      "name": "If",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO wallet_transactions (\n  transaction_type,\n  amount,\n  booked_member_id,\n  wallet_id,\n  resource_type,\n  resource_id,\n  remarks,\n  earned_at,\n  point_type,\n  created_at,\n  updated_at\n)\nSELECT\n  'credit',\n  {{ $json.points }},\n  {{ $json.user_id }},\n  w.id,\n  'DailyTask',\n  NULL,\n  '{{ $json.remark }}',\n  UTC_TIMESTAMP(),\n  'daily_task_reward',\n  UTC_TIMESTAMP(),\n  UTC_TIMESTAMP()\nFROM wallets w\nWHERE w.user_id = {{ $json.user_id }};\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        144,
+        -320
+      ],
+      "id": "47c199eb-3de1-4f57-8526-3266474c578d",
+      "name": "Execute a SQL query4",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE wallets\nSET\n  credited_amount = credited_amount + {{ $json.points }},\n  available_amount = available_amount + {{ $json.points }},\n  updated_at = UTC_TIMESTAMP()\nWHERE user_id = {{ $json.user_id }};\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        160,
+        -128
+      ],
+      "id": "69bb0908-b6a3-44f9-961d-dc31ae75c05c",
+      "name": "Execute a SQL query5",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.responsible_person_id AS user_id,\n  COUNT(*) AS total_tasks_today\nFROM task_managements t\nWHERE DATE(t.created_at) = CURDATE()\nGROUP BY t.responsible_person_id;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -736,
+        -272
+      ],
+      "id": "d5e793d3-676f-4f50-9243-3aaa8d7f2683",
+      "name": "Get Total Assigned Task Today",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.responsible_person_id AS user_id,\n  COUNT(*) AS completed_tasks_today\nFROM task_managements t\nWHERE\n  t.status = 'completed'\n  AND DATE(t.completed_at) = CURDATE()\nGROUP BY t.responsible_person_id;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -768,
+        -80
+      ],
+      "id": "826376e1-4c8f-48ec-aa98-73c0f17aa742",
+      "name": "Get Total Completed Task Today",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  user_id,\n  COUNT(*) AS total_todos_today\nFROM todos\nWHERE DATE(created_at) = UTC_DATE()\nGROUP BY user_id;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -752,
+        128
+      ],
+      "id": "cca2bd50-19e2-49cd-968e-3af52454a253",
+      "name": "Get Total ToDos Today",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  user_id,\n  COUNT(*) AS completed_todos_today\nFROM todos\nWHERE\n  status = 'completed'\n  AND DATE(updated_at) = UTC_DATE()\nGROUP BY user_id;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -752,
+        272
+      ],
+      "id": "ddf54285-c1c2-4c81-90e7-3ba5b17aedd3",
+      "name": "Get Completed ToDos Today",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -512,
+        192
+      ],
+      "id": "ab801ad0-3fa4-4e26-902c-62bd9fc3f31b",
+      "name": "Merge1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const DAILY_TODO_POOL = 20.83; // 10% of daily pool (≈ 208.33 * 10%)\n\nconst output = [];\n\nfor (const item of $input.all()) {\n  const user_id = item.json.user_id;\n  const total = Number(item.json.total_todos_today || 0);\n  const completed = Number(item.json.completed_todos_today || 0);\n\n  if (total === 0) continue;\n\n  const ratio = completed / total;\n  let points = ratio * DAILY_TODO_POOL;\n\n  // safety cap\n  if (points > DAILY_TODO_POOL) {\n    points = DAILY_TODO_POOL;\n  }\n\n  points = Number(points.toFixed(2));\n\n  if (points <= 0) continue;\n\n  output.push({\n    json: {\n      user_id,\n      points,\n      remark: `Daily todo completion: ${completed}/${total}`\n    }\n  });\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -176,
+        192
+      ],
+      "id": "90fd0e86-abe6-4b93-b3ad-b41bf722b66e",
+      "name": "Code in JavaScript2",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const map = {};\n\nfor (const item of $input.all()) {\n  const data = item.json;\n  const userId = data.user_id;\n\n  if (!map[userId]) {\n    map[userId] = {\n      user_id: userId,\n      total_todos_today: 0,\n      completed_todos_today: 0\n    };\n  }\n\n  if (typeof data.total_todos_today === 'number') {\n    map[userId].total_todos_today = data.total_todos_today;\n  }\n\n  if (typeof data.completed_todos_today === 'number') {\n    map[userId].completed_todos_today = data.completed_todos_today;\n  }\n}\n\nreturn Object.values(map).map(v => ({ json: v }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -336,
+        64
+      ],
+      "id": "1f21fa74-9821-4a5c-9158-9d3242643f39",
+      "name": "Code in JavaScript3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO wallet_transactions (\n  transaction_type,\n  amount,\n  booked_member_id,\n  wallet_id,\n  resource_type,\n  resource_id,\n  remarks,\n  earned_at,\n  point_type,\n  created_at,\n  updated_at\n)\nVALUES (\n  'credit',\n  {{ $json.points }},\n  {{ $json.user_id }},\n  (SELECT id FROM wallets WHERE user_id = {{ $json.user_id }} LIMIT 1),\n  'Todo',\n  CURDATE(),\n  '{{ $json.remark }}',\n  UTC_TIMESTAMP(),\n  'daily_todo',\n  UTC_TIMESTAMP(),\n  UTC_TIMESTAMP()\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        320,
+        96
+      ],
+      "id": "bbf94dd0-bce9-43c6-9b9d-666db7e36547",
+      "name": "Execute a SQL query2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE wallets\nSET\n  credited_amount = credited_amount + {{ $json.points }},\n  available_amount = available_amount + {{ $json.points }},\n  updated_at = UTC_TIMESTAMP()\nWHERE user_id = {{ $json.user_id }};\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        320,
+        272
+      ],
+      "id": "77ecf4a4-0830-449e-8f55-bd4cea457016",
+      "name": "Execute a SQL query3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ec8d4a2c-3c67-44e1-9a22-7df6ef1e524a",
+              "leftValue": "={{ $json.points }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        96
+      ],
+      "id": "76ad6542-0f28-42a4-bcbd-597776f26790",
+      "name": "If1",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Total Assigned Task Today",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Total Completed Task Today",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Total ToDos Today",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Completed ToDos Today",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        []
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Total Assigned Task Today": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Total Completed Task Today": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Total ToDos Today": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Completed ToDos Today": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "2b381fa1-e849-498b-8eeb-101f5847aafb",
+  "activeVersionId": null,
+  "versionCounter": 10,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-03T02:59:48.475Z",
+      "createdAt": "2026-02-03T02:59:48.475Z",
+      "role": "workflow:owner",
+      "workflowId": "AyK1piK31r7caqGb",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-04-08T07:51:24.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-04-07",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}
