@@ -1,0 +1,728 @@
+{
+  "updatedAt": "2026-03-31T07:44:54.825Z",
+  "createdAt": "2025-12-26T07:16:41.551Z",
+  "id": "Tbg6CMO2DAYXJFf8",
+  "name": "Task Assigned",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "task-assigned",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        528,
+        -304
+      ],
+      "id": "883f2760-6d54-4377-814f-49e72003a627",
+      "name": "Webhook",
+      "webhookId": "5de15c59-e86b-4b91-b644-763d36e00ab4",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.responsible_person_email}}\n",
+        "subject": "=New Task Assigned: {{$json.task_title}}\n\n\n",
+        "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.responsible_person_first_name}} {{$json.responsible_person_last_name}},\n  </p>\n\n  <p>\n    You have been assigned a new task requiring your attention.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Task Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Assigned To</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.responsible_person_first_name}} {{$json.responsible_person_last_name}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_start_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Planned End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Estimated Time (hrs)</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.estimated_time}}</td>\n    </tr>\n\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/tasks/{{$json.task_id}}\" target=\"_blank\">\n          View Task Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please begin execution and keep the task status updated.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Task Management System</strong>\n  </p>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        -272
+      ],
+      "id": "a60ec748-9e7f-452c-a122-661c0b5e7ebb",
+      "name": "Task Owner",
+      "webhookId": "8c21ec8e-b0d0-4411-bf36-6d2f28733a4f",
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        496,
+        -48
+      ],
+      "id": "59e444a3-a435-403f-a4f0-c62f08865dfb",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.id            AS task_id,\n  t.title         AS task_title,\n  t.description,\n  t.status,\n  t.priority,\n  t.target_date,\n  t.created_at    AS task_created_at,\n  t.parent_id     AS parent_id,\n  t.estimated_hour AS estimated_time,\n  CONVERT_TZ(t.expected_start_date, '+00:00', '+05:30') AS task_start_date,\n  CONVERT_TZ(t.target_date, '+00:00', '+05:30') AS task_end_date,\n\n  -- milestone\n  m.id            AS milestone_id,\n  m.title         AS milestone_title,\n\n  -- project\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  -- responsible person\n  u.id            AS responsible_person_id,\n  u.firstname     AS responsible_person_first_name,\n  u.lastname      AS responsible_person_last_name,\n  u.email         AS responsible_person_email,\n\n  -- observers (aggregated)\n  GROUP_CONCAT(DISTINCT obs.id) AS observer_ids,\n  GROUP_CONCAT(DISTINCT obs.firstname) AS observer_first_names,\n  GROUP_CONCAT(DISTINCT obs.lastname) AS observer_last_names,\n  GROUP_CONCAT(DISTINCT obs.email) AS observer_emails\n\nFROM task_managements t\n\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\nLEFT JOIN milestones m\n  ON m.id = t.milestone_id\n\nLEFT JOIN project_managements pm\n  ON pm.id = t.project_management_id\n\n-- join task_users for observers\nLEFT JOIN task_users tu\n  ON tu.task_id = t.id\n  AND tu.user_type = 'observer'\n  AND tu.active = 1\n\n-- join spree_users again for observer details\nLEFT JOIN spree_users obs\n  ON obs.id = tu.user_id\n\nWHERE\n  t.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND t.parent_id IS NULL\n\nGROUP BY t.id;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -192,
+        -256
+      ],
+      "id": "63239da3-a6a0-4a04-be3c-b426f936cb5d",
+      "name": "Fetch the created annd assigned tasks in pas 1 hr",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -464,
+        0
+      ],
+      "id": "02b3b8a5-4308-4563-8305-9f069f9c3722",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * from task_managements ORDER by created_at DESC LIMIT 5;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -288,
+        -464
+      ],
+      "id": "203bfbb6-809d-4bb6-b165-86b7e84c7f01",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM task_users ORDER BY created_at DESC LIMIT 5;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -160,
+        48
+      ],
+      "id": "75aac5bd-ca78-479f-b6f9-f806fb803048",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.id            AS task_id,\n  t.title         AS task_title,\n  t.description,\n  t.status,\n  t.priority,\n  t.target_date,\n  t.created_at    AS task_created_at,\n  t.parent_id     AS parent_id,\n  t.estimated_hour AS estimated_time,\n  CONVERT_TZ(t.expected_start_date, '+00:00', '+05:30') AS task_start_date,\n  CONVERT_TZ(t.target_date, '+00:00', '+05:30') AS task_end_date,\n\n  -- milestone\n  m.id            AS milestone_id,\n  m.title         AS milestone_title,\n\n  -- project\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  -- responsible person\n  u.id            AS responsible_person_id,\n  u.firstname     AS responsible_person_first_name,\n  u.lastname      AS responsible_person_last_name,\n  u.email         AS responsible_person_email,\n\n  -- observers (aggregated)\n  GROUP_CONCAT(DISTINCT obs.id) AS observer_ids,\n  GROUP_CONCAT(DISTINCT obs.firstname) AS observer_first_names,\n  GROUP_CONCAT(DISTINCT obs.lastname) AS observer_last_names,\n  GROUP_CONCAT(DISTINCT obs.email) AS observer_emails\n\nFROM task_managements t\n\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\nLEFT JOIN milestones m\n  ON m.id = t.milestone_id\n\nLEFT JOIN project_managements pm\n  ON pm.id = t.project_management_id\n\n-- join task_users for observers\nLEFT JOIN task_users tu\n  ON tu.task_id = t.id\n  AND tu.user_type = 'observer'\n  AND tu.active = 1\n\n-- join spree_users again for observer details\nLEFT JOIN spree_users obs\n  ON obs.id = tu.user_id\n\nWHERE\n  t.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND t.parent_id IS NULL\n\nGROUP BY t.id;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -128,
+        240
+      ],
+      "id": "3ec231e7-936e-4351-aae6-85b61246868b",
+      "name": "Fetch the created annd assigned tasks in pas 1 hr1",
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = [];\n\nfor (const item of $input.all()) {\n  const emails = (item.json.observer_emails || '').split(',');\n  const firstNames = (item.json.observer_first_names || '').split(',');\n  const lastNames = (item.json.observer_last_names || '').split(',');\n\n  for (let i = 0; i < emails.length; i++) {\n    if (!emails[i]) continue;\n\n    items.push({\n      json: {\n        ...item.json,\n\n        observer_email: emails[i].trim(),\n        observer_first_name: firstNames[i]?.trim(),\n        observer_last_name: lastNames[i]?.trim()\n      }\n    });\n  }\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        -32
+      ],
+      "id": "deee34ba-a94e-483e-869c-fdd51daf8a1c",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.id            AS task_id,\n  t.title         AS task_title,\n  t.description,\n  t.status,\n  t.priority,\n  t.target_date,\n  t.created_at    AS task_created_at,\n  t.parent_id     AS parent_id,\n  t.estimated_hour AS estimated_time,\n  CONVERT_TZ(t.expected_start_date, '+00:00', '+05:30') AS task_start_date,\n  CONVERT_TZ(t.target_date, '+00:00', '+05:30') AS task_end_date,\n\n  -- milestone (optional)\n  m.id            AS milestone_id,\n  m.title         AS milestone_title,\n\n  -- project (direct from task)\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  -- responsible person\n  u.id            AS responsible_person_id,\n  u.firstname     AS responsible_person_first_name,\n  u.lastname      AS responsible_person_last_name,\n  u.email         AS responsible_person_email\n\nFROM task_managements t\n\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\n-- milestone join\nLEFT JOIN milestones m\n  ON m.id = t.milestone_id\n\n-- project join directly from task\nLEFT JOIN project_managements pm\n  ON pm.id = t.project_management_id\n\nWHERE\n  t.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND t.parent_id IS NULL;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -464,
+        272
+      ],
+      "id": "58cd4693-b148-4624-8ed8-9b32d944bc4a",
+      "name": "Fetch the created annd assigned tasks in pas 1 hr2 Without Observers",
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "={{$json.observer_email}}",
+        "subject": "=Added as Observer: {{$json.task_title}}\n\n\n",
+        "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.observer_first_name}} {{$json.observer_last_name}},\n  </p>\n\n  <p>\n    You have been added as an observer to this task to monitor its progress.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Task Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Assigned To</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.responsible_person_first_name}} {{$json.responsible_person_last_name}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_start_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Planned End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Estimated Time (hrs)</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.estimated_time}}</td>\n    </tr>\n\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/tasks/{{$json.task_id}}\" target=\"_blank\">\n          View Task Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    No action is required from your side. You will be notified of any updates.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Task Management System</strong>\n  </p>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        320,
+        80
+      ],
+      "id": "32689637-f9bd-478a-89db-5d6123b6fcb0",
+      "name": "Observers",
+      "webhookId": "8c21ec8e-b0d0-4411-bf36-6d2f28733a4f",
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Task Owner": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch the created annd assigned tasks in pas 1 hr": {
+      "main": [
+        [
+          {
+            "node": "Task Owner",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch the created annd assigned tasks in pas 1 hr",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch the created annd assigned tasks in pas 1 hr1": {
+      "main": [
+        []
+      ]
+    },
+    "Observers": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Observers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "2ae597ee-5ec6-4071-8472-8a482847ec3b",
+  "activeVersionId": "e3c8bd5b-c12d-4c66-b3d1-80f2abee7a8b",
+  "versionCounter": 45,
+  "triggerCount": 2,
+  "shared": [
+    {
+      "updatedAt": "2025-12-26T07:16:41.557Z",
+      "createdAt": "2025-12-26T07:16:41.557Z",
+      "role": "workflow:owner",
+      "workflowId": "Tbg6CMO2DAYXJFf8",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-04-13T06:56:34.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-04-12",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-30T10:13:58.000Z",
+    "createdAt": "2026-03-30T10:12:07.859Z",
+    "versionId": "e3c8bd5b-c12d-4c66-b3d1-80f2abee7a8b",
+    "workflowId": "Tbg6CMO2DAYXJFf8",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "task-assigned",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          528,
+          -304
+        ],
+        "id": "883f2760-6d54-4377-814f-49e72003a627",
+        "name": "Webhook",
+        "webhookId": "5de15c59-e86b-4b91-b644-763d36e00ab4",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{$json.responsible_person_email}}\n",
+          "subject": "=New Task Assigned: {{$json.task_title}}\n\n\n",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.responsible_person_first_name}} {{$json.responsible_person_last_name}},\n  </p>\n\n  <p>\n    You have been assigned a new task requiring your attention.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Task Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Assigned To</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.responsible_person_first_name}} {{$json.responsible_person_last_name}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_start_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Planned End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Estimated Time (hrs)</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.estimated_time}}</td>\n    </tr>\n\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/tasks/{{$json.task_id}}\" target=\"_blank\">\n          View Task Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please begin execution and keep the task status updated.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Task Management System</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          80,
+          -272
+        ],
+        "id": "a60ec748-9e7f-452c-a122-661c0b5e7ebb",
+        "name": "Task Owner",
+        "webhookId": "8c21ec8e-b0d0-4411-bf36-6d2f28733a4f",
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          496,
+          -48
+        ],
+        "id": "59e444a3-a435-403f-a4f0-c62f08865dfb",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  t.id            AS task_id,\n  t.title         AS task_title,\n  t.description,\n  t.status,\n  t.priority,\n  t.target_date,\n  t.created_at    AS task_created_at,\n  t.parent_id     AS parent_id,\n  t.estimated_hour AS estimated_time,\n  CONVERT_TZ(t.expected_start_date, '+00:00', '+05:30') AS task_start_date,\n  CONVERT_TZ(t.target_date, '+00:00', '+05:30') AS task_end_date,\n\n  -- milestone\n  m.id            AS milestone_id,\n  m.title         AS milestone_title,\n\n  -- project\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  -- responsible person\n  u.id            AS responsible_person_id,\n  u.firstname     AS responsible_person_first_name,\n  u.lastname      AS responsible_person_last_name,\n  u.email         AS responsible_person_email,\n\n  -- observers (aggregated)\n  GROUP_CONCAT(DISTINCT obs.id) AS observer_ids,\n  GROUP_CONCAT(DISTINCT obs.firstname) AS observer_first_names,\n  GROUP_CONCAT(DISTINCT obs.lastname) AS observer_last_names,\n  GROUP_CONCAT(DISTINCT obs.email) AS observer_emails\n\nFROM task_managements t\n\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\nLEFT JOIN milestones m\n  ON m.id = t.milestone_id\n\nLEFT JOIN project_managements pm\n  ON pm.id = t.project_management_id\n\n-- join task_users for observers\nLEFT JOIN task_users tu\n  ON tu.task_id = t.id\n  AND tu.user_type = 'observer'\n  AND tu.active = 1\n\n-- join spree_users again for observer details\nLEFT JOIN spree_users obs\n  ON obs.id = tu.user_id\n\nWHERE\n  t.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND t.parent_id IS NULL\n\nGROUP BY t.id;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -192,
+          -256
+        ],
+        "id": "63239da3-a6a0-4a04-be3c-b426f936cb5d",
+        "name": "Fetch the created annd assigned tasks in pas 1 hr",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -464,
+          0
+        ],
+        "id": "02b3b8a5-4308-4563-8305-9f069f9c3722",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * from task_managements ORDER by created_at DESC LIMIT 5;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -288,
+          -464
+        ],
+        "id": "203bfbb6-809d-4bb6-b165-86b7e84c7f01",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * FROM task_users ORDER BY created_at DESC LIMIT 5;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -160,
+          48
+        ],
+        "id": "75aac5bd-ca78-479f-b6f9-f806fb803048",
+        "name": "Execute a SQL query1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  t.id            AS task_id,\n  t.title         AS task_title,\n  t.description,\n  t.status,\n  t.priority,\n  t.target_date,\n  t.created_at    AS task_created_at,\n  t.parent_id     AS parent_id,\n  t.estimated_hour AS estimated_time,\n  CONVERT_TZ(t.expected_start_date, '+00:00', '+05:30') AS task_start_date,\n  CONVERT_TZ(t.target_date, '+00:00', '+05:30') AS task_end_date,\n\n  -- milestone\n  m.id            AS milestone_id,\n  m.title         AS milestone_title,\n\n  -- project\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  -- responsible person\n  u.id            AS responsible_person_id,\n  u.firstname     AS responsible_person_first_name,\n  u.lastname      AS responsible_person_last_name,\n  u.email         AS responsible_person_email,\n\n  -- observers (aggregated)\n  GROUP_CONCAT(DISTINCT obs.id) AS observer_ids,\n  GROUP_CONCAT(DISTINCT obs.firstname) AS observer_first_names,\n  GROUP_CONCAT(DISTINCT obs.lastname) AS observer_last_names,\n  GROUP_CONCAT(DISTINCT obs.email) AS observer_emails\n\nFROM task_managements t\n\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\nLEFT JOIN milestones m\n  ON m.id = t.milestone_id\n\nLEFT JOIN project_managements pm\n  ON pm.id = t.project_management_id\n\n-- join task_users for observers\nLEFT JOIN task_users tu\n  ON tu.task_id = t.id\n  AND tu.user_type = 'observer'\n  AND tu.active = 1\n\n-- join spree_users again for observer details\nLEFT JOIN spree_users obs\n  ON obs.id = tu.user_id\n\nWHERE\n  t.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND t.parent_id IS NULL\n\nGROUP BY t.id;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -128,
+          240
+        ],
+        "id": "3ec231e7-936e-4351-aae6-85b61246868b",
+        "name": "Fetch the created annd assigned tasks in pas 1 hr1",
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = [];\n\nfor (const item of $input.all()) {\n  const emails = (item.json.observer_emails || '').split(',');\n  const firstNames = (item.json.observer_first_names || '').split(',');\n  const lastNames = (item.json.observer_last_names || '').split(',');\n\n  for (let i = 0; i < emails.length; i++) {\n    if (!emails[i]) continue;\n\n    items.push({\n      json: {\n        ...item.json,\n\n        observer_email: emails[i].trim(),\n        observer_first_name: firstNames[i]?.trim(),\n        observer_last_name: lastNames[i]?.trim()\n      }\n    });\n  }\n}\n\nreturn items;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          64,
+          -32
+        ],
+        "id": "deee34ba-a94e-483e-869c-fdd51daf8a1c",
+        "name": "Code in JavaScript",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  t.id            AS task_id,\n  t.title         AS task_title,\n  t.description,\n  t.status,\n  t.priority,\n  t.target_date,\n  t.created_at    AS task_created_at,\n  t.parent_id     AS parent_id,\n  t.estimated_hour AS estimated_time,\n  CONVERT_TZ(t.expected_start_date, '+00:00', '+05:30') AS task_start_date,\n  CONVERT_TZ(t.target_date, '+00:00', '+05:30') AS task_end_date,\n\n  -- milestone (optional)\n  m.id            AS milestone_id,\n  m.title         AS milestone_title,\n\n  -- project (direct from task)\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  -- responsible person\n  u.id            AS responsible_person_id,\n  u.firstname     AS responsible_person_first_name,\n  u.lastname      AS responsible_person_last_name,\n  u.email         AS responsible_person_email\n\nFROM task_managements t\n\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\n-- milestone join\nLEFT JOIN milestones m\n  ON m.id = t.milestone_id\n\n-- project join directly from task\nLEFT JOIN project_managements pm\n  ON pm.id = t.project_management_id\n\nWHERE\n  t.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND t.parent_id IS NULL;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -464,
+          272
+        ],
+        "id": "58cd4693-b148-4624-8ed8-9b32d944bc4a",
+        "name": "Fetch the created annd assigned tasks in pas 1 hr2 Without Observers",
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{$json.observer_email}}",
+          "subject": "=Added as Observer: {{$json.task_title}}\n\n\n",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.observer_first_name}} {{$json.observer_last_name}},\n  </p>\n\n  <p>\n    You have been added as an observer to this task to monitor its progress.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Task Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Assigned To</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.responsible_person_first_name}} {{$json.responsible_person_last_name}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_start_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Planned End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Estimated Time (hrs)</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.estimated_time}}</td>\n    </tr>\n\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/tasks/{{$json.task_id}}\" target=\"_blank\">\n          View Task Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    No action is required from your side. You will be notified of any updates.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Task Management System</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          320,
+          80
+        ],
+        "id": "32689637-f9bd-478a-89db-5d6123b6fcb0",
+        "name": "Observers",
+        "webhookId": "8c21ec8e-b0d0-4411-bf36-6d2f28733a4f",
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Task Owner": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch the created annd assigned tasks in pas 1 hr": {
+        "main": [
+          [
+            {
+              "node": "Task Owner",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Execute a SQL query1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch the created annd assigned tasks in pas 1 hr1": {
+        "main": [
+          []
+        ]
+      },
+      "Observers": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Observers",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "N8N Admin",
+    "name": "Version e3c8bd5b",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-30T10:13:58.817Z",
+        "id": 77,
+        "workflowId": "Tbg6CMO2DAYXJFf8",
+        "versionId": "e3c8bd5b-c12d-4c66-b3d1-80f2abee7a8b",
+        "event": "activated",
+        "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+      }
+    ]
+  }
+}

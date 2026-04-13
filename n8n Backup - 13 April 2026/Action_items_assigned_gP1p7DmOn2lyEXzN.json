@@ -1,0 +1,375 @@
+{
+  "updatedAt": "2026-01-12T12:17:45.763Z",
+  "createdAt": "2025-12-26T08:43:26.598Z",
+  "id": "gP1p7DmOn2lyEXzN",
+  "name": "Action items assigned",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        240,
+        0
+      ],
+      "id": "72fd2bf7-cb4f-4345-bd07-9c8fcd42ba00",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "action-item-assigned",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -592,
+        -112
+      ],
+      "id": "9cd1a291-98ba-4f80-aa6d-7fe0cbc9ff21",
+      "name": "Webhook",
+      "webhookId": "c7179830-bba2-412d-aec4-dff531303d2a",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{ $json.responsible_user_email }}\n",
+        "subject": "= New MoM Action Item Assigned – {{$json.action_title}}\n\n",
+        "emailFormat": "=Dear {{$json.RecipientName}},\n\nYou have been assigned a new action item originating from the meeting <b>{{$json.mom_title}}</b>.\n\nAction Item Details:\n• Action Title: {{$json.action_title}}\n• Due Date: {{$json.due_date}}\n• Assigned By: {{$json.assigned_by_name}}\n\nPlease ensure timely completion and keep the status updated.\n\nRegards,\nPMO – Action Tracking\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -16,
+        -208
+      ],
+      "id": "ca198125-5fc4-4fdb-a122-e1812960ce21",
+      "name": "Action Owners",
+      "webhookId": "4914fb6b-7016-404b-bb7a-981e10b73456",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  mt.id                 AS mom_task_id,\n  mt.description        AS action_description,\n  mt.target_date,\n  mt.status             AS action_status,\n  mt.created_at         AS action_created_at,\n\n  md.id                 AS mom_id,\n  md.title              AS mom_title,\n  md.meeting_date,\n\n  su.id                 AS responsible_user_id,\n  su.firstname          AS responsible_user_first_name,\n  su.lastname           AS responsible_user_last_name,\n  su.email              AS responsible_user_email\n\nFROM mom_tasks mt\n\nJOIN mom_details md\n  ON md.id = mt.mom_detail_id\n\nJOIN spree_users su\n  ON su.id = mt.responsible_person_id\n\nWHERE\n  mt.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND su.email IS NOT NULL\n  AND su.email != '';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -304,
+        -224
+      ],
+      "id": "2ed9de4a-9b8b-4b58-8a89-23d27a55619f",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -368,
+        48
+      ],
+      "id": "82026b88-8a6f-4373-a6ee-f17bdd72676f",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Action Owners": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Action Owners",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "80cf4b88-80a2-416e-afcc-43dcc88a324f",
+  "activeVersionId": "193d12ed-130a-4d61-9563-ab806284115c",
+  "versionCounter": 47,
+  "triggerCount": 2,
+  "shared": [
+    {
+      "updatedAt": "2025-12-26T08:43:26.603Z",
+      "createdAt": "2025-12-26T08:43:26.603Z",
+      "role": "workflow:owner",
+      "workflowId": "gP1p7DmOn2lyEXzN",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-04-13T06:56:34.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-04-12",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-01-09T07:22:56.000Z",
+    "createdAt": "2026-01-09T07:15:11.547Z",
+    "versionId": "193d12ed-130a-4d61-9563-ab806284115c",
+    "workflowId": "gP1p7DmOn2lyEXzN",
+    "nodes": [
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          240,
+          0
+        ],
+        "id": "72fd2bf7-cb4f-4345-bd07-9c8fcd42ba00",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "action-item-assigned",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -592,
+          -112
+        ],
+        "id": "9cd1a291-98ba-4f80-aa6d-7fe0cbc9ff21",
+        "name": "Webhook",
+        "webhookId": "c7179830-bba2-412d-aec4-dff531303d2a",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{ $json.responsible_user_email }}\n",
+          "subject": "=You have a new action item: {{$json.action_description}} (from meeting)",
+          "emailFormat": "=Hello {{ $json.responsible_user_first_name }},\n\nYou have been assigned a new action item from MoM \"{{ $json.mom_title }}\".\n\nAction: {{ $json.action_description }}\nTarget Date: {{ $json.target_date }}\n\nPlease take necessary action.\n\nRegards,\nFM Team\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          -16,
+          -208
+        ],
+        "id": "ca198125-5fc4-4fdb-a122-e1812960ce21",
+        "name": "Action Owners",
+        "webhookId": "4914fb6b-7016-404b-bb7a-981e10b73456",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  mt.id                 AS mom_task_id,\n  mt.description        AS action_description,\n  mt.target_date,\n  mt.status             AS action_status,\n  mt.created_at         AS action_created_at,\n\n  md.id                 AS mom_id,\n  md.title              AS mom_title,\n  md.meeting_date,\n\n  su.id                 AS responsible_user_id,\n  su.firstname          AS responsible_user_first_name,\n  su.lastname           AS responsible_user_last_name,\n  su.email              AS responsible_user_email\n\nFROM mom_tasks mt\n\nJOIN mom_details md\n  ON md.id = mt.mom_detail_id\n\nJOIN spree_users su\n  ON su.id = mt.responsible_person_id\n\nWHERE\n  mt.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND su.email IS NOT NULL\n  AND su.email != '';\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -304,
+          -224
+        ],
+        "id": "2ed9de4a-9b8b-4b58-8a89-23d27a55619f",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -368,
+          48
+        ],
+        "id": "82026b88-8a6f-4373-a6ee-f17bdd72676f",
+        "name": "Schedule Trigger"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Action Owners": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Action Owners",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "N8N Admin",
+    "name": "Version 193d12ed",
+    "description": "",
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-01-09T07:22:56.908Z",
+        "id": 71,
+        "workflowId": "gP1p7DmOn2lyEXzN",
+        "versionId": "193d12ed-130a-4d61-9563-ab806284115c",
+        "event": "activated",
+        "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+      }
+    ]
+  }
+}
