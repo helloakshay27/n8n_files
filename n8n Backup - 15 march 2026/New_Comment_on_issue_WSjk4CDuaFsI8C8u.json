@@ -1,0 +1,302 @@
+{
+  "updatedAt": "2026-03-31T08:51:42.329Z",
+  "createdAt": "2026-03-31T05:25:46.447Z",
+  "id": "WSjk4CDuaFsI8C8u",
+  "name": "New Comment on issue",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "e7c995f2-56dc-4aa9-b39c-d7ac70cc91e0",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -544,
+        128
+      ],
+      "id": "55b83474-0948-484d-aa08-ce1142c6feb0",
+      "name": "Webhook",
+      "webhookId": "e7c995f2-56dc-4aa9-b39c-d7ac70cc91e0",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        272,
+        48
+      ],
+      "id": "13a4cbea-4480-4d19-9d55-9b640ca4304c",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  -- COMMENT DATA\n  c.id                         AS comment_id,\n  c.body                       AS comment_body,\n  CONVERT_TZ(c.created_at, '+00:00', '+05:30')                 AS comment_created_at,\n  c.commentor_id               AS commented_by_id,\n\n  commenter.firstname          AS commented_by_firstname,\n  commenter.lastname           AS commented_by_lastname,\n  commenter.email              AS commented_by_email,\n\n  -- ISSUE FULL DATA\n  i.*,\n  i.id                         AS issue_id,\n  i.title                      AS issue_title,\n  i.created_at                 AS issue_created_at,\n  i.end_date                   AS issue_end_date,\n  i.status                     AS issue_status,\n  i.priority                   AS issue_priority,\n\n  -- PROJECT\n  pm.id                        AS project_id,\n  pm.title                     AS project_title,\n\n  -- ISSUE OWNER\n  io.email                     AS issue_owner_email,\n  io.firstname                 AS issue_owner_firstname,\n  io.lastname                  AS issue_owner_lastname,\n\n  -- PROJECT MANAGER\n  pmo.email                    AS project_manager_email,\n  pmo.firstname                AS project_manager_firstname,\n  pmo.lastname                  AS project_manager_lastname,\n\n  -- CREATED BY\n  cb.firstname                 AS created_by_firstname,\n  cb.lastname                  AS created_by_lastname,\n\n  -- MILESTONE\n  m.id                         AS milestone_id,\n  m.title                      AS milestone_title,\n\n  -- TASK INFO\n  t.id                         AS task_id,\n  t.title                      AS task_title,\n\n  -- MENTIONED USER\n  u.id                         AS mentioned_user_id,\n  u.firstname                  AS mentioned_user_firstname,\n  u.lastname                   AS mentioned_user_lastname,\n  u.email                      AS mentioned_user_email\n\nFROM comments c\n\n-- ISSUE\nJOIN issues i\n  ON i.id = c.commentable_id\n AND c.commentable_type = 'Issue'\n\n-- ISSUE OWNER\nJOIN spree_users io\n  ON io.id = i.responsible_person_id\n\n-- PROJECT\nJOIN project_managements pm\n  ON pm.id = i.project_management_id\n\n-- PROJECT MANAGER\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\n-- CREATED BY\nLEFT JOIN spree_users cb\n  ON cb.id = i.created_by_id\n\n-- COMMENTER\nLEFT JOIN spree_users commenter\n  ON commenter.id = c.commentor_id\n\n-- MILESTONE (from issue)\nLEFT JOIN milestones m\n  ON m.id = i.milestone_id\n\n-- TASK (from issue)\nLEFT JOIN task_managements t\n  ON t.id = i.task_management_id\n\n-- MENTIONED USERS\nLEFT JOIN spree_users u\n  ON c.body REGEXP CONCAT('\\\\@\\\\[.*\\\\]\\\\(', u.id, '\\\\)')\n\nWHERE\n  c.created_at >= UTC_TIMESTAMP() - INTERVAL 30 MINUTE;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -240,
+        -224
+      ],
+      "id": "c1f4ca9b-45dc-47f3-bf6c-e94a0dce8b2b",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -480,
+        -224
+      ],
+      "id": "686e35b8-9072-492d-91aa-1b8b339f78f8",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{$json.issue_owner_email}}",
+        "subject": "=New Issue Logged: {{$json.issue_title}}\n\n",
+        "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.issue_owner_firstname}} {{$json.issue_owner_lastname}},\n  </p>\n\n  <p>\n    An issue has been logged in the system and assigned for review and resolution.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Issue Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Type</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_type}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.end_date || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Linked Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.task_title || 'N/A'}})\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Created By</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.created_by_firstname}} {{$json.created_by_lastname}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/issues/{{$json.id}}\" target=\"_blank\">\n          View Issue Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the issue details and initiate corrective action as appropriate.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Issue & Quality Management System</strong>\n  </p>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "2531e579-a2ec-47c2-8b7d-cbe35a6b399e",
+      "name": "Issue Owner",
+      "webhookId": "6a7f000e-5952-4c88-a925-67750d6cbccd",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM comments ORDER BY created_at DESC LIMIT 5;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -288,
+        48
+      ],
+      "id": "db258fb4-61d7-443d-b2ac-87ca49e78bfe",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "notificaions@lockated.com",
+        "toEmail": "={{$json.recipient_email}}",
+        "subject": "=New Comment Added on Issue: {{$json.issue_title}}\n",
+        "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n  <p>Dear {{$json.recipient_firstname}} {{$json.recipient_lastname}},</p>\n\n  <p>A new comment has been added to the issue <strong>{{$json.issue_title}}</strong> for your review.</p>\n\n  <h3 style=\"color: #2c3e50;\">Comment Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_created_at}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_end_date || 'N/A'}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Linked Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Commented By</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.commented_by_firstname}} {{$json.commented_by_lastname}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Comment</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">“{{$json.comment_body}}”</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue URL</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/issues/{{$json.issue_id}}\" target=\"_blank\">View Issue</a>\n      </td>\n    </tr>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review and respond if any action is required.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Issue Collaboration System</strong>\n  </p>\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        256,
+        -240
+      ],
+      "id": "f0515dd6-b5b6-4a69-8ca3-744baabea60a",
+      "name": "Issue Owner and Comment Participants",
+      "webhookId": "1b64978b-5f91-480c-8af8-036feee61b17",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "e6BxRubia0RizPKp",
+          "name": "Lockated Local SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nlet emails = [];\n\nitems.forEach(item => {\n  const json = item.json;\n\n  // Use a Map to deduplicate recipients per comment\n  const recipientsMap = new Map();\n\n  // 1️⃣ Issue owner\n  if (json.issue_owner_email) {\n    recipientsMap.set(json.issue_owner_email, {\n      email: json.issue_owner_email,\n      firstname: json.issue_owner_firstname,\n      lastname: json.issue_owner_lastname,\n    });\n  }\n\n  // 2️⃣ Mentioned users\n  if (json.mentioned_user_email) {\n    recipientsMap.set(json.mentioned_user_email, {\n      email: json.mentioned_user_email,\n      firstname: json.mentioned_user_firstname || '',\n      lastname: json.mentioned_user_lastname || '',\n    });\n  }\n\n  // 3️⃣ Build email objects per recipient\n  recipientsMap.forEach(recipient => {\n    emails.push({\n      json: {\n        comment_id: json.comment_id,\n        comment_body: json.comment_body,\n        comment_created_at: json.comment_created_at,\n        commented_by_firstname: json.commented_by_firstname,\n        commented_by_lastname: json.commented_by_lastname,\n\n        issue_id: json.issue_id,\n        issue_title: json.issue_title,\n        issue_created_at: json.issue_created_at,\n        issue_end_date: json.issue_end_date,\n        issue_status: json.issue_status,\n        issue_priority: json.issue_priority,\n\n        project_id: json.project_id,\n        project_title: json.project_title,\n\n        milestone_id: json.milestone_id,\n        milestone_title: json.milestone_title,\n\n        task_id: json.task_id,\n        task_title: json.task_title,\n\n        recipient_email: recipient.email,\n        recipient_firstname: recipient.firstname,\n        recipient_lastname: recipient.lastname\n      }\n    });\n  });\n});\n\nreturn emails;\n\nreturn emails;\n\n// const items = $input.all();\n\n// let emails = [];\n\n// items.forEach(base => {\n//   const json = base.json;\n\n//   let recipients = [];\n\n//   // 1️⃣ Issue owner\n//   if (json.issue_owner_email) {\n//     recipients.push({\n//       email: json.issue_owner_email,\n//       firstname: json.issue_owner_firstname,\n//       lastname: json.issue_owner_lastname,\n//     });\n//   }\n\n//   // 2️⃣ Mentioned users (unique per comment)\n//   const mentionedUsersMap = new Map();\n//   if (json.mentioned_user_email) {\n//     mentionedUsersMap.set(json.mentioned_user_email, {\n//       email: json.mentioned_user_email,\n//       firstname: json.mentioned_user_firstname || '',\n//       lastname: json.mentioned_user_lastname || '',\n//     });\n//   }\n\n//   recipients.push(...mentionedUsersMap.values());\n\n//   // 3️⃣ Build email items with milestone, task, and project info\n//   recipients.forEach(recipient => {\n//     emails.push({\n//       json: {\n//         comment_id: json.comment_id,\n//         comment_body: json.comment_body,\n//         comment_created_at: json.comment_created_at,\n//         commented_by_firstname: json.commented_by_firstname,\n//         commented_by_lastname: json.commented_by_lastname,\n\n//         issue_id: json.issue_id,\n//         issue_title: json.issue_title,\n//         issue_created_at: json.issue_created_at,\n//         issue_end_date: json.issue_end_date,\n//         issue_status: json.issue_status,\n//         issue_priority: json.issue_priority,\n\n//         project_id: json.project_id,\n//         project_title: json.project_title,\n\n//         milestone_id: json.milestone_id,\n//         milestone_title: json.milestone_title,\n\n//         task_id: json.task_id,\n//         task_title: json.task_title,\n\n//         recipient_email: recipient.email,\n//         recipient_firstname: recipient.firstname,\n//         recipient_lastname: recipient.lastname\n//       }\n//     });\n//   });\n// });\n\n// return emails;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -272
+      ],
+      "id": "5bc21446-51b6-4a01-874d-bc6e7a9de670",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Issue Owner": {
+      "main": [
+        []
+      ]
+    },
+    "Issue Owner and Comment Participants": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Issue Owner and Comment Participants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "8917dd34-d078-4077-bd8a-2ef7cf530e6d",
+  "activeVersionId": null,
+  "versionCounter": 45,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-03-31T05:25:46.453Z",
+      "createdAt": "2026-03-31T05:25:46.453Z",
+      "role": "workflow:owner",
+      "workflowId": "WSjk4CDuaFsI8C8u",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-04-15T07:07:10.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-04-14",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

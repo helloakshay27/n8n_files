@@ -1,0 +1,276 @@
+{
+  "updatedAt": "2026-01-19T13:03:07.435Z",
+  "createdAt": "2026-01-16T06:56:24.779Z",
+  "id": "t5WCXQGZ4w44xKbU",
+  "name": "New Wallet Trigger Rules",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -272,
+        0
+      ],
+      "id": "5f88045f-57d3-4295-bf8f-26598f9bac97",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const YEARLY_VARIABLE = 120000; // dummy value\nconst MONTHLY_VARIABLE = YEARLY_VARIABLE / 12;\nconst BASE_REWARD = MONTHLY_VARIABLE * 0.01; // 1%\n\nconst output = [];\n\nfor (const item of $input.all()) {\n  const { task_id, user_id, hours_difference } = item.json;\n\n  let multiplier = 0;\n  let reason = '';\n\n  if (hours_difference >= 12) {\n    multiplier = 1.05;\n    reason = 'Completed 12 hours before deadline';\n  } else if (hours_difference >= 0) {\n    multiplier = 1.0;\n    reason = 'Completed on time';\n  } else if (hours_difference >= -12) {\n    multiplier = 0.75;\n    reason = 'Completed within 12 hours after deadline';\n  } else if (hours_difference >= -24) {\n    multiplier = 0.5;\n    reason = 'Completed within 24 hours after deadline';\n  } else {\n    continue; // no reward\n  }\n\n  const reward_amount = Math.round(BASE_REWARD * multiplier);\n\n  output.push({\n    json: {\n      task_id,\n      user_id,\n      reward_amount,\n      multiplier,\n      reason\n    }\n  });\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        -160
+      ],
+      "id": "7ba17b79-7f9a-4a3d-946e-516827d35084",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d06d1f33-175b-48ae-ac03-8f235ce900cb",
+              "leftValue": "={{ $json.reward_amount }}\n",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        16
+      ],
+      "id": "09f6eaff-4f8b-4990-9f4b-6e6530302afc",
+      "name": "If",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO wallet_transactions (\n  transaction_type,\n  amount,\n  booked_member_id,\n  wallet_id,\n  resource_type,\n  resource_id,\n  remarks,\n  earned_at,\n  point_type,\n  created_at,\n  updated_at\n)\nVALUES (\n  'credit',\n  {{ $json.reward_amount }},\n  {{ $json.user_id }},\n  (SELECT id FROM wallets WHERE user_id = {{ $json.user_id }} LIMIT 1),\n  'TaskManagement',\n  {{ $json.task_id }},\n  '{{ $json.reason }}',\n  UTC_TIMESTAMP(),\n  'task_reward',\n  UTC_TIMESTAMP(),\n  UTC_TIMESTAMP()\n);\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        640,
+        -112
+      ],
+      "id": "0b28d550-90d3-4651-aeb3-de2659d2e9fa",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "notesInFlow": false,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE wallets\nSET\n  credited_amount = credited_amount + {{ $json.reward_amount }},\n  available_amount = available_amount + {{ $json.reward_amount }},\n  updated_at = UTC_TIMESTAMP()\nWHERE user_id = {{ $json.user_id }};\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        688,
+        80
+      ],
+      "id": "b9b3a08c-25fa-4234-9d17-0b37fcf131d5",
+      "name": "Execute a SQL query2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  t.id AS task_id,\n  t.responsible_person_id AS user_id,\n  t.target_date,\n  t.completed_at,\n\n  TIMESTAMPDIFF(\n    HOUR,\n    t.completed_at,\n    t.target_date\n  ) AS hours_difference\n\nFROM task_managements t\n\nWHERE\n  t.status = 'completed'\n\n  -- only recent completions\n  AND t.completed_at >= UTC_TIMESTAMP() - INTERVAL 24 HOUR\n\n  -- block already rewarded tasks\n  AND t.id NOT IN (\n    SELECT resource_id\n    FROM wallet_transactions\n    WHERE resource_type = 'TaskManagement'\n      AND point_type = 'task_reward'\n  );\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -64,
+        -128
+      ],
+      "id": "af5883a1-9cf4-40de-9b02-2ca84f8da3e3",
+      "name": "Execute a SQL query3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "4705b1cc-99e2-426e-858e-34d11488607d",
+  "activeVersionId": null,
+  "versionCounter": 4,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-01-16T06:56:24.782Z",
+      "createdAt": "2026-01-16T06:56:24.782Z",
+      "role": "workflow:owner",
+      "workflowId": "t5WCXQGZ4w44xKbU",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-04-15T07:07:10.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-04-14",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

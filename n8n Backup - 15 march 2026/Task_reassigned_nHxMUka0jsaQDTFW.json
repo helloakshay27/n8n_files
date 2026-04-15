@@ -1,0 +1,254 @@
+{
+  "updatedAt": "2026-03-23T04:41:44.925Z",
+  "createdAt": "2025-12-26T07:22:59.296Z",
+  "id": "nHxMUka0jsaQDTFW",
+  "name": "Task reassigned",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "teask-reassigned",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -512,
+        -48
+      ],
+      "id": "1438b8ee-be44-43fd-8901-061a39e0c429",
+      "name": "Webhook",
+      "webhookId": "208761de-4f79-449a-bbe1-fdf096c1cebf",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "notifications@lockated.com",
+        "toEmail": "heypiyush112@gmail.com",
+        "subject": "=Task Reassigned: {{$json.title}}",
+        "html": "=Dear {{$json.RecipientName}},\n\nThis is to inform you that the task <b>{{$json.title}}</b> has been reassigned.\n\n<b>Task Reassignment Details</b>\n* Task Title: {{$json.title}}\n* Previous Owner: {{$json.previous_owner_name}}\n* New Owner: {{$json.new_owner_name}}\n* Project: {{$json.project_title}}\n* Updated On: {{$json.updated_at}}\n\nPlease take note of this change and proceed accordingly.\n\nRegards,\n<b>Task Management System</b>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -256
+      ],
+      "id": "e478e915-ba84-4ffa-b16b-f112674b738f",
+      "name": "Previous & New Owner",
+      "webhookId": "80dbd401-6741-430b-9502-00d1743d1cf3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "m6pGNPu76sBcBXtf",
+          "name": "Task Management SMTP Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        176,
+        -128
+      ],
+      "id": "8a56df53-f842-4f4e-95cd-62ff34565909",
+      "name": "Respond to Webhook",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM task_managements;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -208,
+        -304
+      ],
+      "id": "df66ce04-a5a9-4040-827b-328a00753c9d",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM system_logs WHERE changed_attr IS NOT NULL LIMIT 100;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -128,
+        -16
+      ],
+      "id": "d0c9fb3b-68b9-4f36-a17b-92ba7ee00eae",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "FGCPCtEG47rFAJ4J",
+          "name": "New FM UAT Task Management Database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -512,
+        -240
+      ],
+      "id": "28541815-67e6-4925-8de2-784d292e7da3",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Previous & New Owner": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Previous & New Owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ae9d4270-ed90-4f26-ad80-f5c8ea0158f5",
+  "activeVersionId": null,
+  "versionCounter": 10,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2025-12-26T07:22:59.301Z",
+      "createdAt": "2025-12-26T07:22:59.301Z",
+      "role": "workflow:owner",
+      "workflowId": "nHxMUka0jsaQDTFW",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-04-15T07:07:10.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-04-14",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

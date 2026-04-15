@@ -1,0 +1,324 @@
+{
+  "updatedAt": "2026-04-03T08:17:23.652Z",
+  "createdAt": "2026-03-07T05:12:49.137Z",
+  "id": "ABvTorJrxHjPg2yl",
+  "name": "Rustomjee BigQuery Category - Personal Events- 1 - Points on Birthdays",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {},
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -336,
+        48
+      ],
+      "id": "70505f03-d5da-4cf0-a8bb-24e8f3258637",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.account_summary_person LIMIT 10000\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -112
+      ],
+      "id": "18ad6f6f-5879-4593-8cf8-25646313e062",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_leads \n  WHERE LeadSource = \"Loyalty\"",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        -240
+      ],
+      "id": "b2f25761-ddab-4893-881d-efe2bfb18b51",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  return {\n    json: {\n      customer_mobile: item.json.mobile,\n      customer_name: `${item.json.FirstName} ${item.json.LastName}`,\n      points: 1000,\n      reason: \"Birthday Reward\",\n      email: item.json.email,\n      birthday: item.json.Birth_Date__c\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        16
+      ],
+      "id": "930a07d2-e19d-4cc4-b873-666c5fb41450",
+      "name": "Code in JavaScript3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "projectId": {
+          "__rl": true,
+          "value": "powerbi-implementation",
+          "mode": "list",
+          "cachedResultName": "PowerBI Implementation",
+          "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+        },
+        "sqlQuery": "SELECT\n  FirstName,\n  LastName,\n  Person_Account_Email__c AS email,\n  COALESCE(PersonMobilePhone, Person_Account_Mobile__c) AS mobile,\n  Birth_Date__c\nFROM `powerbi-implementation.dataWarehouse_prod.account_summary_person`\nWHERE\n  Birth_Date__c IS NOT NULL\n  AND COALESCE(PersonMobilePhone, Person_Account_Mobile__c) IS NOT NULL\n  AND EXTRACT(MONTH FROM DATE(Birth_Date__c)) = EXTRACT(MONTH FROM CURRENT_DATE())\n  AND EXTRACT(DAY FROM DATE(Birth_Date__c)) = EXTRACT(DAY FROM CURRENT_DATE())",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleBigQuery",
+      "typeVersion": 2.1,
+      "position": [
+        -112,
+        48
+      ],
+      "id": "79e9af84-3163-4da1-a426-270fd33f2ac2",
+      "name": "Query to fetch details of Person Having Birthday On Today's Date",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "nmAIqj1Sf2UOZ6ZZ",
+          "name": "Rustomjee - BigQuery Google Service Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ab1a59da-346c-4d34-bfff-50d160cb4000",
+              "leftValue": "={{$json[\"mobile\"]}}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        112,
+        48
+      ],
+      "id": "2e1df2aa-45a0-409b-82b4-05749c0d3b02",
+      "name": "If",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"customer_code\": \"{{ $json.customer_mobile }}\",\n  \"amount\": {{ $json.points }},\n  \"remarks\": \"{{ $json.reason }}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        576,
+        160
+      ],
+      "id": "31676d1f-ca79-4a05-9f90-6258c919586a",
+      "name": "HTTP Request",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Query to fetch details of Person Having Birthday On Today's Date",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        []
+      ]
+    },
+    "Query to fetch details of Person Having Birthday On Today's Date": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ab707632-2135-47a6-b161-7d422c99e53f",
+  "activeVersionId": null,
+  "versionCounter": 33,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-03-07T05:12:49.144Z",
+      "createdAt": "2026-03-07T05:12:49.144Z",
+      "role": "workflow:owner",
+      "workflowId": "ABvTorJrxHjPg2yl",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-04-15T07:07:10.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-04-14",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

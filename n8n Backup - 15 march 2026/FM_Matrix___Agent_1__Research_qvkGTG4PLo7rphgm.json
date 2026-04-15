@@ -1,0 +1,565 @@
+{
+  "updatedAt": "2026-04-15T10:53:39.907Z",
+  "createdAt": "2026-04-15T10:53:39.907Z",
+  "id": "qvkGTG4PLo7rphgm",
+  "name": "FM Matrix — Agent 1: Research",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openRouterApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "HTTP-Referer",
+              "value": "https://fmmatrix.com"
+            },
+            {
+              "name": "X-Title",
+              "value": "FM Matrix Research Agent"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"model\": \"google/gemini-flash-1.5\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a market intelligence analyst for FM Matrix, a B2B SaaS Facilities Management platform serving India and GCC markets. Your target customers are: TG1 = Commercial Real Estate Developers and IT Park Operators in India, TG2 = Integrated Facility Management (IFM) Service Companies in India, TG3 = GCC Commercial Real Estate and Free Zone Operators. You produce structured JSON research outputs that a content team uses to plan LinkedIn posts. Return ONLY valid JSON, no markdown, no preamble.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Generate a research intelligence report on FM industry news, PropTech trends, ESG developments, hybrid work updates, and commercial real estate news relevant to India and GCC markets. Based on your training knowledge, identify the most relevant recent trends, developments, and talking points that a facilities management SaaS company should be aware of for content marketing purposes.\\n\\nReturn a JSON object in exactly this format:\\n{\\n  \\\"skill\\\": \\\"web-search-news\\\",\\n  \\\"items\\\": [\\n    {\\n      \\\"title\\\": \\\"trend or development title\\\",\\n      \\\"summary\\\": \\\"2-3 sentence summary of the trend and why it matters for FM professionals\\\",\\n      \\\"content_angle\\\": \\\"one sentence on how FM Matrix could use this as a LinkedIn post angle\\\",\\n      \\\"relevance\\\": \\\"high or medium\\\",\\n      \\\"tags\\\": [\\\"ESG\\\", \\\"India\\\", \\\"CRE\\\"]\\n    }\\n  ],\\n  \\\"high_relevance_count\\\": 0\\n}\\n\\nInclude 5-8 items. Only include high or medium relevance items. Set high_relevance_count to the count of high relevance items.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "98a0ec3e-a9f8-449a-a004-b19b1e229368",
+      "name": "Gather — Industry News",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        576,
+        -224
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "quP69dEEC1mzyxzA",
+          "name": "LinkedIn-Auth"
+        },
+        "openRouterApi": {
+          "id": "mKwEBYpU6SHPOaDP",
+          "name": "Content Generation API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "HTTP-Referer",
+              "value": "https://fmmatrix.com"
+            },
+            {
+              "name": "X-Title",
+              "value": "FM Matrix Research Agent"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"model\": \"google/gemini-flash-1.5\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a competitive intelligence analyst for FM Matrix, a B2B SaaS Facilities Management platform. FM Matrix's known strengths over competitors: native CAM billing automation, 5-level helpdesk escalation, tenant loyalty/VAS modules, PTW and MSafe safety modules, Marketplace app store model. Key competitors and their weaknesses: Facilio (no CAM billing, no VAS/loyalty, limited safety depth), Archibus (expensive, slow to deploy, no India focus), Planon (very expensive, no India presence, no safety modules), CAFM Explorer (no VAS, no CAM billing, outdated UI), BuildingMinds (ESG only, not a full FM platform). Return ONLY valid JSON, no markdown, no preamble.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Based on your training knowledge, generate a competitive intelligence report on FM Matrix's key competitors: Facilio, Archibus/Eptura, Planon, CAFM Explorer, and BuildingMinds. For each competitor, identify their likely recent strategic direction, product focus areas, market positioning, and any known gaps that FM Matrix can exploit in content marketing.\\n\\nReturn a JSON object in exactly this format:\\n{\\n  \\\"skill\\\": \\\"competitor-monitor\\\",\\n  \\\"competitors\\\": [\\n    {\\n      \\\"name\\\": \\\"competitor name\\\",\\n      \\\"strategic_direction\\\": \\\"what they are likely focusing on\\\",\\n      \\\"known_gaps\\\": \\\"what they are still missing that FM Matrix has\\\",\\n      \\\"suggested_response_angle\\\": \\\"how FM Matrix could respond in LinkedIn content\\\",\\n      \\\"priority\\\": \\\"high or medium or low\\\"\\n    }\\n  ]\\n}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "388f5183-0a1e-4b44-94e1-201b6454d236",
+      "name": "Gather — Competitor Activity",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        576,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "HTTP-Referer",
+              "value": "https://fmmatrix.com"
+            },
+            {
+              "name": "X-Title",
+              "value": "FM Matrix Research Agent"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"model\": \"google/gemini-flash-1.5\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a customer insights analyst for FM Matrix, a B2B SaaS Facilities Management platform. You specialise in extracting customer pain points and voice-of-customer language from software reviews. Your outputs are used to write LinkedIn content that resonates with FM professionals. Return ONLY valid JSON, no markdown, no preamble.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Based on your training knowledge of how facilities management professionals talk about their software challenges, generate representative user review insights for FM software in India and GCC. Focus on the real frustrations FM managers, property managers, and IFM company operations heads have with manual processes and fragmented tools.\\n\\nReturn a JSON object in exactly this format:\\n{\\n  \\\"skill\\\": \\\"review-scraper\\\",\\n  \\\"reviews\\\": [\\n    {\\n      \\\"platform\\\": \\\"G2 or Capterra\\\",\\n      \\\"reviewer_role\\\": \\\"job title of reviewer\\\",\\n      \\\"pain_extracted\\\": \\\"the core problem this persona has\\\",\\n      \\\"frustration\\\": \\\"what is not working for them\\\",\\n      \\\"verbatim_quote\\\": \\\"a realistic quote in the voice of this persona describing their pain\\\",\\n      \\\"content_angle\\\": \\\"how FM Matrix could use this pain in a LinkedIn post\\\"\\n    }\\n  ],\\n  \\\"top_pains_mentioned\\\": [\\\"pain1\\\", \\\"pain2\\\", \\\"pain3\\\"]\\n}\\n\\nInclude 4-6 review insights. Make verbatim quotes vivid and specific — avoid generic phrases.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "7694ac40-2157-4ad5-b867-dcca25e3f588",
+      "name": "Gather — User Reviews",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        576,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "HTTP-Referer",
+              "value": "https://fmmatrix.com"
+            },
+            {
+              "name": "X-Title",
+              "value": "FM Matrix Research Agent"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"model\": \"google/gemini-flash-1.5\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a regulatory intelligence analyst for FM Matrix, a B2B SaaS Facilities Management platform serving India and GCC markets. You track compliance and regulatory developments that affect facility managers, property operators, and IFM companies. Key India regulations: RERA, NABH, Factories Act, PCB, BEE, SEBI BRSR. Key GCC regulations: Civil Defence UAE, DEWA smart metering, UAE Net Zero 2050, Saudi Vision 2030, Saudi Green Initiative. Return ONLY valid JSON, no markdown, no preamble.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Based on your training knowledge, generate a regulatory intelligence report covering compliance and policy developments relevant to facilities management in India and GCC. Focus on regulations that create urgency for FM software adoption — compliance tracking, safety certifications, ESG reporting, and building management requirements.\\n\\nReturn a JSON object in exactly this format:\\n{\\n  \\\"skill\\\": \\\"regulatory-monitor\\\",\\n  \\\"updates\\\": [\\n    {\\n      \\\"region\\\": \\\"India or GCC or UAE or Saudi or Oman\\\",\\n      \\\"regulation\\\": \\\"name of regulation or regulatory body\\\",\\n      \\\"summary\\\": \\\"what the requirement is and what it means for FM operators\\\",\\n      \\\"who_it_affects\\\": \\\"which FM Matrix customer segments are affected\\\",\\n      \\\"fm_matrix_angle\\\": \\\"which FM Matrix feature addresses this requirement\\\",\\n      \\\"content_urgency\\\": \\\"high or medium or low\\\"\\n    }\\n  ]\\n}\\n\\nInclude 4-6 regulatory items. Focus on items that create a clear content opportunity for FM Matrix.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "45c69bca-351c-4a3b-b71e-a2bd4c9bd7e8",
+      "name": "Gather — Regulatory Updates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        576,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "HTTP-Referer",
+              "value": "https://fmmatrix.com"
+            },
+            {
+              "name": "X-Title",
+              "value": "FM Matrix Research Agent"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"model\": \"google/gemini-flash-1.5\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a competitive intelligence analyst specialising in hiring signal analysis for FM Matrix, a B2B SaaS Facilities Management platform. You interpret competitor hiring patterns as strategic signals — what they are building, where they are expanding, and what product bets they are making. Competitors to monitor: Facilio, Archibus/Eptura, Planon, CAFM Explorer, BuildingMinds. Return ONLY valid JSON, no markdown, no preamble.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Based on your training knowledge of these FM software companies, generate a hiring signals intelligence report. For each competitor, infer what their likely hiring focus areas are based on their known strategic direction — AI/ML investment, India expansion, GCC growth, new product areas like billing or tenant experience.\\n\\nReturn a JSON object in exactly this format:\\n{\\n  \\\"skill\\\": \\\"job-posting-monitor\\\",\\n  \\\"signals\\\": [\\n    {\\n      \\\"competitor\\\": \\\"competitor name\\\",\\n      \\\"likely_hiring_focus\\\": \\\"what roles they are likely hiring for\\\",\\n      \\\"signal_type\\\": \\\"AI investment or India expansion or GCC expansion or Feature build or Sales scale\\\",\\n      \\\"interpretation\\\": \\\"what this means strategically for FM Matrix\\\",\\n      \\\"content_angle\\\": \\\"how FM Matrix could use this signal in LinkedIn content\\\",\\n      \\\"priority\\\": \\\"high or medium or low\\\"\\n    }\\n  ],\\n  \\\"summary\\\": \\\"2-3 sentence summary of the most significant competitive hiring trends\\\"\\n}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "8e9a4eb6-54ac-4172-85bb-ba89b0e88972",
+      "name": "Gather — Hiring Signals",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        576,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "mergeByPosition"
+      },
+      "id": "16a84482-043d-4794-a829-b41ed8f6e448",
+      "name": "Merge All Outputs",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        800,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-relevance",
+              "leftValue": "={{ $json.high_relevance_count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "56608c73-1330-4118-a232-027fa9b00062",
+      "name": "IF: High Relevance Items Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        -128
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "content.manager@fmmatrix.com",
+        "subject": "FM Matrix Research Agent — Slow news week ({{ $now.format('dd MMM yyyy') }})",
+        "message": "<p>Hi,</p><p>The research agent ran today but did not find any high-relevance items across industry news, competitor activity, reviews, regulatory updates, or hiring signals.</p><p>This may be a genuinely slow news week. No research document has been created for this cycle.</p><p>The agent will run again on the next scheduled date.</p><p>— FM Matrix Research Agent</p>",
+        "options": {}
+      },
+      "id": "b7f3a720-fdde-485d-ba18-23f22daf0df5",
+      "name": "Email — Slow News Week Alert",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1248,
+        -224
+      ],
+      "webhookId": "affac695-9f67-42ae-8742-0dbd5afdbff6"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "HTTP-Referer",
+              "value": "https://fmmatrix.com"
+            },
+            {
+              "name": "X-Title",
+              "value": "FM Matrix Research Agent"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistralai/mistral-large\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a senior content strategist for FM Matrix, a B2B SaaS Facilities Management platform for India and GCC markets. You produce weekly research documents for a content calendar manager who plans LinkedIn posts for the FM Matrix Product Showcase page.\\n\\nFM Matrix LinkedIn voice rules:\\n- Outcome-led, not feature-led\\n- Peer-to-peer tone — talking with FM professionals, not at them\\n- Every post anchored in data or a customer story\\n- Direct, active voice. No corporate jargon.\\n- BANNED words: best-in-class, cutting-edge, revolutionary, solution, leverage, synergy, seamlessly\\n\\nTarget groups:\\n- TG1: Commercial Real Estate Developers and IT Park Operators (India) — buyer: Head of Property Management / VP Facilities\\n- TG2: Integrated Facility Management (IFM) Service Companies (India) — buyer: COO / Head of Operations\\n- TG3: GCC Commercial Real Estate and Free Zone Operators — buyer: FM Director / Head of Asset Management\\n\\nFM Matrix proof points to reference where relevant:\\n- CAM billing cycle reduced from 12 days to 2 days at a 50-tenant commercial complex\\n- Compliance lapse rate fell from 22% to 0% across 8 sites\\n- Vendor SLA compliance rose from 62% to 91% across 12 managed sites\\n- Safety incidents fell 86% at a pharma manufacturing campus\\n- Tenant NPS increased from +18 to +52 at a co-working operator\\n- FM operating cost fell 25% at a 300,000 sq ft SEZ campus\\n\\nReturn ONLY valid markdown, no JSON wrapper, no preamble.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"Using the research intelligence below, produce a structured weekly research document for the FM Matrix content calendar manager.\\n\\nRESEARCH INPUTS:\\n{{ JSON.stringify($input.all()) }}\\n\\nProduce the document using EXACTLY this structure:\\n\\n# FM Matrix Content Intelligence — Week of {{ $now.format('dd MMM yyyy') }}\\n\\n> Prepared by Research Agent | {{ $now.toISO() }}\\n\\n---\\n\\n## This week's top 3 post opportunities\\n\\n[List 3 highest-priority content angles. For each: angle in one sentence, why it's timely, which TG it targets, suggested format (Text / Image / Carousel)]\\n\\n---\\n\\n## Industry news\\n\\n[For each relevant item: topic, summary, content angle, TG, urgency]\\n\\n---\\n\\n## Competitor activity\\n\\n[For each competitor with signals: what the signal is, strategic implication, suggested FM Matrix response angle]\\n\\n---\\n\\n## What customers are saying\\n\\n[Best verbatim quotes. For each: quote in blockquote format, pain it reveals, content angle]\\n\\n---\\n\\n## Regulatory updates\\n\\n[For each update: regulation, what it means, who it affects, FM Matrix module that addresses it, urgency]\\n\\n---\\n\\n## Hiring signals\\n\\n[Summary of competitor hiring patterns and what they signal strategically]\\n\\n---\\n\\n## Background intelligence\\n\\n[Items useful as context but not time-sensitive for posting this week]\\n\\n---\\n\\n*End of report*\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "55a4ddde-0da0-4bb8-aaf9-35c8a1d1baf7",
+      "name": "Synthesise Research Doc",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1248,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "title": "=FM Matrix Content Intelligence — Week of {{ $now.format('dd MMM yyyy') }}"
+      },
+      "id": "b89d8587-be2b-4f30-a161-ad50b139dda6",
+      "name": "Create Google Doc",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "mode": "id",
+          "value": "YOUR_TRACKING_SHEET_ID"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "Research Runs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Run Date": "={{ $now.format('dd MMM yyyy') }}",
+            "Doc Title": "=FM Matrix Content Intelligence — Week of {{ $now.format('dd MMM yyyy') }}",
+            "Doc URL": "={{ $node['Create Google Doc'].json.documentId ? 'https://docs.google.com/document/d/' + $node['Create Google Doc'].json.documentId : 'unavailable' }}",
+            "Status": "Completed",
+            "Timestamp": "={{ $now.toISO() }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "0d7a2ab1-d541-4485-872c-59e58858fc79",
+      "name": "Log Run to Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        1696,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "content.manager@fmmatrix.com",
+        "subject": "=FM Matrix Content Intelligence — Week of {{ $now.format('dd MMM yyyy') }} is ready",
+        "message": "=<html><body style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;\">\n<h2 style=\"color: #1a1a1a;\">This week's content research is ready</h2>\n<p>Hi,</p>\n<p>The FM Matrix research agent has completed this week's intelligence run. Your research document is ready to review.</p>\n<div style=\"background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 20px 0;\">\n  <p style=\"margin: 0 0 12px 0; font-weight: bold;\">Sources checked this cycle:</p>\n  <p style=\"margin: 4px 0;\">✓ Industry news and trends</p>\n  <p style=\"margin: 4px 0;\">✓ Competitor activity</p>\n  <p style=\"margin: 4px 0;\">✓ User review insights</p>\n  <p style=\"margin: 4px 0;\">✓ Regulatory updates (India and GCC)</p>\n  <p style=\"margin: 4px 0;\">✓ Competitor hiring signals</p>\n</div>\n<p style=\"text-align: center; margin: 24px 0;\">\n  <a href=\"https://docs.google.com/document/d/{{ $node['Create Google Doc'].json.documentId }}\" \n     style=\"background: #1a1a1a; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;\">\n    View Research Document\n  </a>\n</p>\n<p style=\"color: #666; font-size: 13px;\">The document includes this week's top 3 post opportunities, competitor intelligence, regulatory updates, and customer insight angles tagged by TG1, TG2, and TG3.</p>\n<p style=\"color: #666; font-size: 13px;\">— FM Matrix Research Agent</p>\n</body></html>",
+        "options": {}
+      },
+      "id": "9050912a-3fda-47ce-94bb-fdd8aa26578c",
+      "name": "Email — Research Doc Ready",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1920,
+        -32
+      ],
+      "webhookId": "a6112b10-28ac-497b-8628-9400bf7598ae"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        352,
+        160
+      ],
+      "id": "8bd9fbe5-80f9-429e-8ea0-7ab3c54dee89",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "connections": {
+    "Gather — Industry News": {
+      "main": [
+        [
+          {
+            "node": "Merge All Outputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gather — Competitor Activity": {
+      "main": [
+        [
+          {
+            "node": "Merge All Outputs",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge All Outputs": {
+      "main": [
+        [
+          {
+            "node": "IF: High Relevance Items Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: High Relevance Items Found?": {
+      "main": [
+        [
+          {
+            "node": "Synthesise Research Doc",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email — Slow News Week Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Synthesise Research Doc": {
+      "main": [
+        [
+          {
+            "node": "Create Google Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Google Doc": {
+      "main": [
+        [
+          {
+            "node": "Log Run to Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Run to Sheets": {
+      "main": [
+        [
+          {
+            "node": "Email — Research Doc Ready",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Gather — Hiring Signals",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gather — Regulatory Updates",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gather — User Reviews",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gather — Competitor Activity",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gather — Industry News",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "5f2873d5-b090-456c-a800-71ccfeeb1b52",
+  "activeVersionId": null,
+  "versionCounter": 1,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-04-15T10:53:39.910Z",
+      "createdAt": "2026-04-15T10:53:39.910Z",
+      "role": "workflow:owner",
+      "workflowId": "qvkGTG4PLo7rphgm",
+      "projectId": "s9jeiIUr8G6hBG6i",
+      "project": {
+        "updatedAt": "2026-01-28T12:34:21.552Z",
+        "createdAt": "2025-12-24T09:57:24.391Z",
+        "id": "s9jeiIUr8G6hBG6i",
+        "name": "N8N Admin <n8n@lockated.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+        "projectRelations": [
+          {
+            "updatedAt": "2025-12-24T09:57:24.391Z",
+            "createdAt": "2025-12-24T09:57:24.391Z",
+            "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+            "projectId": "s9jeiIUr8G6hBG6i",
+            "user": {
+              "updatedAt": "2026-04-15T07:07:10.000Z",
+              "createdAt": "2025-12-24T09:57:23.917Z",
+              "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "email": "n8n@lockated.com",
+              "firstName": "N8N",
+              "lastName": "Admin",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                "personalization_survey_n8n_version": "2.1.4",
+                "automationGoalDevops": [
+                  "ci-cd",
+                  "cloud-infrastructure-orchestration",
+                  "monitoring-alerting",
+                  "reporting"
+                ],
+                "companyType": "saas",
+                "role": "it"
+              },
+              "settings": {
+                "userActivated": true,
+                "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                "userActivatedAt": 1767166205042,
+                "npsSurvey": {
+                  "responded": true,
+                  "lastShownAt": 1770088091114
+                },
+                "easyAIWorkflowOnboarded": true
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-04-14",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [
+    {
+      "updatedAt": "2026-04-15T10:52:08.322Z",
+      "createdAt": "2026-04-15T10:52:08.322Z",
+      "id": "505cn03XguhmsNRd",
+      "name": "FM Matrix"
+    },
+    {
+      "updatedAt": "2026-04-15T10:52:08.344Z",
+      "createdAt": "2026-04-15T10:52:08.344Z",
+      "id": "557YZpzjrdmA5aWX",
+      "name": "Agent 1"
+    },
+    {
+      "updatedAt": "2026-04-15T10:52:08.354Z",
+      "createdAt": "2026-04-15T10:52:08.354Z",
+      "id": "8j4cc1G2U8fJX0DJ",
+      "name": "Research"
+    }
+  ],
+  "activeVersion": null
+}
