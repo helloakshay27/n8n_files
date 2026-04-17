@@ -1,0 +1,333 @@
+{
+  "data": {
+    "updatedAt": "2026-03-31T16:18:02.635Z",
+    "createdAt": "2026-03-20T16:09:56.517Z",
+    "id": "2PuhB6Vz7fo8xOpJ",
+    "name": "SubTask File attached",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "file-attached",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -320,
+          224
+        ],
+        "id": "71d34ca3-3d57-4054-ba99-46ae6a05fc90",
+        "name": "Webhook",
+        "webhookId": "120b15fa-9cae-4746-be93-6e82547dc828",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          464,
+          160
+        ],
+        "id": "b6ead511-7273-41db-85af-1d1c57f44a70",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{$json.task_owner_email}}",
+          "subject": "=File Attached to SubTask: {{$json.subtask_title}}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.task_owner_firstname}} {{$json.task_owner_lastname}},\n  </p>\n\n  <p>\n    A file has been added to the subtask <b>{{$json.subtask_title}}</b>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Attachment Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_name}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Type</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_type}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Uploaded On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_added_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_created_on}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_end_on}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Parent Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.parent_task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/tasks/{{$json.subtask_id}}\" target=\"_blank\">\n          View Task Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the attached document as part of task execution.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Document & Task Management System</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          256,
+          32
+        ],
+        "id": "023060b3-0c3f-4dff-8d7a-d290de721ddc",
+        "name": "Task Owner",
+        "webhookId": "c32cf3da-943a-40fb-93c1-ae2a1deff5dc",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  -- =========================\n  -- ATTACHMENT\n  -- =========================\n  af.id                    AS attachment_id,\n  ANY_VALUE(af.document_file_name)    AS file_name,\n  ANY_VALUE(af.document_content_type) AS file_type,\n  ANY_VALUE(af.created_at)            AS file_added_at,\n\n  -- =========================\n  -- SUBTASK\n  -- =========================\n  ANY_VALUE(t.id)          AS subtask_id,\n  ANY_VALUE(t.title)       AS subtask_title,\n  ANY_VALUE(t.created_at)  AS subtask_created_on,\n  ANY_VALUE(t.target_date) AS subtask_end_on,\n  ANY_VALUE(t.parent_id)   AS parent_task_id,\n\n  -- =========================\n  -- PARENT TASK\n  -- =========================\n  ANY_VALUE(pt.title)      AS parent_task_title,\n\n  -- =========================\n  -- MILESTONE\n  -- =========================\n  ANY_VALUE(m.id)          AS milestone_id,\n  ANY_VALUE(m.title)       AS milestone_title,\n\n  -- =========================\n  -- PROJECT\n  -- =========================\n  ANY_VALUE(pm.id)         AS project_id,\n  ANY_VALUE(pm.title)      AS project_title,\n\n  -- =========================\n  -- TASK OWNER\n  -- =========================\n  ANY_VALUE(u.id)          AS task_owner_id,\n  ANY_VALUE(u.email)       AS task_owner_email,\n  ANY_VALUE(u.firstname)   AS task_owner_firstname,\n  ANY_VALUE(u.lastname)    AS task_owner_lastname,\n\n  -- =========================\n  -- OBSERVERS (SAFE FORMAT)\n  -- =========================\n  IFNULL(\n    GROUP_CONCAT(\n      DISTINCT CONCAT(obs.email, '||', obs.firstname, '||', obs.lastname)\n    ),\n    ''\n  ) AS observers\n\nFROM attachfiles af\n\n-- Subtask\nJOIN task_managements t\n  ON t.id = af.relation_id\n AND af.relation = 'TaskManagement'\n\n-- Task owner\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\n-- Parent task\nLEFT JOIN task_managements pt\n  ON pt.id = t.parent_id\n\n-- Milestone\nLEFT JOIN milestones m\n  ON m.id = pt.milestone_id\n\n-- Project\nLEFT JOIN project_managements pm\n  ON pm.id = COALESCE(\n       m.project_management_id,\n       pt.project_management_id\n     )\n\n-- Observers\nLEFT JOIN task_users tu\n  ON tu.task_id = t.id\n  AND tu.user_type = 'observer'\n  AND tu.active = 1\n\nLEFT JOIN spree_users obs\n  ON obs.id = tu.user_id\n\nWHERE\n  af.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND af.active = 1\n  AND t.parent_id IS NOT NULL\n\nGROUP BY af.id;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          0,
+          0
+        ],
+        "id": "a8d7dc24-26af-4df3-92bb-4fc080e48004",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -352,
+          16
+        ],
+        "id": "0f23e942-0f74-406d-a441-ce13fa86cee9",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * FROM attachfiles ORDER BY created_at DESC LIMIT 5;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -112,
+          144
+        ],
+        "id": "a262c372-22a2-4ba3-b8d4-069e2fefafef",
+        "name": "Execute a SQL query1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  -- =========================\n  -- ATTACHMENT\n  -- =========================\n  af.id                    AS attachment_id,\n  af.document_file_name    AS file_name,\n  af.document_content_type AS file_type,\n  af.created_at            AS file_added_at,\n\n  -- =========================\n  -- SUBTASK\n  -- =========================\n  t.id                     AS subtask_id,\n  t.title                  AS subtask_title,\n  t.created_at             AS subtask_created_on,\n  t.target_date            AS subtask_end_on,\n  t.parent_id              AS parent_task_id,\n\n  -- =========================\n  -- PARENT TASK\n  -- =========================\n  pt.title                 AS parent_task_title,\n\n  -- =========================\n  -- MILESTONE (via parent)\n  -- =========================\n  m.id                     AS milestone_id,\n  m.title                  AS milestone_title,\n\n  -- =========================\n  -- PROJECT (via milestone OR parent)\n  -- =========================\n  pm.id                    AS project_id,\n  pm.title                 AS project_title,\n\n  -- =========================\n  -- TASK OWNER\n  -- =========================\n  u.id                     AS task_owner_id,\n  u.email                  AS task_owner_email,\n  u.firstname              AS task_owner_firstname,\n  u.lastname               AS task_owner_lastname\n\nFROM attachfiles af\n\n-- Subtask\nJOIN task_managements t\n  ON t.id = af.relation_id\n AND af.relation = 'TaskManagement'\n\n-- Task owner\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\n-- Parent task\nLEFT JOIN task_managements pt\n  ON pt.id = t.parent_id\n\n-- Milestone via parent task\nLEFT JOIN milestones m\n  ON m.id = pt.milestone_id\n\n-- Project via milestone OR parent task (IMPORTANT FIX)\nLEFT JOIN project_managements pm\n  ON pm.id = COALESCE(\n       m.project_management_id,\n       pt.project_management_id\n     )\n\nWHERE\n  af.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND af.active = 1\n  AND t.parent_id IS NOT NULL;  -- only subtasks",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -176,
+          368
+        ],
+        "id": "2b892066-0fb4-45c0-93ef-7e20e42b8066",
+        "name": "Without Observers",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = [];\n\nfor (const item of $input.all()) {\n  const json = item.json;\n\n  const recipientsMap = new Map();\n\n  const observersRaw = json.observers;\n\n  if (!observersRaw) continue;\n\n  const observers = observersRaw.split(',');\n\n  for (const user of observers) {\n    if (!user || !user.includes('||')) continue;\n\n    const [email, firstname, lastname] = user.split('||');\n\n    if (!email) continue;\n\n    recipientsMap.set(email.trim(), {\n      email: email.trim(),\n      firstname: firstname?.trim() || '',\n      lastname: lastname?.trim() || ''\n    });\n  }\n\n  recipientsMap.forEach(recipient => {\n    items.push({\n      json: {\n        ...json,\n        recipient_email: recipient.email,\n        recipient_firstname: recipient.firstname,\n        recipient_lastname: recipient.lastname\n      }\n    });\n  });\n}\n\nreturn items;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          192,
+          224
+        ],
+        "id": "2dfe228a-e4f9-4f7c-9c49-694b5b7e91dc",
+        "name": "Code in JavaScript",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{ $json.recipient_email }}",
+          "subject": "=File Attached to SubTask: {{$json.subtask_title}}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{ $json.recipient_firstname }} {{ $json.recipient_lastname }},\n  </p>\n\n  <p>\n    A file has been added to the subtask <b>{{$json.subtask_title}}</b>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Attachment Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_name}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Type</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_type}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Uploaded On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_added_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_created_on}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_end_on}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Parent Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.parent_task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/tasks/{{$json.subtask_id}}\" target=\"_blank\">\n          View Task Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    As an observer, please review the attached document as part of task execution.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Document & Task Management System</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          416,
+          352
+        ],
+        "id": "a7a81bde-8ffc-4dea-967a-cf1e04928e0c",
+        "name": "Observers",
+        "webhookId": "c32cf3da-943a-40fb-93c1-ae2a1deff5dc",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Task Owner",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Execute a SQL query1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Observers",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": {},
+    "versionId": "cf9957e7-33da-4f60-8864-87ae0e604861",
+    "activeVersionId": null,
+    "versionCounter": 9,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-03-20T16:09:56.523Z",
+        "createdAt": "2026-03-20T16:09:56.523Z",
+        "role": "workflow:owner",
+        "workflowId": "2PuhB6Vz7fo8xOpJ",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-16T03:51:58.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-15",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2026-03-20T16:00:44.816Z",
+      "createdAt": "2026-03-20T16:00:44.816Z",
+      "id": "2EgLHgrVJNh2U0Rt",
+      "name": "Module 2.1 - SUBTASKS, KANBAN, MY SUBTASKS",
+      "parentFolderId": null
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "fae370806c36f6186cbb0eb7825dd329e136d9863b92e537fde8000afad98d76"
+  }
+}

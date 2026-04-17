@@ -1,0 +1,399 @@
+{
+  "data": {
+    "updatedAt": "2026-03-29T11:12:12.649Z",
+    "createdAt": "2025-12-26T08:52:03.522Z",
+    "id": "mbmQyGKC6ytZevH7",
+    "name": "To-do overdue",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          256,
+          -96
+        ],
+        "id": "1f702309-884b-42be-85a7-6fefe1a6906b",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "to-do-overdue",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -560,
+          -64
+        ],
+        "id": "8b34b502-8c19-4856-8325-512b3699fa76",
+        "name": "Webhook",
+        "webhookId": "118b1276-84c7-435f-b8de-4f46889d1049",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{$json.todo_owner_email}}\n",
+          "subject": "= To-Do Overdue – {{$json.todo_title}}\n",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>Dear {{$json.todo_owner_firstname}} {{$json.todo_owner_lastname}},</p>\n\n  <p>Your to-do item <b>{{$json.todo_title}}</b> is overdue.</p>\n\n  <h3 style=\"color: #c0392b;\">Overdue To-Do Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>To-Do Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.todo_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.todo_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority ? $json.priority : 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>End On / Target Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.target_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Overdue By</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.overdue_days}} days</td>\n    </tr>\n\n  </table>\n\n  <p>Immediate action is required.</p>\n\n  <p>Regards,<br>\n  <b>Task Governance</b></p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          -192
+        ],
+        "id": "5ff420d1-0024-449f-b6be-95e74cad3b0f",
+        "name": "User",
+        "webhookId": "c3c831e5-4123-4473-9a75-79e0d38e4a2b",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  t.*,\n  t.id                        AS todo_id,\n  t.title                     AS todo_title,\n  t.target_date,\n  t.status                    AS todo_status,\n\n  DATEDIFF(UTC_DATE(), t.target_date) AS overdue_days,\n\n  u.email                     AS todo_owner_email,\n  u.firstname                 AS todo_owner_firstname,\n  u.lastname                  AS todo_owner_lastname\n\nFROM todos t\n\nJOIN spree_users u\n  ON u.id = t.user_id\n\nWHERE\n  t.status != 'completed'\n  AND t.target_date < UTC_DATE();\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -240,
+          -224
+        ],
+        "id": "0a3fb075-9243-457a-b00e-6176a960cc64",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -544,
+          -288
+        ],
+        "id": "153f7d74-0d7d-47fd-8220-6299e6faf56d",
+        "name": "Schedule Trigger",
+        "alwaysOutputData": true
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          []
+        ]
+      },
+      "User": {
+        "main": [
+          []
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "User",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "ac0b2c71-363c-4d4b-9676-1d65453beb73",
+    "activeVersionId": "51b41566-2e59-49f3-b412-f6d2e2de8c5c",
+    "versionCounter": 66,
+    "triggerCount": 2,
+    "shared": [
+      {
+        "updatedAt": "2025-12-26T08:52:03.524Z",
+        "createdAt": "2025-12-26T08:52:03.524Z",
+        "role": "workflow:owner",
+        "workflowId": "mbmQyGKC6ytZevH7",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-16T03:51:58.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-15",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2025-12-26T08:50:32.000Z",
+      "createdAt": "2025-12-26T08:50:13.438Z",
+      "id": "Rxhl8LN55QJFCvsf",
+      "name": "Module 9 - To-Do List",
+      "parentFolderId": null
+    },
+    "activeVersion": {
+      "updatedAt": "2026-01-08T12:54:25.000Z",
+      "createdAt": "2026-01-08T12:54:21.432Z",
+      "versionId": "51b41566-2e59-49f3-b412-f6d2e2de8c5c",
+      "workflowId": "mbmQyGKC6ytZevH7",
+      "nodes": [
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            256,
+            -96
+          ],
+          "id": "1f702309-884b-42be-85a7-6fefe1a6906b",
+          "name": "Respond to Webhook",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "to-do-overdue",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            -464,
+            -144
+          ],
+          "id": "8b34b502-8c19-4856-8325-512b3699fa76",
+          "name": "Webhook",
+          "webhookId": "118b1276-84c7-435f-b8de-4f46889d1049",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "fromEmail": "notificaions@lockated.com",
+            "toEmail": "={{$json.todo_owner_email}}\n",
+            "subject": "=To-Do {{$json.todo_title}} overdue",
+            "html": "=Hello,\n\nYour todo is overdue.\n\nTodo: {{$json.todo_title}}\nDue date: {{$json.target_date}}\nOverdue by: {{$json.overdue_days}} day(s)\n\nPlease take action.\n\nRegards,\nPMS System\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            0,
+            -192
+          ],
+          "id": "5ff420d1-0024-449f-b6be-95e74cad3b0f",
+          "name": "User",
+          "webhookId": "c3c831e5-4123-4473-9a75-79e0d38e4a2b",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "m6pGNPu76sBcBXtf",
+              "name": "Task Management SMTP Account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  t.id                        AS todo_id,\n  t.title                     AS todo_title,\n  t.target_date,\n  t.status                    AS todo_status,\n\n  DATEDIFF(UTC_DATE(), t.target_date) AS overdue_days,\n\n  u.email                     AS todo_owner_email\n\nFROM todos t\n\nJOIN spree_users u\n  ON u.id = t.user_id\n\nWHERE\n  t.status != 'completed'\n  AND t.target_date < UTC_DATE();\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -240,
+            -224
+          ],
+          "id": "0a3fb075-9243-457a-b00e-6176a960cc64",
+          "name": "Execute a SQL query",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "FGCPCtEG47rFAJ4J",
+              "name": "New FM UAT Task Management Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {}
+              ]
+            }
+          },
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.3,
+          "position": [
+            -320,
+            0
+          ],
+          "id": "153f7d74-0d7d-47fd-8220-6299e6faf56d",
+          "name": "Schedule Trigger",
+          "alwaysOutputData": true
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Execute a SQL query",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "User": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Execute a SQL query": {
+          "main": [
+            [
+              {
+                "node": "User",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version 51b41566",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-01-08T12:54:25.908Z",
+          "id": 69,
+          "workflowId": "mbmQyGKC6ytZevH7",
+          "versionId": "51b41566-2e59-49f3-b412-f6d2e2de8c5c",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "94ecda501e5f1192d590dbb520960894017e3b12caa93199c71a5bca4b6c629d"
+  }
+}

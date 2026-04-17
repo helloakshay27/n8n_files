@@ -1,0 +1,556 @@
+{
+  "data": {
+    "updatedAt": "2026-03-17T12:47:19.403Z",
+    "createdAt": "2026-03-17T07:04:46.469Z",
+    "id": "ceGq6CHrLDJMEmLV",
+    "name": "Industry Intelligence — Google Drive",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {},
+        "id": "be59d06b-17d8-41c7-acf9-421a329fb095",
+        "name": "Manual Trigger",
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          1232,
+          256
+        ],
+        "notes": "Run manually to test. Switch to Schedule Trigger for automation."
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "searchMethod": "query",
+          "queryString": "'10Hf7rxeU9KON2t0whdizx-ykZLQWKB2I' in parents and trashed = false",
+          "returnAll": true,
+          "filter": {},
+          "options": {
+            "fields": [
+              "id",
+              "name"
+            ]
+          }
+        },
+        "id": "65d88975-2217-4d1d-9987-5a27f50147e5",
+        "name": "List Product Folders",
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1456,
+          256
+        ],
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "vh52X2Zy6jXu0wTy",
+            "name": "Google Drive account"
+          }
+        },
+        "notes": "Lists all 16 product folders inside 'Products Marketing Content Output'. Each folder becomes one item with id and name."
+      },
+      {
+        "parameters": {
+          "resource": "fileFolder",
+          "searchMethod": "query",
+          "queryString": "='{{ $json.id }}' in parents and trashed = false",
+          "filter": {},
+          "options": {}
+        },
+        "id": "45935f0d-02f7-4795-9625-b3092996bc6e",
+        "name": "List 15 Documents",
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1680,
+          256
+        ],
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "vh52X2Zy6jXu0wTy",
+            "name": "Google Drive account"
+          }
+        },
+        "notes": "Lists all 15 Google Docs inside each product folder. Passes folder id and product name forward."
+      },
+      {
+        "parameters": {
+          "jsCode": "// ─────────────────────────────────────────────────────────────\n// NODE 3 — GROUP FILES BY PRODUCT\n// The previous node returns one item per file (15 items per\n// product × 16 products = 240 items). This node groups them\n// back into 16 items, one per product, each containing all\n// 15 file IDs mapped to their document slot.\n// ─────────────────────────────────────────────────────────────\n\n// Collect all items from the List 15 Documents node\nconst allItems = $input.all();\n\n// Each item has: { id (file id), name (e.g. '=HiSociety - Screenplay'), parent folder name }\n// We need the product name — extract from filename before the ' - '\n// File format: '={ProductName} - {DocumentType}'\n\n// Document type → slot key mapping (matches exact suffix after ' - ')\nconst TYPE_TO_SLOT = {\n  'User Guide':             'userGuide',\n  'One Pager':              'onePager',\n  'Storyboard':             'storyboard',\n  'Screenplay':             'screenplay',\n  'Marketing Script':       'marketingScript',\n  'Industry Feature List':  'industryFeatureList',\n  'Elevator Pitch':         'elevatorPitch',\n  'Communication Strategy': 'communicationStrategy',\n  'Research Report':        'researchReport',\n  'Product Description':    'productDescription',\n  'Product Overview':       'productOverview',\n  'Video Summary':          'videoSummary',\n  'Gemini Analysis':        'geminiAnalysis',\n  'AI Transcript':          'aiTranscript',\n  'Original Transcript':    'originalTranscript',\n};\n\n// Group by product name\nconst productMap = {};\n\nfor (const item of allItems) {\n  const fileName = item.json.name || '';\n  const fileId   = item.json.id   || '';\n\n  // Strip leading '=' and split on ' - '\n  // e.g. '=HiSociety - Original Transcript' → ['HiSociety', 'Original Transcript']\n  const stripped = fileName.startsWith('=') ? fileName.slice(1) : fileName;\n  const dashIdx  = stripped.indexOf(' - ');\n  if (dashIdx === -1) {\n    console.warn(`Skipping unrecognised filename format: ${fileName}`);\n    continue;\n  }\n\n  const productName = stripped.substring(0, dashIdx).trim();\n  const docType     = stripped.substring(dashIdx + 3).trim();\n  const slot        = TYPE_TO_SLOT[docType];\n\n  if (!slot) {\n    console.warn(`No slot mapping for doc type: '${docType}' (file: ${fileName})`);\n    continue;\n  }\n\n  if (!productMap[productName]) {\n    productMap[productName] = { productName, fileIds: {} };\n  }\n  productMap[productName].fileIds[slot] = fileId;\n}\n\nconst products = Object.values(productMap);\nconsole.log(`Grouped ${allItems.length} files into ${products.length} products:`, products.map(p => `${p.productName} (${Object.keys(p.fileIds).length} docs)`));\n\nif (products.length === 0) {\n  throw new Error('No products grouped — check file naming format matches: =ProductName - Document Type');\n}\n\nreturn products.map(p => ({ json: p }));"
+        },
+        "id": "8cf59d4d-3a00-4edb-a875-e533f2ba3f14",
+        "name": "Group Files by Product",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1904,
+          256
+        ],
+        "notes": "Groups the 240 individual file items back into 16 product items. Each product item has fileIds map: slot → Google Doc ID."
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.first().json;\nconst productName = data.productName || 'Product';\nconst industries = data.industries || [];\nconst generatedAt = data.generatedAt || new Date().toISOString();\nconst dateStr = new Date(generatedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });\n\nconst regionKeys = [\n  { key: 'india',         label: 'India',          color: '#D4500A' },\n  { key: 'gccAfrica',     label: 'GCC & Africa',   color: '#006B3C' },\n  { key: 'southeastAsia', label: 'Southeast Asia', color: '#0097A7' },\n  { key: 'usEurope',      label: 'US & Europe',    color: '#3C3B6E' },\n];\n\nconst sectionKeys = [\n  { key: 'industryLandscape',    label: 'Industry Landscape' },\n  { key: 'coreProblem',          label: 'Core Problem This Product Solves' },\n  { key: 'productIndustryFit',   label: 'Product–Industry Fit' },\n  { key: 'targetBuyerProfile',   label: 'Target Buyer Profile' },\n  { key: 'competitiveLandscape', label: 'Competitive Landscape' },\n  { key: 'goToMarketStrategy',   label: 'Go-to-Market Strategy' },\n  { key: 'keyMetricsROI',        label: 'Key Metrics & ROI' },\n  { key: 'idealFirstCustomers',  label: 'Ideal First Customers' },\n  { key: 'barriersToEntry',      label: 'Barriers to Entry & How to Overcome' },\n];\n\nlet html = `\n<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<style>\n  body { font-family: Arial, sans-serif; font-size: 11pt; color: #1A1A2E; margin: 40px; }\n  h1 { color: #1B3A6B; font-size: 22pt; border-bottom: 3px solid #E8524A; padding-bottom: 6px; }\n  h2 { color: #2E75B6; font-size: 16pt; margin-top: 30px; }\n  h3 { font-size: 13pt; margin-top: 20px; margin-bottom: 4px; }\n  .cover { text-align: center; padding: 80px 0; page-break-after: always; }\n  .cover h1 { font-size: 28pt; border: none; }\n  .cover .product { font-size: 22pt; color: #2E75B6; margin: 10px 0; }\n  .cover .sub { font-size: 12pt; color: #4A4A6A; }\n  .summary-table { width: 100%; border-collapse: collapse; margin: 20px 0; }\n  .summary-table th { background: #1B3A6B; color: white; padding: 10px; text-align: left; }\n  .summary-table td { padding: 8px 10px; border: 1px solid #ccc; vertical-align: top; }\n  .summary-table tr:nth-child(even) td { background: #EEF4FB; }\n  .region-header { padding: 10px 16px; color: white; font-size: 14pt; font-weight: bold; margin-top: 24px; page-break-before: always; }\n  .section-label { font-weight: bold; font-size: 10pt; text-transform: uppercase; border-bottom: 2px solid; padding-bottom: 2px; margin-top: 16px; margin-bottom: 4px; }\n  .section-content { font-size: 10.5pt; line-height: 1.5; margin-bottom: 8px; }\n  .industry-title { page-break-before: always; }\n  .fit-box { background: #EEF4FB; padding: 8px 12px; margin: 8px 0; font-size: 10.5pt; }\n  @media print { .region-header { page-break-before: always; } }\n</style>\n</head>\n<body>\n\n<div class=\"cover\">\n  <h1>INDUSTRY INTELLIGENCE REPORT</h1>\n  <div class=\"product\">${productName}</div>\n  <div class=\"sub\">Top 5 Industries × 4 Global Regions × 20 One-Pagers</div>\n  <div class=\"sub\" style=\"margin-top:8px;\">India | GCC & Africa | Southeast Asia | US & Europe</div>\n  <div class=\"sub\" style=\"margin-top:24px;\">Generated: ${dateStr}</div>\n  <div class=\"sub\">Auto-generated via n8n AI Workflow | Confidential</div>\n</div>\n\n<h1>Executive Summary</h1>\n<p>This report identifies the five highest-potential industries for <strong>${productName}</strong> across four global markets: India, GCC & Africa, Southeast Asia, and US & Europe. For each industry and region, a dedicated one-pager covers market landscape, core problem solved, product-industry fit, target buyer profile, competitive context, go-to-market strategy, ROI metrics, ideal first customers, and barriers to entry.</p>\n\n<h1>Top 5 Industries at a Glance</h1>\n<table class=\"summary-table\">\n  <thead><tr><th>#</th><th>Industry</th><th>Why This Product Fits</th><th>Market Scoring</th></tr></thead>\n  <tbody>\n    ${industries.map((ind, i) => `\n    <tr>\n      <td><strong>${ind.rank || i+1}</strong></td>\n      <td><strong>${ind.industryName || ''}</strong></td>\n      <td>${ind.fitRationale || ''}</td>\n      <td>${ind.scoringRationale || ''}</td>\n    </tr>`).join('')}\n  </tbody>\n</table>\n`;\n\nindustries.forEach((industry, idx) => {\n  const name = industry.industryName || `Industry ${idx + 1}`;\n  html += `\n  <div class=\"industry-title\">\n    <h1>${idx + 1}. ${name}</h1>\n    <div class=\"fit-box\"><strong>WHY THIS INDUSTRY:</strong> ${industry.fitRationale || ''}</div>\n    <div class=\"fit-box\"><strong>SCORING:</strong> ${industry.scoringRationale || ''}</div>\n  </div>`;\n\n  regionKeys.forEach(({ key, label, color }) => {\n    const regionData = industry.regions?.[key] || {};\n    html += `<div class=\"region-header\" style=\"background:${color};\">${label} — ${name}</div>`;\n    sectionKeys.forEach(({ key: sk, label: sl }) => {\n      const content = regionData[sk] || 'Not available.';\n      html += `\n      <div class=\"section-label\" style=\"color:${color}; border-color:${color};\">${sl}</div>\n      <div class=\"section-content\">${content.replace(/\\n/g, '<br>')}</div>`;\n    });\n  });\n});\n\nhtml += `</body></html>`;\n\nconst base64 = Buffer.from(html).toString('base64');\nconst safe = productName.replace(/[^a-zA-Z0-9_\\- ]/g, '_').replace(/\\s+/g, '_').substring(0, 50);\nconst date = new Date().toISOString().slice(0, 10);\nconst fileName = `${safe}_Industry_Intelligence_${date}.html`;\n\nreturn [{\n  json: { productName, fileName },\n  binary: {\n    data: {\n      data: base64,\n      mimeType: 'text/html',\n      fileName: fileName,\n      fileExtension: 'html',\n    },\n  },\n}];"
+        },
+        "id": "57319122-8af7-487e-8cda-149efbe9ba91",
+        "name": "Generate DOCX",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3472,
+          320
+        ]
+      },
+      {
+        "parameters": {
+          "name": "={{ $('Code in JavaScript1').first().json.fileName }}",
+          "driveId": {
+            "mode": "list",
+            "value": "MyDrive"
+          },
+          "folderId": {
+            "mode": "id",
+            "value": "={{ $('List Product Folders').item.json.id }}"
+          },
+          "options": {}
+        },
+        "id": "01165a13-9c8a-403c-99fb-acfc7ea6a702",
+        "name": "Upload DOCX to Product Folder",
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          4128,
+          0
+        ],
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "vh52X2Zy6jXu0wTy",
+            "name": "Google Drive account"
+          }
+        },
+        "notes": "Uploads the .docx directly into the same product folder on Google Drive. Uses the folder ID from Node 1."
+      },
+      {
+        "parameters": {
+          "jsCode": "const results = $input.all().map(i => i.json);\nconsole.log(`=== Run complete: ${results.length} products processed ===`);\nresults.forEach(r => console.log(`  ✓ ${r.name || r.productName}`));\nreturn [{ json: { status: 'complete', processed: results.length, files: results.map(r => r.name || r.productName) } }];"
+        },
+        "id": "20cc4548-a9b1-40b0-90a1-00e178687bfa",
+        "name": "Done",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4304,
+          16
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.fileId }}/export",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleDriveOAuth2Api",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "mimeType",
+                "value": "text/plain"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "text",
+                "outputPropertyName": "documentText"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          2304,
+          256
+        ],
+        "id": "bb648304-734e-48a1-8358-b1a4675c1995",
+        "name": "HTTP Request",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "vh52X2Zy6jXu0wTy",
+            "name": "Google Drive account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const { productName, fileIds } = $input.first().json;\n\nconst SLOT_MAP = {\n  originalTranscript:    fileIds.originalTranscript    || '',\n  aiTranscript:          fileIds.aiTranscript          || '',\n  geminiAnalysis:        fileIds.geminiAnalysis        || '',\n  videoSummary:          fileIds.videoSummary          || '',\n  productOverview:       fileIds.productOverview       || '',\n  productDescription:    fileIds.productDescription    || '',\n  userGuide:             fileIds.userGuide             || '',\n  elevatorPitch:         fileIds.elevatorPitch         || '',\n  onePager:              fileIds.onePager              || '',\n  researchReport:        fileIds.researchReport        || '',\n  industryFeatureList:   fileIds.industryFeatureList   || '',\n  marketingScript:       fileIds.marketingScript       || '',\n  communicationStrategy: fileIds.communicationStrategy || '',\n  storyboard:            fileIds.storyboard            || '',\n  screenplay:            fileIds.screenplay            || '',\n};\n\n// Output one item per file — HTTP Request node will process each\nreturn Object.entries(SLOT_MAP)\n  .filter(([slot, id]) => id !== '')\n  .map(([slot, id]) => ({\n    json: { productName, slot, fileId: id }\n  }));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2096,
+          256
+        ],
+        "id": "7a10935a-4008-464b-ada8-8cfb2062b0ab",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst productName = items[0].json.productName;\n\nconst docs = {};\nfor (const item of items) {\n  const slot = item.json.slot;\n  const text = item.json.documentText || item.json.data || item.json.body || '';\n  docs[slot] = typeof text === 'string' ? text.trim() : JSON.stringify(text);\n}\n\nconsole.log(`[${productName}] Grouped ${Object.keys(docs).length} docs`);\n\nreturn [{ json: { productName, docs, filledSlots: Object.keys(docs).length } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2512,
+          256
+        ],
+        "id": "bbfdbe6e-ddfe-4aed-a6d2-2c3c56b6beda",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $input.first().json;\n\n// Handle HTTP Request node output (Groq API response)\nconst content = input.choices?.[0]?.message?.content\n  || input.message?.content\n  || input.text\n  || input.content\n  || '';\n\n// If input is already parsed JSON (no content field), just pass it through\nif (!content) {\n  return [{ json: input }];\n}\n\nlet clean = content\n  .replace(/^```json\\s*/i, '')\n  .replace(/^```\\s*/i, '')\n  .replace(/\\s*```$/i, '')\n  .trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(clean);\n} catch (e) {\n  throw new Error(`JSON parse failed: ${e.message}\\n\\nPreview: ${clean.slice(0, 300)}`);\n}\n\nreturn [{ json: parsed }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3104,
+          320
+        ],
+        "id": "681dd2a5-387b-47e7-b9f4-6ce6d2f3fed8",
+        "name": "Code in JavaScript2",
+        "alwaysOutputData": false
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer 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"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.body }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          2928,
+          -96
+        ],
+        "id": "2a732319-d22d-442e-b97e-6eebbc4557b0",
+        "name": "HTTP Request1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const response = $input.first().json;\nconst content = response.choices[0].message.content;\n\nlet parsed;\ntry {\n  parsed = JSON.parse(content);\n} catch (e) {\n  throw new Error(`JSON parse failed: ${e.message}\\n\\nPreview: ${content.slice(0, 300)}`);\n}\n\nreturn [{ json: parsed }];\n\n\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3104,
+          -96
+        ],
+        "id": "36ee829d-9db4-4565-b734-261c6d52e416",
+        "name": "Code in JavaScript3"
+      },
+      {
+        "parameters": {
+          "jsCode": "const productName = $input.first().json.productName;\nconst docs = $input.first().json.docs;\n\nconst systemPrompt = `You are a senior industry analyst and consulting expert. Output ONLY a single valid JSON object. No markdown, no code fences, no explanation. Do NOT truncate any field. Do NOT stop until the JSON is 100% complete with the final closing brace. All 5 industries must be present with all 4 regions fully filled.`;\n\nconst userPrompt = `Analyze the following product documents and generate a structured Industry Intelligence Report.\n\nProduct Name: ${productName}\n\nDocuments:\n${JSON.stringify(docs, null, 2)}\n\n---\n\nINSTRUCTIONS:\n\n1. Identify the TOP 5 industries where this product fits best, ranked 1 (best) to 5.\n2. For EACH industry, generate deep analysis across all 4 regions:\n   - India\n   - GCC & Africa\n   - Southeast Asia\n   - US & Europe\n\nEach region must contain exactly these 9 sections:\n1. industryLandscape — Market size (TAM/SAM), CAGR, key incumbents, digital maturity, macro trends and government policies.\n2. coreProblem — The 2-3 most acute pain points this industry has in this region, and how the product directly solves each using its actual features.\n3. productIndustryFit — Feature-by-feature mapping of product capabilities to industry pain points. Use industry terminology.\n4. targetBuyerProfile — Job titles, company size, budget authority, decision-making process, evaluation timeline, typical tech stack.\n5. competitiveLandscape — Status quo solutions, active direct competitors with their top 3 products, differentiators, where product wins vs loses.\n6. goToMarketStrategy — Primary sales motion, pricing approach, key partner types, marketing channels, regulatory requirements.\n7. keyMetricsROI — Quantified value: time saved, cost reduced, revenue enabled. Realistic ranges, payback period, CFO framing.\n8. idealFirstCustomers — 3 specific named companies or sub-sectors that are ideal beachhead customers. Include why each is ideal.\n9. barriersToEntry — Real barriers each paired with a specific actionable mitigation strategy.\n\nBe specific, practical, business-focused. No generic statements.\n\n---\n\nOUTPUT THIS EXACT JSON:\n{\n  \"productName\": \"string\",\n  \"generatedAt\": \"ISO timestamp\",\n  \"industries\": [\n    {\n      \"rank\": 1,\n      \"industryName\": \"string\",\n      \"fitRationale\": \"string\",\n      \"scoringRationale\": \"string\",\n      \"regions\": {\n        \"india\": {\n          \"industryLandscape\": \"string\",\n          \"coreProblem\": \"string\",\n          \"productIndustryFit\": \"string\",\n          \"targetBuyerProfile\": \"string\",\n          \"competitiveLandscape\": \"string\",\n          \"goToMarketStrategy\": \"string\",\n          \"keyMetricsROI\": \"string\",\n          \"idealFirstCustomers\": \"string\",\n          \"barriersToEntry\": \"string\"\n        },\n        \"gccAfrica\": {\n          \"industryLandscape\": \"string\",\n          \"coreProblem\": \"string\",\n          \"productIndustryFit\": \"string\",\n          \"targetBuyerProfile\": \"string\",\n          \"competitiveLandscape\": \"string\",\n          \"goToMarketStrategy\": \"string\",\n          \"keyMetricsROI\": \"string\",\n          \"idealFirstCustomers\": \"string\",\n          \"barriersToEntry\": \"string\"\n        },\n        \"southeastAsia\": {\n          \"industryLandscape\": \"string\",\n          \"coreProblem\": \"string\",\n          \"productIndustryFit\": \"string\",\n          \"targetBuyerProfile\": \"string\",\n          \"competitiveLandscape\": \"string\",\n          \"goToMarketStrategy\": \"string\",\n          \"keyMetricsROI\": \"string\",\n          \"idealFirstCustomers\": \"string\",\n          \"barriersToEntry\": \"string\"\n        },\n        \"usEurope\": {\n          \"industryLandscape\": \"string\",\n          \"coreProblem\": \"string\",\n          \"productIndustryFit\": \"string\",\n          \"targetBuyerProfile\": \"string\",\n          \"competitiveLandscape\": \"string\",\n          \"goToMarketStrategy\": \"string\",\n          \"keyMetricsROI\": \"string\",\n          \"idealFirstCustomers\": \"string\",\n          \"barriersToEntry\": \"string\"\n        }\n      }\n    }\n  ]\n}`;\n\nreturn [{\n  json: {\n    body: {\n      model: \"llama-3.3-70b-versatile\",\n      max_tokens: 32768,\n      temperature: 0.3,\n      response_format: { type: \"json_object\" },\n      messages: [\n        { role: \"system\", content: systemPrompt },\n        { role: \"user\", content: userPrompt }\n      ]\n    }\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2720,
+          256
+        ],
+        "id": "0d740223-8b72-4933-bd2a-66a73c3b12b9",
+        "name": "Code in JavaScript4"
+      },
+      {
+        "parameters": {
+          "name": "={{ $json.fileName }}",
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "root",
+            "mode": "list",
+            "cachedResultName": "/ (Root folder)",
+            "cachedResultUrl": "https://drive.google.com/drive"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          3696,
+          320
+        ],
+        "id": "55fc7c61-d74b-4b30-959d-0b513dd9fd4f",
+        "name": "Upload file",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "vh52X2Zy6jXu0wTy",
+            "name": "Google Drive account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Manual Trigger": {
+        "main": [
+          [
+            {
+              "node": "List Product Folders",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "List Product Folders": {
+        "main": [
+          [
+            {
+              "node": "List 15 Documents",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "List 15 Documents": {
+        "main": [
+          [
+            {
+              "node": "Group Files by Product",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Group Files by Product": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate DOCX": {
+        "main": [
+          [
+            {
+              "node": "Upload file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload DOCX to Product Folder": {
+        "main": [
+          [
+            {
+              "node": "Done",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "Generate DOCX",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript4": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "80f9ca58-c243-47ce-b4b9-1b57b362aa2d",
+    "activeVersionId": null,
+    "versionCounter": 5,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-03-17T07:04:46.480Z",
+        "createdAt": "2026-03-17T07:04:46.480Z",
+        "role": "workflow:owner",
+        "workflowId": "ceGq6CHrLDJMEmLV",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-16T03:51:58.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-15",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2026-03-16T06:10:14.138Z",
+      "createdAt": "2026-03-16T06:10:14.138Z",
+      "id": "lLv5xRyxrErs7b5T",
+      "name": "Yash Workflows",
+      "parentFolderId": null
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "f685816cce099abd4aebb986759985ad45a4e8ee264dd0638aed79f40fca6e3c"
+  }
+}
