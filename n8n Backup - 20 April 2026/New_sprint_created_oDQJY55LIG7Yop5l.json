@@ -1,0 +1,218 @@
+{
+  "data": {
+    "updatedAt": "2026-01-12T10:54:50.810Z",
+    "createdAt": "2025-12-26T08:31:38.746Z",
+    "id": "oDQJY55LIG7Yop5l",
+    "name": "New sprint created",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "new-sprint-created",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -464,
+          -144
+        ],
+        "id": "414f22d0-19dd-4e08-b3d5-a4d3e120a0d2",
+        "name": "Webhook",
+        "webhookId": "39c07d3d-382c-4a54-b287-e11838b71786",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          128,
+          16
+        ],
+        "id": "248934ad-93ed-4efa-b51b-cfea2d22f80a",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "heypiyush112@gmail.com",
+          "subject": "=Sprint Started: {{$json.name}}",
+          "html": "=Dear {{$json.RecipientName}},\n\nWe would like to inform you that a new sprint, <b>{{$json.name}}</b>, has officially started.\n\n<b>Sprint Overview</b>\n* Sprint Name: {{$json.name}}\n* Associated Project ID: {{$json.project_id}}\n* Sprint Duration: {{$json.start_date}} {{$json.start_time}} to {{$json.end_date}} {{$json.end_time}}\n* Current Status: {{$json.status}}\n\nPlease review your assigned sprint tasks and ensure timely execution throughout the sprint cycle.\n\nRegards,\n<b>Agile Delivery Office</b>\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          -144,
+          -48
+        ],
+        "id": "eb36a9ca-3fe9-40fd-a73c-22040d261fe5",
+        "name": "Sprint Team",
+        "webhookId": "447e07b2-69fa-40c3-ae49-f755f4023855",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * from sprints;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -256,
+          -240
+        ],
+        "id": "366f79b9-8443-462a-b7c2-1662e8934f3f",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          []
+        ]
+      },
+      "Sprint Team": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Sprint Team",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "dcabe1f7-eade-457a-923a-9e338b1906e8",
+    "activeVersionId": null,
+    "versionCounter": 16,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2025-12-26T08:31:38.750Z",
+        "createdAt": "2025-12-26T08:31:38.750Z",
+        "role": "workflow:owner",
+        "workflowId": "oDQJY55LIG7Yop5l",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-20T08:20:33.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-19",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2025-12-26T08:31:16.099Z",
+      "createdAt": "2025-12-26T08:31:16.099Z",
+      "id": "lWyrbzOLu0XNECl9",
+      "name": "Module 5 - Sprints",
+      "parentFolderId": null
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "5e4f970e1f30520a73227e50973fdff1654049de691c806d2dcc02f0bd3bde04"
+  }
+}

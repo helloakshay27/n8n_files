@@ -1,0 +1,114 @@
+{
+  "data": {
+    "updatedAt": "2026-04-09T05:59:11.117Z",
+    "createdAt": "2026-04-09T05:59:07.113Z",
+    "id": "aO5nVrbVlWCB7yy2",
+    "name": "WF07 — Weekly GTM Dashboard",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [],
+    "connections": {},
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": {},
+    "versionId": "22fb8953-97ec-46a6-a226-5a8ba89b9be3",
+    "activeVersionId": null,
+    "versionCounter": 3,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-04-09T05:59:07.122Z",
+        "createdAt": "2026-04-09T05:59:07.122Z",
+        "role": "workflow:owner",
+        "workflowId": "aO5nVrbVlWCB7yy2",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-20T08:20:33.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-19",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-04-09T05:50:06.216Z",
+        "createdAt": "2026-04-09T05:50:06.216Z",
+        "id": "G3nbvWMHGcGbTeOI",
+        "name": "marketing-support"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-04-09T05:53:38.760Z",
+      "createdAt": "2026-04-09T05:53:38.760Z",
+      "id": "Nv4Mxy1IviRIXWgg",
+      "name": "Marketing Agent implementation",
+      "parentFolderId": null
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "27293303842a5332e593bf5ec888e464c8efc3b5d418a91a5d43571c8aae70b0"
+  }
+}

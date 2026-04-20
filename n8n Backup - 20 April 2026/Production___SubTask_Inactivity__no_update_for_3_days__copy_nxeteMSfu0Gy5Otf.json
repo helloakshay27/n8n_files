@@ -1,0 +1,561 @@
+{
+  "data": {
+    "updatedAt": "2026-04-16T09:03:54.343Z",
+    "createdAt": "2026-04-15T11:52:08.157Z",
+    "id": "nxeteMSfu0Gy5Otf",
+    "name": "Production - SubTask Inactivity (no update for 3 days) copy",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "b810687d-5b29-4e58-8492-8593092bc706",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "5b85231b-8a04-4b18-bd19-a366ab868066",
+        "name": "Webhook",
+        "webhookId": "b810687d-5b29-4e58-8492-8593092bc706",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          800,
+          256
+        ],
+        "id": "a4e4574b-05c3-47d0-8e7a-a934593511c5",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 10,
+                "triggerAtMinute": 25
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          32,
+          288
+        ],
+        "id": "3185e887-5a07-4a6e-8ad0-a6823242cb97",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  t.id            AS subtask_id,\n  t.title         AS subtask_name,\n  t.description   AS subtask_description,\n  t.status        AS subtask_status,\n  t.priority      AS subtask_priority,\n  t.target_date   AS subtask_target_date,\n  t.created_at    AS subtask_created_at,\n  t.updated_at    AS subtask_last_updated,\n  CONVERT_TZ(t.expected_start_date, '+00:00', '+05:30') AS subtask_start_on,\n  CONVERT_TZ(t.target_date, '+00:00', '+05:30') AS subtask_end_on,\n\n  rp.id           AS responsible_person_id,\n  rp.firstname    AS responsible_person_first_name,\n  rp.lastname     AS responsible_person_last_name,\n  rp.email        AS responsible_person_email,\n\n  pt.id           AS parent_task_id,\n  pt.title        AS parent_task_title,\n\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  pmo.id          AS manager_id,\n  pmo.firstname   AS manager_first_name,\n  pmo.lastname    AS manager_last_name,\n  pmo.email       AS manager_email,\n\n  m.id            AS milestone_id,\n  m.title         AS milestone_title,\n\n  GROUP_CONCAT(obs.id ORDER BY obs.id) AS observer_ids,\n  GROUP_CONCAT(obs.firstname ORDER BY obs.id) AS observer_first_names,\n  GROUP_CONCAT(obs.lastname ORDER BY obs.id) AS observer_last_names,\n  GROUP_CONCAT(obs.email ORDER BY obs.id) AS observer_emails\n\nFROM task_managements t\n\nJOIN spree_users rp\n  ON rp.id = t.responsible_person_id\n\nJOIN project_managements pm\n  ON pm.id = t.project_management_id\n\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nLEFT JOIN task_managements pt\n  ON pt.id = t.parent_id\n\nLEFT JOIN milestones m\n  ON m.id = pt.milestone_id\n\nLEFT JOIN task_users tu\n  ON tu.task_id = t.id\n  AND tu.user_type = 'observer'\n  AND tu.active = 1\n\nLEFT JOIN spree_users obs\n  ON obs.id = tu.user_id\n\nWHERE\n  t.status IN ('open', 'in_progress', 'on_hold', 'overdue', 'started')\n  AND t.updated_at <= UTC_TIMESTAMP() - INTERVAL 4320 MINUTE\n  AND t.active = 1\n  AND t.parent_id IS NOT NULL\n  AND rp.organization_id IN (13, 14, 59, 84)\n\nGROUP BY t.id;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          288,
+          96
+        ],
+        "id": "574700c7-b47d-4ded-8ae6-026a4d6a060e",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "{{$json.manager_email}}",
+          "subject": "=No Recent Update on SubTask: {{$json.subtask_name}}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{ $json.manager_first_name }} {{ $json.manager_last_name }},\n  </p>\n\n  <p>\n    We noticed that there has been no update on the subtask <b>{{$json.subtask_name}}</b> for the past <b>3 days</b>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Subtask Snapshot</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_name}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Last Updated On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_last_updated}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_start_on || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_end_on || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Responsible Person</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.responsible_person_first_name}} {{$json.responsible_person_last_name}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Parent Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.parent_task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/tasks/{{$json.subtask_id}}\" target=\"_blank\">\n          View Subtask Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the subtask and update the status or add comments to avoid potential delays.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO – Task Governance</strong>\n  </p>\n\n</div>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the subtask and update the status or add comments to avoid potential delays.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO – Task Governance</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          544,
+          96
+        ],
+        "id": "7bb77583-d83d-4358-bb1b-ff1ad3bbf268",
+        "name": "PM",
+        "webhookId": "004695b1-7d43-48a7-ad29-621ab2f04051",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "{{$json.owner_email}}",
+          "subject": "=No Recent Update on Task: {{$json.subtask_name}}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{ $json.responsible_person_first_name }} {{ $json.responsible_person_last_name }},\n  </p>\n\n  <p>\n    We noticed that there has been no update on the subtask <b>{{$json.subtask_name}}</b> for the past <b>3 days</b>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Subtask Snapshot</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_name}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Last Updated On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_last_updated}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_start_on || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_end_on || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Responsible Person</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.responsible_person_first_name}} {{$json.responsible_person_last_name}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Parent Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.parent_task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/tasks/{{$json.subtask_id}}\" target=\"_blank\">\n          View Subtask Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the subtask and update the status or add comments to avoid potential delays.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO – Task Governance</strong>\n  </p>\n\n</div>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the subtask and update the status or add comments to avoid potential delays.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO – Task Governance</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          528,
+          304
+        ],
+        "id": "308473a5-e0de-4666-8238-e9cbdc9d36b2",
+        "name": "Task Owner",
+        "webhookId": "0e17537d-3347-4e40-8a75-2a550f5803aa",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = [];\n\nfor (const item of $input.all()) {\n  const emails = (item.json.observer_emails || '').split(',');\n  const firstNames = (item.json.observer_first_names || '').split(',');\n  const lastNames = (item.json.observer_last_names || '').split(',');\n\n  for (let i = 0; i < emails.length; i++) {\n    if (!emails[i]) continue;\n\n    items.push({\n      json: {\n        ...item.json,\n\n        observer_email: emails[i].trim(),\n        observer_first_name: firstNames[i]?.trim(),\n        observer_last_name: lastNames[i]?.trim()\n      }\n    });\n  }\n}\n\nreturn items;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          464,
+          464
+        ],
+        "id": "f5e5d3c7-9eff-4b24-aa50-1592a6274a6d",
+        "name": "Code in JavaScript",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{ $json.observer_email }}",
+          "subject": "=No Recent Update on Task: {{$json.subtask_name}}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{ $json.observer_first_name }} {{ $json.observer_last_name }},\n  </p>\n\n  <p>\n    We noticed that there has been no update on the subtask <b>{{$json.subtask_name}}</b> for the past <b>3 days</b>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Subtask Snapshot</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_name}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Last Updated On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_last_updated}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_start_on || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_end_on || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Responsible Person</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.responsible_person_first_name}} {{$json.responsible_person_last_name}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Parent Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.parent_task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/tasks/{{$json.subtask_id}}\" target=\"_blank\">\n          View Subtask Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the subtask and update the status or add comments to avoid potential delays.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO – Task Governance</strong>\n  </p>\n\n</div>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the subtask and update the status or add comments to avoid potential delays.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO – Task Governance</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          688,
+          560
+        ],
+        "id": "3ee792db-b8fb-4ce6-a866-fb190a162810",
+        "name": "Observers",
+        "webhookId": "3bf540c1-806b-4905-9eb6-a01f7313e364",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "PM",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Task Owner",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Observers",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": null,
+    "pinData": {},
+    "versionId": "9e736231-e401-4f13-b235-5064eb654603",
+    "activeVersionId": "9e736231-e401-4f13-b235-5064eb654603",
+    "versionCounter": 33,
+    "triggerCount": 2,
+    "shared": [
+      {
+        "updatedAt": "2026-04-15T11:52:08.162Z",
+        "createdAt": "2026-04-15T11:52:08.162Z",
+        "role": "workflow:owner",
+        "workflowId": "nxeteMSfu0Gy5Otf",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-20T08:20:33.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-19",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-04-15T11:32:35.314Z",
+        "createdAt": "2026-04-15T11:32:35.314Z",
+        "id": "L0EeV7qZEpOHtqXt",
+        "name": "Production Ready"
+      },
+      {
+        "updatedAt": "2026-04-15T11:50:19.612Z",
+        "createdAt": "2026-04-15T11:50:19.612Z",
+        "id": "Uq7B4y56s5FTtmhz",
+        "name": "Module 2.1 - SUBTASKS"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-04-15T11:49:33.471Z",
+      "createdAt": "2026-04-15T11:49:33.471Z",
+      "id": "JZBEQrtRyogrut64",
+      "name": "Production Ready",
+      "parentFolderId": "2EgLHgrVJNh2U0Rt"
+    },
+    "activeVersion": {
+      "updatedAt": "2026-04-16T09:03:57.000Z",
+      "createdAt": "2026-04-16T09:03:54.345Z",
+      "versionId": "9e736231-e401-4f13-b235-5064eb654603",
+      "workflowId": "nxeteMSfu0Gy5Otf",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "b810687d-5b29-4e58-8492-8593092bc706",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            0,
+            0
+          ],
+          "id": "5b85231b-8a04-4b18-bd19-a366ab868066",
+          "name": "Webhook",
+          "webhookId": "b810687d-5b29-4e58-8492-8593092bc706",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            800,
+            256
+          ],
+          "id": "a4e4574b-05c3-47d0-8e7a-a934593511c5",
+          "name": "Respond to Webhook"
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "triggerAtHour": 10,
+                  "triggerAtMinute": 25
+                }
+              ]
+            }
+          },
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.3,
+          "position": [
+            32,
+            288
+          ],
+          "id": "3185e887-5a07-4a6e-8ad0-a6823242cb97",
+          "name": "Schedule Trigger"
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  t.id            AS subtask_id,\n  t.title         AS subtask_name,\n  t.description   AS subtask_description,\n  t.status        AS subtask_status,\n  t.priority      AS subtask_priority,\n  t.target_date   AS subtask_target_date,\n  t.created_at    AS subtask_created_at,\n  t.updated_at    AS subtask_last_updated,\n  CONVERT_TZ(t.expected_start_date, '+00:00', '+05:30') AS subtask_start_on,\n  CONVERT_TZ(t.target_date, '+00:00', '+05:30') AS subtask_end_on,\n\n  rp.id           AS responsible_person_id,\n  rp.firstname    AS responsible_person_first_name,\n  rp.lastname     AS responsible_person_last_name,\n  rp.email        AS responsible_person_email,\n\n  pt.id           AS parent_task_id,\n  pt.title        AS parent_task_title,\n\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  pmo.id          AS manager_id,\n  pmo.firstname   AS manager_first_name,\n  pmo.lastname    AS manager_last_name,\n  pmo.email       AS manager_email,\n\n  m.id            AS milestone_id,\n  m.title         AS milestone_title,\n\n  GROUP_CONCAT(obs.id ORDER BY obs.id) AS observer_ids,\n  GROUP_CONCAT(obs.firstname ORDER BY obs.id) AS observer_first_names,\n  GROUP_CONCAT(obs.lastname ORDER BY obs.id) AS observer_last_names,\n  GROUP_CONCAT(obs.email ORDER BY obs.id) AS observer_emails\n\nFROM task_managements t\n\nJOIN spree_users rp\n  ON rp.id = t.responsible_person_id\n\nJOIN project_managements pm\n  ON pm.id = t.project_management_id\n\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nLEFT JOIN task_managements pt\n  ON pt.id = t.parent_id\n\nLEFT JOIN milestones m\n  ON m.id = pt.milestone_id\n\nLEFT JOIN task_users tu\n  ON tu.task_id = t.id\n  AND tu.user_type = 'observer'\n  AND tu.active = 1\n\nLEFT JOIN spree_users obs\n  ON obs.id = tu.user_id\n\nWHERE\n  t.status IN ('open', 'in_progress', 'on_hold', 'overdue', 'started')\n  AND t.updated_at <= UTC_TIMESTAMP() - INTERVAL 4320 MINUTE\n  AND t.active = 1\n  AND t.parent_id IS NOT NULL\n  AND rp.organization_id IN (13, 14, 59, 84)\n\nGROUP BY t.id;",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            288,
+            96
+          ],
+          "id": "574700c7-b47d-4ded-8ae6-026a4d6a060e",
+          "name": "Execute a SQL query",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "fromEmail": "notifications@lockated.com",
+            "toEmail": "{{$json.manager_email}}",
+            "subject": "=No Recent Update on SubTask: {{$json.subtask_name}}",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{ $json.manager_first_name }} {{ $json.manager_last_name }},\n  </p>\n\n  <p>\n    We noticed that there has been no update on the subtask <b>{{$json.subtask_name}}</b> for the past <b>3 days</b>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Subtask Snapshot</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_name}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Last Updated On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_last_updated}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_start_on || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_end_on || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Responsible Person</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.responsible_person_first_name}} {{$json.responsible_person_last_name}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Parent Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.parent_task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/tasks/{{$json.subtask_id}}\" target=\"_blank\">\n          View Subtask Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the subtask and update the status or add comments to avoid potential delays.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO – Task Governance</strong>\n  </p>\n\n</div>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the subtask and update the status or add comments to avoid potential delays.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO – Task Governance</strong>\n  </p>\n\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            544,
+            96
+          ],
+          "id": "7bb77583-d83d-4358-bb1b-ff1ad3bbf268",
+          "name": "PM",
+          "webhookId": "004695b1-7d43-48a7-ad29-621ab2f04051",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "e6BxRubia0RizPKp",
+              "name": "Lockated Local SMTP"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "fromEmail": "notifications@lockated.com",
+            "toEmail": "{{$json.owner_email}}",
+            "subject": "=No Recent Update on Task: {{$json.subtask_name}}",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{ $json.responsible_person_first_name }} {{ $json.responsible_person_last_name }},\n  </p>\n\n  <p>\n    We noticed that there has been no update on the subtask <b>{{$json.subtask_name}}</b> for the past <b>3 days</b>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Subtask Snapshot</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_name}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Last Updated On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_last_updated}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_start_on || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_end_on || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Responsible Person</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.responsible_person_first_name}} {{$json.responsible_person_last_name}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Parent Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.parent_task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/tasks/{{$json.subtask_id}}\" target=\"_blank\">\n          View Subtask Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the subtask and update the status or add comments to avoid potential delays.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO – Task Governance</strong>\n  </p>\n\n</div>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the subtask and update the status or add comments to avoid potential delays.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO – Task Governance</strong>\n  </p>\n\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            528,
+            304
+          ],
+          "id": "308473a5-e0de-4666-8238-e9cbdc9d36b2",
+          "name": "Task Owner",
+          "webhookId": "0e17537d-3347-4e40-8a75-2a550f5803aa",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "e6BxRubia0RizPKp",
+              "name": "Lockated Local SMTP"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "jsCode": "const items = [];\n\nfor (const item of $input.all()) {\n  const emails = (item.json.observer_emails || '').split(',');\n  const firstNames = (item.json.observer_first_names || '').split(',');\n  const lastNames = (item.json.observer_last_names || '').split(',');\n\n  for (let i = 0; i < emails.length; i++) {\n    if (!emails[i]) continue;\n\n    items.push({\n      json: {\n        ...item.json,\n\n        observer_email: emails[i].trim(),\n        observer_first_name: firstNames[i]?.trim(),\n        observer_last_name: lastNames[i]?.trim()\n      }\n    });\n  }\n}\n\nreturn items;"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            464,
+            464
+          ],
+          "id": "f5e5d3c7-9eff-4b24-aa50-1592a6274a6d",
+          "name": "Code in JavaScript",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "fromEmail": "notifications@lockated.com",
+            "toEmail": "={{ $json.observer_email }}",
+            "subject": "=No Recent Update on Task: {{$json.subtask_name}}",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{ $json.observer_first_name }} {{ $json.observer_last_name }},\n  </p>\n\n  <p>\n    We noticed that there has been no update on the subtask <b>{{$json.subtask_name}}</b> for the past <b>3 days</b>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Subtask Snapshot</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_name}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Last Updated On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_last_updated}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_start_on || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.subtask_end_on || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Responsible Person</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.responsible_person_first_name}} {{$json.responsible_person_last_name}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Parent Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.parent_task_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Subtask Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/tasks/{{$json.subtask_id}}\" target=\"_blank\">\n          View Subtask Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the subtask and update the status or add comments to avoid potential delays.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO – Task Governance</strong>\n  </p>\n\n</div>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the subtask and update the status or add comments to avoid potential delays.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO – Task Governance</strong>\n  </p>\n\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            688,
+            560
+          ],
+          "id": "3ee792db-b8fb-4ce6-a866-fb190a162810",
+          "name": "Observers",
+          "webhookId": "3bf540c1-806b-4905-9eb6-a01f7313e364",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "e6BxRubia0RizPKp",
+              "name": "Lockated Local SMTP"
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Schedule Trigger": {
+          "main": [
+            [
+              {
+                "node": "Execute a SQL query",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Execute a SQL query": {
+          "main": [
+            [
+              {
+                "node": "PM",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Task Owner",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Code in JavaScript",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Code in JavaScript": {
+          "main": [
+            [
+              {
+                "node": "Observers",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version 9e736231",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-04-16T09:03:57.287Z",
+          "id": 149,
+          "workflowId": "nxeteMSfu0Gy5Otf",
+          "versionId": "9e736231-e401-4f13-b235-5064eb654603",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "9e88700d4960845291e545230c8e9c2fde5faa27aa1fdecfd8a6b67ead468870"
+  }
+}

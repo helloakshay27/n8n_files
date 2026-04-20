@@ -1,0 +1,740 @@
+{
+  "data": {
+    "updatedAt": "2026-04-18T13:17:50.084Z",
+    "createdAt": "2026-04-15T13:35:31.280Z",
+    "id": "dviTaZHKFiWpBKhl",
+    "name": "FM Matrix — Agent: Research",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"model\": \"claude-sonnet-4-5\",\n  \"max_tokens\": 1000,\n  \"system\": \"You are a market intelligence analyst for FM Matrix, a B2B SaaS Facilities Management platform serving India and GCC markets. Your target customers are: TG1 = Commercial Real Estate Developers and IT Park Operators in India, TG2 = Integrated Facility Management (IFM) Service Companies in India, TG3 = GCC Commercial Real Estate and Free Zone Operators. You produce structured JSON research outputs that a content team uses to plan LinkedIn posts. Return ONLY valid JSON, no markdown, no preamble.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Generate a research intelligence report on FM industry news, PropTech trends, ESG developments, hybrid work updates, and commercial real estate news relevant to India and GCC markets. Based on your training knowledge, identify the most relevant recent trends, developments, and talking points that a facilities management SaaS company should be aware of for content marketing purposes.\\n\\nReturn a JSON object in exactly this format:\\n{\\n  \\\"skill\\\": \\\"web-search-news\\\",\\n  \\\"items\\\": [\\n    {\\n      \\\"title\\\": \\\"trend or development title\\\",\\n      \\\"summary\\\": \\\"2-3 sentence summary of the trend and why it matters for FM professionals\\\",\\n      \\\"content_angle\\\": \\\"one sentence on how FM Matrix could use this as a LinkedIn post angle\\\",\\n      \\\"relevance\\\": \\\"high or medium\\\",\\n      \\\"tags\\\": [\\\"ESG\\\", \\\"India\\\", \\\"CRE\\\"]\\n    }\\n  ],\\n  \\\"high_relevance_count\\\": 0\\n}\\n\\nInclude 5-8 items. Only include high or medium relevance items. Set high_relevance_count to the count of high relevance items.\"\n    }\n  ]\n}",
+          "options": {}
+        },
+        "id": "ac9f80c3-0bb0-4368-a09a-4a82bfc27d96",
+        "name": "Gather — Industry News",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          -240
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "x4mn87km8fmniFtJ",
+            "name": "Adhip's Demo Anthropic API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"model\": \"claude-sonnet-4-5\",\n  \"max_tokens\": 1000,\n  \"system\": \"You are a competitive intelligence analyst for FM Matrix, a B2B SaaS Facilities Management platform. FM Matrix's known strengths over competitors: native CAM billing automation, 5-level helpdesk escalation, tenant loyalty/VAS modules, PTW and MSafe safety modules, Marketplace app store model. Key competitors and their weaknesses: Facilio (no CAM billing, no VAS/loyalty, limited safety depth), Archibus (expensive, slow to deploy, no India focus), Planon (very expensive, no India presence, no safety modules), CAFM Explorer (no VAS, no CAM billing, outdated UI), BuildingMinds (ESG only, not a full FM platform). Return ONLY valid JSON, no markdown, no preamble.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Based on your training knowledge, generate a competitive intelligence report on FM Matrix's key competitors: Facilio, Archibus/Eptura, Planon, CAFM Explorer, and BuildingMinds. For each competitor, identify their likely recent strategic direction, product focus areas, market positioning, and any known gaps that FM Matrix can exploit in content marketing.\\n\\nReturn a JSON object in exactly this format:\\n{\\n  \\\"skill\\\": \\\"competitor-monitor\\\",\\n  \\\"competitors\\\": [\\n    {\\n      \\\"name\\\": \\\"competitor name\\\",\\n      \\\"strategic_direction\\\": \\\"what they are likely focusing on\\\",\\n      \\\"known_gaps\\\": \\\"what they are still missing that FM Matrix has\\\",\\n      \\\"suggested_response_angle\\\": \\\"how FM Matrix could respond in LinkedIn content\\\",\\n      \\\"priority\\\": \\\"high or medium or low\\\"\\n    }\\n  ]\\n}\"\n    }\n  ]\n}",
+          "options": {}
+        },
+        "id": "b42a65f7-ac2d-420f-8d88-b6443fdfba42",
+        "name": "Gather — Competitor Activity",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          -48
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "x4mn87km8fmniFtJ",
+            "name": "Adhip's Demo Anthropic API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"model\": \"claude-sonnet-4-5\",\n  \"max_tokens\": 1000,\n  \"system\": \"You are a customer insights analyst for FM Matrix, a B2B SaaS Facilities Management platform. You specialise in extracting customer pain points and voice-of-customer language from software reviews. Your outputs are used to write LinkedIn content that resonates with FM professionals. Return ONLY valid JSON, no markdown, no preamble.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Based on your training knowledge of how facilities management professionals talk about their software challenges, generate representative user review insights for FM software in India and GCC. Focus on the real frustrations FM managers, property managers, and IFM company operations heads have with manual processes and fragmented tools.\\n\\nReturn a JSON object in exactly this format:\\n{\\n  \\\"skill\\\": \\\"review-scraper\\\",\\n  \\\"reviews\\\": [\\n    {\\n      \\\"platform\\\": \\\"G2 or Capterra\\\",\\n      \\\"reviewer_role\\\": \\\"job title of reviewer\\\",\\n      \\\"pain_extracted\\\": \\\"the core problem this persona has\\\",\\n      \\\"frustration\\\": \\\"what is not working for them\\\",\\n      \\\"verbatim_quote\\\": \\\"a realistic quote in the voice of this persona describing their pain\\\",\\n      \\\"content_angle\\\": \\\"how FM Matrix could use this pain in a LinkedIn post\\\"\\n    }\\n  ],\\n  \\\"top_pains_mentioned\\\": [\\\"pain1\\\", \\\"pain2\\\", \\\"pain3\\\"]\\n}\\n\\nInclude 4-6 review insights. Make verbatim quotes vivid and specific — avoid generic phrases.\"\n    }\n  ]\n}",
+          "options": {}
+        },
+        "id": "bb097a4c-ff1c-45d2-bc0d-528b200c4bde",
+        "name": "Gather — User Reviews",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          144
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "x4mn87km8fmniFtJ",
+            "name": "Adhip's Demo Anthropic API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"model\": \"claude-sonnet-4-5\",\n  \"max_tokens\": 1000,\n  \"system\": \"You are a regulatory intelligence analyst for FM Matrix, a B2B SaaS Facilities Management platform serving India and GCC markets. You track compliance and regulatory developments that affect facility managers, property operators, and IFM companies. Key India regulations: RERA, NABH, Factories Act, PCB, BEE, SEBI BRSR. Key GCC regulations: Civil Defence UAE, DEWA smart metering, UAE Net Zero 2050, Saudi Vision 2030, Saudi Green Initiative. Return ONLY valid JSON, no markdown, no preamble.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Based on your training knowledge, generate a regulatory intelligence report covering compliance and policy developments relevant to facilities management in India and GCC. Focus on regulations that create urgency for FM software adoption — compliance tracking, safety certifications, ESG reporting, and building management requirements.\\n\\nReturn a JSON object in exactly this format:\\n{\\n  \\\"skill\\\": \\\"regulatory-monitor\\\",\\n  \\\"updates\\\": [\\n    {\\n      \\\"region\\\": \\\"India or GCC or UAE or Saudi or Oman\\\",\\n      \\\"regulation\\\": \\\"name of regulation or regulatory body\\\",\\n      \\\"summary\\\": \\\"what the requirement is and what it means for FM operators\\\",\\n      \\\"who_it_affects\\\": \\\"which FM Matrix customer segments are affected\\\",\\n      \\\"fm_matrix_angle\\\": \\\"which FM Matrix feature addresses this requirement\\\",\\n      \\\"content_urgency\\\": \\\"high or medium or low\\\"\\n    }\\n  ]\\n}\\n\\nInclude 4-6 regulatory items. Focus on items that create a clear content opportunity for FM Matrix.\"\n    }\n  ]\n}",
+          "options": {}
+        },
+        "id": "3b309495-9d6b-4a07-8dbe-88a145aa5fd0",
+        "name": "Gather — Regulatory Updates",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          336
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "x4mn87km8fmniFtJ",
+            "name": "Adhip's Demo Anthropic API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"model\": \"claude-sonnet-4-5\",\n  \"max_tokens\": 1000,\n  \"system\": \"You are a competitive intelligence analyst specialising in hiring signal analysis for FM Matrix, a B2B SaaS Facilities Management platform. You interpret competitor hiring patterns as strategic signals. Competitors to monitor: Facilio, Archibus/Eptura, Planon, CAFM Explorer, BuildingMinds. Return ONLY valid JSON, no markdown, no preamble.\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Based on your training knowledge of these FM software companies, generate a hiring signals intelligence report. For each competitor, infer what their likely hiring focus areas are based on their known strategic direction — AI/ML investment, India expansion, GCC growth, new product areas like billing or tenant experience.\\n\\nReturn a JSON object in exactly this format:\\n{\\n  \\\"skill\\\": \\\"job-posting-monitor\\\",\\n  \\\"signals\\\": [\\n    {\\n      \\\"competitor\\\": \\\"competitor name\\\",\\n      \\\"likely_hiring_focus\\\": \\\"what roles they are likely hiring for\\\",\\n      \\\"signal_type\\\": \\\"AI investment or India expansion or GCC expansion or Feature build or Sales scale\\\",\\n      \\\"interpretation\\\": \\\"what this means strategically for FM Matrix\\\",\\n      \\\"content_angle\\\": \\\"how FM Matrix could use this signal in LinkedIn content\\\",\\n      \\\"priority\\\": \\\"high or medium or low\\\"\\n    }\\n  ],\\n  \\\"summary\\\": \\\"2-3 sentence summary of the most significant competitive hiring trends\\\"\\n}\"\n    }\n  ]\n}",
+          "options": {}
+        },
+        "id": "74887c47-3197-4be6-b440-42e71ee671fe",
+        "name": "Gather — Hiring Signals",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          560,
+          528
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "x4mn87km8fmniFtJ",
+            "name": "Adhip's Demo Anthropic API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "numberInputs": 5
+        },
+        "id": "bfc2d708-9ed8-4334-b6dd-0e4710894dea",
+        "name": "Merge All Outputs",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3,
+        "position": [
+          784,
+          96
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nlet totalHighRelevance = 0;\nconst allOutputs = [];\n\nfor (const item of items) {\n  try {\n    const body = item.json.body || item.json;\n    const content = body.content?.[0]?.text || body.choices?.[0]?.message?.content || '';\n    const cleaned = content.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n    const parsed = JSON.parse(cleaned);\n    \n    if (parsed.high_relevance_count) {\n      totalHighRelevance += parsed.high_relevance_count;\n    } else if (parsed.items) {\n      totalHighRelevance += parsed.items.filter(i => i.relevance === 'high').length;\n    } else if (parsed.updates) {\n      totalHighRelevance += parsed.updates.filter(i => i.content_urgency === 'high').length;\n    } else if (parsed.signals) {\n      totalHighRelevance += parsed.signals.filter(i => i.priority === 'high').length;\n    } else if (parsed.competitors) {\n      totalHighRelevance += parsed.competitors.filter(i => i.priority === 'high').length;\n    } else if (parsed.reviews) {\n      totalHighRelevance += parsed.reviews.length;\n    }\n    \n    allOutputs.push(parsed);\n  } catch(e) {\n    allOutputs.push({ error: e.message, raw: item.json });\n  }\n}\n\nreturn [{\n  json: {\n    high_relevance_count: totalHighRelevance,\n    all_outputs: allOutputs,\n    run_date: new Date().toISOString()\n  }\n}];"
+        },
+        "id": "8402ca97-c2dd-45f5-b8b2-f026828d9eb7",
+        "name": "Parse and Score Outputs",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1008,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "model",
+                "value": "claude-sonnet-4-5"
+              },
+              {
+                "name": "max_tokens",
+                "value": "={{ 20000 }}"
+              },
+              {
+                "name": "messages",
+                "value": "={{\n  $json.all_outputs\n    .filter(item => item?.raw?.content?.[0]?.text)\n    .map(item => ({\n      role: 'user',\n      content: item.raw.content[0].text\n    }))\n}}"
+              },
+              {
+                "name": "system",
+                "value": "\"You are a senior content strategist for FM Matrix, a B2B SaaS Facilities Management platform for India and GCC markets. You produce weekly research documents for a content calendar manager who plans LinkedIn posts for the FM Matrix Product Showcase page.\\n\\nFM Matrix LinkedIn voice rules:\\n- Outcome-led, not feature-led\\n- Peer-to-peer tone — talking with FM professionals, not at them\\n- Every post anchored in data or a customer story\\n- Direct, active voice. No corporate jargon.\\n- BANNED words: best-in-class, cutting-edge, revolutionary, solution, leverage, synergy, seamlessly\\n\\nTarget groups:\\n- TG1: Commercial Real Estate Developers and IT Park Operators (India) — buyer: Head of Property Management / VP Facilities\\n- TG2: Integrated Facility Management (IFM) Service Companies (India) — buyer: COO / Head of Operations\\n- TG3: GCC Commercial Real Estate and Free Zone Operators — buyer: FM Director / Head of Asset Management\\n\\nFM Matrix proof points to reference where relevant:\\n- CAM billing cycle reduced from 12 days to 2 days at a 50-tenant commercial complex\\n- Compliance lapse rate fell from 22% to 0% across 8 sites\\n- Vendor SLA compliance rose from 62% to 91% across 12 managed sites\\n- Safety incidents fell 86% at a pharma manufacturing campus\\n- Tenant NPS increased from +18 to +52 at a co-working operator\\n- FM operating cost fell 25% at a 300,000 sq ft SEZ campus\""
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "c9838057-3ae4-407e-bb47-e71210f892b1",
+        "name": "Synthesise Research Doc",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1232,
+          144
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "x4mn87km8fmniFtJ",
+            "name": "Adhip's Demo Anthropic API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const response = $input.first().json;\nconst content = response.body?.content?.[0]?.text || response.content?.[0]?.text || '';\nreturn [{ json: { synthesised_doc: content } }];"
+        },
+        "id": "e2b556f6-e1cb-4aae-b452-3eabfd7ea0e5",
+        "name": "Extract Synthesis Text",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1456,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1eb2RXrWio4Pjh99wPOpteeGCz09j_3FjGUniruaJluY",
+            "mode": "list",
+            "cachedResultName": "Log Run to Sheets",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eb2RXrWio4Pjh99wPOpteeGCz09j_3FjGUniruaJluY/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1eb2RXrWio4Pjh99wPOpteeGCz09j_3FjGUniruaJluY/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Doc URL": "={{ $json.id }}",
+              "Doc Title": "={{ $json.name }}",
+              "Status": "Doc Generated",
+              "Timestamp": "={{ new Date().toISOString() }}",
+              "Run Date": "={{ new Date().toISOString().split('T')[0] }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Run Date",
+                "displayName": "Run Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Doc Title",
+                "displayName": "Doc Title",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Doc URL",
+                "displayName": "Doc URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Timestamp",
+                "displayName": "Timestamp",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "231d501b-745b-48fd-aaed-02f5cb36f938",
+        "name": "Log Run to Sheets",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.4,
+        "position": [
+          2128,
+          144
+        ],
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "2WI4zaOhhsTGtgv0",
+            "name": "Google Service Account account"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          336,
+          144
+        ],
+        "id": "c961963d-a5b2-41a8-90f2-4fbc7040deb9",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "fromEmail": "marketing@lockated.com",
+          "toEmail": "adhip.shetty@lockated.com",
+          "subject": "=FM Matrix Content Intelligence — Week of {{ $now.format('dd MMM yyyy') }} is ready",
+          "html": "=<html><body style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;\">\n<h2 style=\"color: #1a1a1a;\">This week's content research is ready</h2>\n<p>Hi,</p>\n<p>The FM Matrix research agent has completed this week's intelligence run. Your research document is ready to review.</p>\n<div style=\"background: #f5f5f5; border-radius: 8px; padding: 16px; margin: 20px 0;\">\n  <p style=\"margin: 0 0 12px 0; font-weight: bold;\">Sources checked this cycle:</p>\n  <p style=\"margin: 4px 0;\">&#10003; Industry news and trends</p>\n  <p style=\"margin: 4px 0;\">&#10003; Competitor activity</p>\n  <p style=\"margin: 4px 0;\">&#10003; User review insights</p>\n  <p style=\"margin: 4px 0;\">&#10003; Regulatory updates (India and GCC)</p>\n  <p style=\"margin: 4px 0;\">&#10003; Competitor hiring signals</p>\n</div>\n<p style=\"text-align: center; margin: 24px 0;\">\n  <a href=\"https://docs.google.com/document/d/{{ $json[\"Doc URL\"] }}\" \n     style=\"background: #1a1a1a; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;\">\n    View Research Document\n  </a>\n</p>\n<p style=\"color: #666; font-size: 13px;\">The document includes this week's top 3 post opportunities, competitor intelligence, regulatory updates, and customer insight angles tagged by TG1, TG2, and TG3.</p>\n<p style=\"color: #666; font-size: 13px;\">— FM Matrix Research Agent</p>\n</body></html>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          2352,
+          144
+        ],
+        "id": "b2ab2715-1bd1-4fb0-9c88-4492680c4153",
+        "name": "Send email",
+        "webhookId": "84ca21d4-7b06-44ef-a2b7-831ca1defdf3",
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "folderId": "default",
+          "title": "Test Document "
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          1680,
+          144
+        ],
+        "id": "d7e50521-e2d5-4b2b-934d-69f3a7f0e736",
+        "name": "Create a document",
+        "notesInFlow": false,
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "E8xoxEPqaJ3RuTO4",
+            "name": "Marketing Google Docs"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentURL": "={{ $json.id }}",
+          "actionsUi": {
+            "actionFields": [
+              {
+                "action": "insert",
+                "text": "={{ $('Extract Synthesis Text').item.json.synthesised_doc }}"
+              }
+            ]
+          }
+        },
+        "id": "edeedf07-128b-4abb-b126-7a86a07178b1",
+        "name": "Update Google Doc1",
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          1904,
+          144
+        ],
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "SrvOTuq5YVFv08DK",
+            "name": "Google Docs account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Gather — Industry News": {
+        "main": [
+          [
+            {
+              "node": "Merge All Outputs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gather — Competitor Activity": {
+        "main": [
+          [
+            {
+              "node": "Merge All Outputs",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge All Outputs": {
+        "main": [
+          [
+            {
+              "node": "Parse and Score Outputs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Parse and Score Outputs": {
+        "main": [
+          [
+            {
+              "node": "Synthesise Research Doc",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Synthesise Research Doc": {
+        "main": [
+          [
+            {
+              "node": "Extract Synthesis Text",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract Synthesis Text": {
+        "main": [
+          [
+            {
+              "node": "Create a document",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log Run to Sheets": {
+        "main": [
+          [
+            {
+              "node": "Send email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Gather — Industry News",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Gather — Competitor Activity",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Gather — User Reviews",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Gather — Regulatory Updates",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Gather — Hiring Signals",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Gather — User Reviews": {
+        "main": [
+          [
+            {
+              "node": "Merge All Outputs",
+              "type": "main",
+              "index": 2
+            }
+          ]
+        ]
+      },
+      "Gather — Regulatory Updates": {
+        "main": [
+          [
+            {
+              "node": "Merge All Outputs",
+              "type": "main",
+              "index": 3
+            }
+          ]
+        ]
+      },
+      "Gather — Hiring Signals": {
+        "main": [
+          [
+            {
+              "node": "Merge All Outputs",
+              "type": "main",
+              "index": 4
+            }
+          ]
+        ]
+      },
+      "Create a document": {
+        "main": [
+          [
+            {
+              "node": "Update Google Doc1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Google Doc1": {
+        "main": [
+          [
+            {
+              "node": "Log Run to Sheets",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "0cd55245-3b81-4d24-9348-ad1689a46ab1",
+    "activeVersionId": null,
+    "versionCounter": 11,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-04-15T13:35:31.286Z",
+        "createdAt": "2026-04-15T13:35:31.286Z",
+        "role": "workflow:owner",
+        "workflowId": "dviTaZHKFiWpBKhl",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-20T08:20:33.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-19",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-04-15T10:52:08.322Z",
+        "createdAt": "2026-04-15T10:52:08.322Z",
+        "id": "505cn03XguhmsNRd",
+        "name": "FM Matrix"
+      },
+      {
+        "updatedAt": "2026-04-15T10:52:08.344Z",
+        "createdAt": "2026-04-15T10:52:08.344Z",
+        "id": "557YZpzjrdmA5aWX",
+        "name": "Agent 1"
+      },
+      {
+        "updatedAt": "2026-04-15T10:52:08.354Z",
+        "createdAt": "2026-04-15T10:52:08.354Z",
+        "id": "8j4cc1G2U8fJX0DJ",
+        "name": "Research"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-04-15T12:34:20.000Z",
+      "createdAt": "2026-04-15T12:34:10.693Z",
+      "id": "saWauqT5DU7gFVEm",
+      "name": "utils",
+      "parentFolderId": "Nv4Mxy1IviRIXWgg"
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "7f76556cc11031114ad62c193c22ab905e0188f5812f4ce472f2ed3ba93c22a2"
+  }
+}

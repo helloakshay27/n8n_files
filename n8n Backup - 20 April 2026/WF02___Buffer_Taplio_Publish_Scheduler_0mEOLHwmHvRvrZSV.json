@@ -1,0 +1,610 @@
+{
+  "data": {
+    "updatedAt": "2026-04-13T12:52:07.047Z",
+    "createdAt": "2026-04-09T05:54:56.629Z",
+    "id": "0mEOLHwmHvRvrZSV",
+    "name": "WF02 — Buffer Taplio Publish Scheduler",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -80,
+          -64
+        ],
+        "id": "b0d336ae-5168-4c81-b6f1-248ab82199e8",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "documentId": {
+            "__rl": true,
+            "value": "1NQe4GqzUU4V1DtBT_kPmHYTuAq2c1c2MM9AxrAZvtbs",
+            "mode": "list",
+            "cachedResultName": "Lockated — Drafts Tracker",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NQe4GqzUU4V1DtBT_kPmHYTuAq2c1c2MM9AxrAZvtbs/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NQe4GqzUU4V1DtBT_kPmHYTuAq2c1c2MM9AxrAZvtbs/edit#gid=0"
+          },
+          "filtersUI": {
+            "values": [
+              {
+                "lookupColumn": "Status",
+                "lookupValue": "Approved"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          208,
+          -64
+        ],
+        "id": "a1c44d52-44a4-463d-a75d-9be619a66c55",
+        "name": "Get row(s) in sheet",
+        "alwaysOutputData": true,
+        "executeOnce": false,
+        "notesInFlow": true,
+        "credentials": {
+          "googleApi": {
+            "id": "2WI4zaOhhsTGtgv0",
+            "name": "Google Service Account account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "sendTo": "adhip.shetty@lockated.com",
+          "subject": "=✅ Post Scheduled — FM Matrix LinkedIn | {{$node[\"Get row(s) in sheet\"].json[\"Topic\"]}}",
+          "message": "=<h2>Post has been scheduled ✅</h2> <p><b>Topic:</b> {{$node[\"Get row(s) in sheet\"].json[\"Topic\"]}}</p> <p><b>Scheduled Time:</b> {{$node[\"Get row(s) in sheet\"].json[\"Scheduled_Time\"]}}</p> <p><b>TG:</b> {{$node[\"Get row(s) in sheet\"].json[\"TG\"]}}</p> <p><b>Platform:</b> LinkedIn</p> <br> <p>To cancel this post, go to Buffer and remove it from the queue within 1 hour.</p> <br> <p>— Lockated GTM Agent</p>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          448,
+          -64
+        ],
+        "id": "f45e0736-c4f1-4d00-a558-cdcf3a90a82b",
+        "name": "Send a message",
+        "webhookId": "37408649-ffeb-4b8c-849d-bdfa7c094c36",
+        "notesInFlow": false,
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "FoLv85yBNHpyMwBj",
+            "name": "Gmail account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1NQe4GqzUU4V1DtBT_kPmHYTuAq2c1c2MM9AxrAZvtbs",
+            "mode": "list",
+            "cachedResultName": "Lockated — Drafts Tracker",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NQe4GqzUU4V1DtBT_kPmHYTuAq2c1c2MM9AxrAZvtbs/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "Sheet1",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1NQe4GqzUU4V1DtBT_kPmHYTuAq2c1c2MM9AxrAZvtbs/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Status": "Posted",
+              "row_number": 0,
+              "Engagement_Log": "Pending — check LinkedIn Analytics at T+24hrs",
+              "Draft_ID": "={{ $('Get row(s) in sheet').item.json.Draft_ID }}"
+            },
+            "matchingColumns": [
+              "Draft_ID"
+            ],
+            "schema": [
+              {
+                "id": "Draft_ID",
+                "displayName": "Draft_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Date",
+                "displayName": "Date",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Day_of_Week",
+                "displayName": "Day_of_Week",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Topic",
+                "displayName": "Topic",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Format",
+                "displayName": "Format",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "ICP_Persona",
+                "displayName": "ICP_Persona",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "TG",
+                "displayName": "TG",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Post_Content",
+                "displayName": "Post_Content",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Scheduled_Time",
+                "displayName": "Scheduled_Time",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Engagement_Log",
+                "displayName": "Engagement_Log",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": true,
+                "readOnly": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1488,
+          -64
+        ],
+        "id": "940e68b1-a165-4d39-b229-fd882c008ad1",
+        "name": "Update row in sheet",
+        "credentials": {
+          "googleApi": {
+            "id": "2WI4zaOhhsTGtgv0",
+            "name": "Google Service Account account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "person": "U8RrGddXCf",
+          "text": "={{ $('Get row(s) in sheet').item.json.Post_Content }}",
+          "additionalFields": {
+            "visibility": "CONNECTIONS"
+          }
+        },
+        "type": "n8n-nodes-base.linkedIn",
+        "typeVersion": 1,
+        "position": [
+          1216,
+          -240
+        ],
+        "id": "deddaa59-b312-485c-9682-cab7ad5c9244",
+        "name": "Create a post",
+        "alwaysOutputData": true,
+        "notesInFlow": true,
+        "retryOnFail": false,
+        "credentials": {
+          "linkedInOAuth2Api": {
+            "id": "MXJcK4hA8CgFDpLl",
+            "name": "Demo Marketing Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": "={{ $('Get row(s) in sheet').item.json.Post_In }}"
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          720,
+          -64
+        ],
+        "id": "1c6a966b-3ddf-42cf-a30c-6d9d6c533807",
+        "name": "Wait",
+        "webhookId": "9a891b8d-6532-47d3-978f-ef2c26695f4b"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "16a6b9be-a184-475b-aac4-6e85595024c1",
+                "leftValue": "Post_Location",
+                "rightValue": "CP Management",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              },
+              {
+                "id": "04b7034f-17e7-4856-95f2-8822a04b1f99",
+                "leftValue": "Post_Location",
+                "rightValue": "Demo Marketing",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          976,
+          -64
+        ],
+        "id": "a7c1fb81-3b56-48ab-9590-219ca0ff3273",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "authentication": "communityManagement",
+          "postAs": "organization",
+          "text": "={{ $('Get row(s) in sheet').item.json.Post_Content }}",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.linkedIn",
+        "typeVersion": 1,
+        "position": [
+          576,
+          128
+        ],
+        "id": "3d062675-29e3-4f0b-bc5b-7e534aaf5c5e",
+        "name": "Create a post1",
+        "credentials": {
+          "linkedInCommunityManagementOAuth2Api": {
+            "id": "tyknwX4meAHrPjDG",
+            "name": "CP Management Page"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.linkedin.com/rest/posts",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBearerAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "LinkedIn-Version",
+                "value": "202312"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"actor\": \"urn:li:showcase:113094308\",\n  \"commentary\": {\n    \"text\": \"{{ $('Get row(s) in sheet').item.json.Post_Content }}\"\n  },\n  \"visibility\": \"PUBLIC\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1200,
+          112
+        ],
+        "id": "c4e0be55-44ae-4de9-b2b9-5e5ee0648af7",
+        "name": "HTTP Request",
+        "credentials": {
+          "linkedInOAuth2Api": {
+            "id": "MXJcK4hA8CgFDpLl",
+            "name": "Demo Marketing Account"
+          },
+          "httpBearerAuth": {
+            "id": "Y3qZtaF5Y7UXyR0R",
+            "name": "Bearer Auth account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "endpointUrl": "https://mcp.buffer.com/mcp",
+          "authentication": "bearerAuth",
+          "tool": {
+            "__rl": true,
+            "value": "create_post",
+            "mode": "list",
+            "cachedResultName": "create_post"
+          },
+          "inputMode": "json",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.mcpClient",
+        "typeVersion": 1,
+        "position": [
+          48,
+          48
+        ],
+        "id": "82f17d37-9791-4d63-83cc-a47ae4933915",
+        "name": "MCP Client",
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "gWUYp7uPcBRWaW0G",
+            "name": "Buffer MCP Token"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet": {
+        "main": [
+          [
+            {
+              "node": "Send a message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a message": {
+        "main": [
+          [
+            {
+              "node": "Wait",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create a post": {
+        "main": [
+          [
+            {
+              "node": "Update row in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Create a post",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Create a post1": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "9c9b09f2-d001-4131-bc0f-6f646467d2a2",
+    "activeVersionId": null,
+    "versionCounter": 31,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-04-09T05:54:56.635Z",
+        "createdAt": "2026-04-09T05:54:56.635Z",
+        "role": "workflow:owner",
+        "workflowId": "0mEOLHwmHvRvrZSV",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-20T08:20:33.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-19",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-04-09T05:50:06.216Z",
+        "createdAt": "2026-04-09T05:50:06.216Z",
+        "id": "G3nbvWMHGcGbTeOI",
+        "name": "marketing-support"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-04-11T13:52:07.383Z",
+      "createdAt": "2026-04-11T13:52:07.383Z",
+      "id": "HKRjTbSSBPfTEdaY",
+      "name": "WF02 — Buffer Taplio Publish Scheduler",
+      "parentFolderId": "Nv4Mxy1IviRIXWgg"
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "620c75cf32a748ca56f57dd921237989e8da8b1ba821cae4a04912be800a8057"
+  }
+}
