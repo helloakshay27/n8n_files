@@ -1,0 +1,515 @@
+{
+  "data": {
+    "updatedAt": "2026-04-21T08:24:37.781Z",
+    "createdAt": "2026-04-15T12:02:26.853Z",
+    "id": "4gdvVo0lSMj61gnN",
+    "name": "Production - To-do overdue copy",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          256,
+          -96
+        ],
+        "id": "cb89cc3e-cd7e-492b-b130-6f61630ba471",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "2996868c-39b7-4341-9ee8-2dea78ae954f",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -560,
+          -64
+        ],
+        "id": "65d03c41-144e-4223-a3ef-fc8d4cd5cb96",
+        "name": "Webhook",
+        "webhookId": "2996868c-39b7-4341-9ee8-2dea78ae954f",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{$json.todo_owner_email}}\n",
+          "subject": "= To-Do Overdue – {{$json.todo_title}}\n",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>Dear {{$json.todo_owner_firstname}} {{$json.todo_owner_lastname}},</p>\n\n  <p>Your to-do item <b>{{$json.todo_title}}</b> is overdue.</p>\n\n  <h3 style=\"color: #c0392b;\">Overdue To-Do Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>To-Do Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.todo_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.todo_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority ? $json.priority : 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>End On / Target Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.target_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Overdue By</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.overdue_days}} days</td>\n    </tr>\n\n  </table>\n\n  <p>Immediate action is required.</p>\n\n  <p>Regards,<br>\n  <b>Task Governance</b></p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          -192
+        ],
+        "id": "b05f7446-e404-4eee-85c4-80799f74f850",
+        "name": "User",
+        "webhookId": "b380ea46-ac34-4da7-a29c-01d375b56b0a",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  t.*,\n  t.id                        AS todo_id,\n  t.title                     AS todo_title,\n  t.target_date,\n  t.status                    AS todo_status,\n\n  DATEDIFF(UTC_DATE(), t.target_date) AS overdue_days,\n\n  u.email                     AS todo_owner_email,\n  u.firstname                 AS todo_owner_firstname,\n  u.lastname                  AS todo_owner_lastname\n\nFROM todos t\n\nJOIN spree_users u\n  ON u.id = t.user_id\n\nWHERE\n  t.status != 'completed'\n  AND t.target_date < UTC_DATE()\n  AND u.organization_id IN (13, 14, 59, 84);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -240,
+          -224
+        ],
+        "id": "76c643d3-59ed-4a8d-8b17-f6797a3fe30f",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 9
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -544,
+          -288
+        ],
+        "id": "d10a7f9e-da69-4bd6-b67d-d5cc0a340a9a",
+        "name": "Schedule Trigger",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const grouped = {};\n\nfor (const item of items) {\n  const row = item.json;\n  const email = row.todo_owner_email;\n\n  if (!email) continue;\n\n  if (!grouped[email]) {\n    grouped[email] = {\n      todo_owner_email: email,\n      todo_owner_firstname: row.todo_owner_firstname || '',\n      todo_owner_lastname: row.todo_owner_lastname || '',\n      todo_owner_name: `${row.todo_owner_firstname || ''} ${row.todo_owner_lastname || ''}`.trim(),\n      todos: []\n    };\n  }\n\n  grouped[email].todos.push({\n    todo_id: row.todo_id,\n    todo_title: row.todo_title || row.title || 'N/A',\n\n    status: row.todo_status || row.status || 'N/A',\n    target_date: row.target_date || 'N/A',\n    overdue_days: row.overdue_days ?? 0,\n\n    description: row.description || 'N/A',\n    priority: row.priority || 'N/A',\n\n    created_at: row.created_at || 'N/A',\n    updated_at: row.updated_at || 'N/A',\n\n    resource_type: row.resource_type || 'N/A',\n    resource_id: row.resource_id || 'N/A'\n  });\n}\n\n// sort by most overdue first\nObject.values(grouped).forEach(user => {\n  user.todos.sort((a, b) => b.overdue_days - a.overdue_days);\n});\n\nreturn Object.values(grouped).map(user => ({\n  json: {\n    todo_owner_email: user.todo_owner_email,\n    todo_owner_firstname: user.todo_owner_firstname,\n    todo_owner_lastname: user.todo_owner_lastname,\n    todo_owner_name: user.todo_owner_name,\n    total_overdue_todos: user.todos.length,\n    todos: user.todos\n  }\n}));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -48,
+          -416
+        ],
+        "id": "4692e150-4be7-4398-81f5-97d4e205e528",
+        "name": "Grouped Todos Todo Owner",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{$json.todo_owner_email}}",
+          "subject": "= To-Do Overdue – {{ $json.total_overdue_todos }} Todos have been overdue that was assigned to you.\n",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.todo_owner_firstname}} {{$json.todo_owner_lastname}},\n  </p>\n\n  <p>\n    The following to-do items assigned to you are currently overdue and require immediate attention.\n  </p>\n\n  <p>\n    Total Overdue To-Dos: <b>{{$json.total_overdue_todos}}</b>\n  </p>\n\n  <table style=\"border-collapse: collapse; width: 100%; font-size: 13px;\">\n\n    <tr style=\"background:#f2f2f2;\">\n      <th style=\"border:1px solid #ddd; padding:8px;\">To-Do</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Status</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Priority</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Created On</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Target Date</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Overdue Days</th>\n    </tr>\n\n    {{ $json.todos.map(todo => `\n      <tr>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${todo.todo_title}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${todo.status}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${todo.priority}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${todo.created_at}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${todo.target_date}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${todo.overdue_days} days\n        </td>\n\n      </tr>\n    `).join('') }}\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please take immediate action to complete or update these to-do items to avoid further escalation.\n  </p>\n\n  <p>\n    Regards,<br>\n    <b>Task Governance</b>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          240,
+          -384
+        ],
+        "id": "a8d39fd3-41a2-42d6-8b58-0cb94d81377f",
+        "name": "User1",
+        "webhookId": "b380ea46-ac34-4da7-a29c-01d375b56b0a",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          []
+        ]
+      },
+      "User": {
+        "main": [
+          []
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Grouped Todos Todo Owner",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Grouped Todos Todo Owner": {
+        "main": [
+          [
+            {
+              "node": "User1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "88d5551c-d740-4e2d-b3e2-102676fe6fcc",
+    "activeVersionId": "88d5551c-d740-4e2d-b3e2-102676fe6fcc",
+    "versionCounter": 85,
+    "triggerCount": 2,
+    "shared": [
+      {
+        "updatedAt": "2026-04-15T12:02:26.858Z",
+        "createdAt": "2026-04-15T12:02:26.858Z",
+        "role": "workflow:owner",
+        "workflowId": "4gdvVo0lSMj61gnN",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-23T18:47:48.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-23",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-04-15T11:32:35.314Z",
+        "createdAt": "2026-04-15T11:32:35.314Z",
+        "id": "L0EeV7qZEpOHtqXt",
+        "name": "Production Ready"
+      },
+      {
+        "updatedAt": "2026-04-15T12:01:49.767Z",
+        "createdAt": "2026-04-15T12:01:49.767Z",
+        "id": "qDrho6ixtjSrfleA",
+        "name": "Module 9 - To-Do List"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-04-15T12:01:32.319Z",
+      "createdAt": "2026-04-15T12:01:32.319Z",
+      "id": "LZbAulQsOshACYdB",
+      "name": "Production Ready",
+      "parentFolderId": "Rxhl8LN55QJFCvsf"
+    },
+    "activeVersion": {
+      "updatedAt": "2026-04-21T08:24:41.000Z",
+      "createdAt": "2026-04-21T08:24:37.784Z",
+      "versionId": "88d5551c-d740-4e2d-b3e2-102676fe6fcc",
+      "workflowId": "4gdvVo0lSMj61gnN",
+      "nodes": [
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            256,
+            -96
+          ],
+          "id": "cb89cc3e-cd7e-492b-b130-6f61630ba471",
+          "name": "Respond to Webhook",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "2996868c-39b7-4341-9ee8-2dea78ae954f",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            -560,
+            -64
+          ],
+          "id": "65d03c41-144e-4223-a3ef-fc8d4cd5cb96",
+          "name": "Webhook",
+          "webhookId": "2996868c-39b7-4341-9ee8-2dea78ae954f",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "fromEmail": "notificaions@lockated.com",
+            "toEmail": "={{$json.todo_owner_email}}\n",
+            "subject": "= To-Do Overdue – {{$json.todo_title}}\n",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>Dear {{$json.todo_owner_firstname}} {{$json.todo_owner_lastname}},</p>\n\n  <p>Your to-do item <b>{{$json.todo_title}}</b> is overdue.</p>\n\n  <h3 style=\"color: #c0392b;\">Overdue To-Do Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>To-Do Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.todo_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.todo_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority ? $json.priority : 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>End On / Target Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.target_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Overdue By</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.overdue_days}} days</td>\n    </tr>\n\n  </table>\n\n  <p>Immediate action is required.</p>\n\n  <p>Regards,<br>\n  <b>Task Governance</b></p>\n\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            0,
+            -192
+          ],
+          "id": "b05f7446-e404-4eee-85c4-80799f74f850",
+          "name": "User",
+          "webhookId": "b380ea46-ac34-4da7-a29c-01d375b56b0a",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "e6BxRubia0RizPKp",
+              "name": "Lockated Local SMTP"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  t.*,\n  t.id                        AS todo_id,\n  t.title                     AS todo_title,\n  t.target_date,\n  t.status                    AS todo_status,\n\n  DATEDIFF(UTC_DATE(), t.target_date) AS overdue_days,\n\n  u.email                     AS todo_owner_email,\n  u.firstname                 AS todo_owner_firstname,\n  u.lastname                  AS todo_owner_lastname\n\nFROM todos t\n\nJOIN spree_users u\n  ON u.id = t.user_id\n\nWHERE\n  t.status != 'completed'\n  AND t.target_date < UTC_DATE()\n  AND u.organization_id IN (13, 14, 59, 84);",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -240,
+            -224
+          ],
+          "id": "76c643d3-59ed-4a8d-8b17-f6797a3fe30f",
+          "name": "Execute a SQL query",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "triggerAtHour": 9
+                }
+              ]
+            }
+          },
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.3,
+          "position": [
+            -544,
+            -288
+          ],
+          "id": "d10a7f9e-da69-4bd6-b67d-d5cc0a340a9a",
+          "name": "Schedule Trigger",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "const grouped = {};\n\nfor (const item of items) {\n  const row = item.json;\n  const email = row.todo_owner_email;\n\n  if (!email) continue;\n\n  if (!grouped[email]) {\n    grouped[email] = {\n      todo_owner_email: email,\n      todo_owner_firstname: row.todo_owner_firstname || '',\n      todo_owner_lastname: row.todo_owner_lastname || '',\n      todo_owner_name: `${row.todo_owner_firstname || ''} ${row.todo_owner_lastname || ''}`.trim(),\n      todos: []\n    };\n  }\n\n  grouped[email].todos.push({\n    todo_id: row.todo_id,\n    todo_title: row.todo_title || row.title || 'N/A',\n\n    status: row.todo_status || row.status || 'N/A',\n    target_date: row.target_date || 'N/A',\n    overdue_days: row.overdue_days ?? 0,\n\n    description: row.description || 'N/A',\n    priority: row.priority || 'N/A',\n\n    created_at: row.created_at || 'N/A',\n    updated_at: row.updated_at || 'N/A',\n\n    resource_type: row.resource_type || 'N/A',\n    resource_id: row.resource_id || 'N/A'\n  });\n}\n\n// sort by most overdue first\nObject.values(grouped).forEach(user => {\n  user.todos.sort((a, b) => b.overdue_days - a.overdue_days);\n});\n\nreturn Object.values(grouped).map(user => ({\n  json: {\n    todo_owner_email: user.todo_owner_email,\n    todo_owner_firstname: user.todo_owner_firstname,\n    todo_owner_lastname: user.todo_owner_lastname,\n    todo_owner_name: user.todo_owner_name,\n    total_overdue_todos: user.todos.length,\n    todos: user.todos\n  }\n}));"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            -48,
+            -416
+          ],
+          "id": "4692e150-4be7-4398-81f5-97d4e205e528",
+          "name": "Grouped Todos Todo Owner",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "fromEmail": "notificaions@lockated.com",
+            "toEmail": "={{$json.todo_owner_email}}",
+            "subject": "= To-Do Overdue – {{ $json.total_overdue_todos }} Todos have been overdue that was assigned to you.\n",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.todo_owner_firstname}} {{$json.todo_owner_lastname}},\n  </p>\n\n  <p>\n    The following to-do items assigned to you are currently overdue and require immediate attention.\n  </p>\n\n  <p>\n    Total Overdue To-Dos: <b>{{$json.total_overdue_todos}}</b>\n  </p>\n\n  <table style=\"border-collapse: collapse; width: 100%; font-size: 13px;\">\n\n    <tr style=\"background:#f2f2f2;\">\n      <th style=\"border:1px solid #ddd; padding:8px;\">To-Do</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Status</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Priority</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Created On</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Target Date</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Overdue Days</th>\n    </tr>\n\n    {{ $json.todos.map(todo => `\n      <tr>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${todo.todo_title}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${todo.status}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${todo.priority}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${todo.created_at}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${todo.target_date}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${todo.overdue_days} days\n        </td>\n\n      </tr>\n    `).join('') }}\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please take immediate action to complete or update these to-do items to avoid further escalation.\n  </p>\n\n  <p>\n    Regards,<br>\n    <b>Task Governance</b>\n  </p>\n\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            240,
+            -384
+          ],
+          "id": "a8d39fd3-41a2-42d6-8b58-0cb94d81377f",
+          "name": "User1",
+          "webhookId": "b380ea46-ac34-4da7-a29c-01d375b56b0a",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "e6BxRubia0RizPKp",
+              "name": "Lockated Local SMTP"
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            []
+          ]
+        },
+        "User": {
+          "main": [
+            []
+          ]
+        },
+        "Execute a SQL query": {
+          "main": [
+            [
+              {
+                "node": "Grouped Todos Todo Owner",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Schedule Trigger": {
+          "main": [
+            [
+              {
+                "node": "Execute a SQL query",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Grouped Todos Todo Owner": {
+          "main": [
+            [
+              {
+                "node": "User1",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version 88d5551c",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-04-21T08:24:41.795Z",
+          "id": 169,
+          "workflowId": "4gdvVo0lSMj61gnN",
+          "versionId": "88d5551c-d740-4e2d-b3e2-102676fe6fcc",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "a0edc14c6b4c1db75d7302ab78f1fcda77b9a87802f59b1fab59eabd4647ecd4"
+  }
+}

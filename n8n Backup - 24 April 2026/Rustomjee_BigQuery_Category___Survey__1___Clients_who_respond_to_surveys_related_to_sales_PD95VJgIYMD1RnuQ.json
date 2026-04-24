@@ -1,0 +1,313 @@
+{
+  "data": {
+    "updatedAt": "2026-04-24T06:19:54.924Z",
+    "createdAt": "2026-04-10T04:14:33.301Z",
+    "id": "PD95VJgIYMD1RnuQ",
+    "name": "Rustomjee BigQuery Category - Survey- 1 - Clients who respond to surveys related to sales",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {},
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -288,
+          -64
+        ],
+        "id": "6e21f200-f586-4771-abfb-3b3a11e68e09",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_sv_oppr LIMIT 1000\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          -160,
+          -288
+        ],
+        "id": "650740bf-04ed-43ca-9cec-c47f5fa1b48c",
+        "name": "Execute a SQL query",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.opportunity_survey LIMIT 100",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          192,
+          -240
+        ],
+        "id": "5b5276a3-4e09-4b79-a766-b9de8081db48",
+        "name": "Execute a SQL query1",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n  return {\n    json: {\n      customer_id: item.json.ID,\n      customer_mobile: item.json.customer_mobile,\n      email: item.json.Account_Email__c,\n      customer_unique_key: `${item.json.customer_mobile}_${item.json.Account_Email__c}`,\n      opportunity_id: item.json.Id,\n      today_date: item.json.today_delta_additions,\n      points: 1000,\n      rule: \"OpportunityClosedLostSurvey\",\n      today_delta_additions: item.json.today_delta_additions\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          320,
+          48
+        ],
+        "id": "d1267ba5-7cbd-4db6-9213-49327b2b2da4",
+        "name": "Code in JavaScript3",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT \n  ID,\n  Account_Email__c,\n\n  -- ✅ Single unified mobile field\n  REGEXP_REPLACE(\n    COALESCE(\n      Account_Mobile_1__c,\n      Account_Mobile_2__c,\n      Account_Mobile_Number__c\n    ),\n    r'[^0-9]',\n    ''\n  ) AS customer_mobile,\n\n  today_delta_additions\n\nFROM `powerbi-implementation.dataWarehouse_prod.opportunity_survey`\n\nWHERE \n  Survey_Name__c = 'OpportunityClosedLostSurvey'\n  AND Status__c = 'Completed'\n  --AND StageName IN ('Closed Won', 'Booking In Process', 'Booking Confirmed', 'Closed Won', 'BookingInProcess', 'BookingConfirmed') --\n  AND today_delta_additions = CURRENT_DATE()\n\n  -- ✅ Ensure at least one mobile exists\n  AND (\n    Account_Mobile_1__c IS NOT NULL OR\n    Account_Mobile_2__c IS NOT NULL OR\n    Account_Mobile_Number__c IS NOT NULL\n  )\n\n  -- ✅ Ensure email exists\n  AND Account_Email__c IS NOT NULL",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          -16,
+          -32
+        ],
+        "id": "499a4b8a-27ff-4684-a7be-f0fe4b2d9cdb",
+        "name": "Query to fetch details of person done booking within first 30 days from the site visit",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{ $json.customer_id }}\",\n  \"amount\": {{ $json.points }},\n  \"remarks\": \"{{ $json.reason }}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          592,
+          128
+        ],
+        "id": "a5bfd950-9e2a-40ee-8cfe-7ce4c9d502b2",
+        "name": "HTTP Request",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "content": "Payload Sample - \nUnique Identifiers - \n\ncustomer_id = ID,\ntoday_delta_additions\n\n{\n  \"customer_id\": \"6OW00000KYSIBYA5\",\n  \"customer_mobile\": \"9967630264\",\n  \"email\": \"shital.nevarekar@yahoo.com\",\n  \"customer_unique_key\": \"9967630264_shital.nevarekar@yahoo.com\",\n  \"today_date\": \"2026-04-24\",\n  \"points\": 1000,\n  \"rule\": \"OpportunityClosedLostSurvey\",\n  \"today_delta_additions\": \"2026-04-24\"\n}",
+          "height": 320,
+          "width": 528
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          416,
+          -336
+        ],
+        "id": "1010024e-02d2-48da-87ff-c92e55629d3f",
+        "name": "Sticky Note"
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Query to fetch details of person done booking within first 30 days from the site visit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          []
+        ]
+      },
+      "Query to fetch details of person done booking within first 30 days from the site visit": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "1d03c3ab-db13-44f9-b433-80661e371dbc",
+    "activeVersionId": null,
+    "versionCounter": 44,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-04-10T04:14:33.305Z",
+        "createdAt": "2026-04-10T04:14:33.305Z",
+        "role": "workflow:owner",
+        "workflowId": "PD95VJgIYMD1RnuQ",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-23T18:47:48.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-23",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2026-03-02T14:34:11.511Z",
+      "createdAt": "2026-03-02T14:34:11.511Z",
+      "id": "Y9zGEIC6huRvstXD",
+      "name": "Rustomjee Bigquery",
+      "parentFolderId": null
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "8e6a80f2269662900b7da09e91a1a0f3597b3e5c1e1aa0fcdd450550e1664117"
+  }
+}

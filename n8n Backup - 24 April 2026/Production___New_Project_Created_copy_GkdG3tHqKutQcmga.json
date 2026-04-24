@@ -1,0 +1,766 @@
+{
+  "data": {
+    "updatedAt": "2026-04-16T06:30:10.390Z",
+    "createdAt": "2026-04-15T11:32:46.704Z",
+    "id": "GkdG3tHqKutQcmga",
+    "name": "Production - New Project Created copy",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "7a1bb923-d220-4375-909a-eb0bba2e3d10",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          320,
+          -160
+        ],
+        "id": "8e74218f-5b06-4c5b-b2b4-16bfff20a64b",
+        "name": "Webhook",
+        "webhookId": "7a1bb923-d220-4375-909a-eb0bba2e3d10",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{$json.owner_email}}",
+          "subject": "=New Project Initiated: {{$json.title}}",
+          "emailFormat": "both",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n  <p>\n    Dear {{$json.first_name || 'User'}} {{$json.last_name || ''}},\n  </p>\n\n  <p>\n    We are pleased to inform you that a new project, \n    <strong>{{$json.title}}</strong>, has been successfully initiated and you have been assigned as Project Manager.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Project Overview</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.start_date}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Planned End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.end_date}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><a href=\"https://web.gophygital.work/vas/projects/details/{{$json.id}}\" target=\"_blank\">\n      View Project Details\n    </a></td>\n    </tr>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the project details, validate timelines, and initiate the necessary planning and execution activities.\n  </p>\n\n  <p>\n    Regards,<br/>\n    <strong>Project Management Office</strong>\n  </p>\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          64,
+          -128
+        ],
+        "id": "06e069fb-b0a4-4503-b7c0-c50e0c8a1760",
+        "name": "Send email to project manager",
+        "webhookId": "c965ff0f-4eab-4a2c-97fd-4f87a5919e06",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{$json.team_user_email}}\n",
+          "subject": "=New Project Initiated: {{$json.project_title}}",
+          "emailFormat": "both",
+          "text": "=",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n  <p>\n    Dear {{$json.first_name || 'User'}} {{$json.last_name || ''}},\n  </p>\n\n  <p>\n    We are pleased to inform you that a new project, \n    <strong>{{$json.title}}</strong>, has been successfully initiated and you have been assigned as Project Team Member.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Project Overview</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.start_date}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Planned End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.end_date}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><a href=\"https://web.gophygital.work/vas/projects/details/{{$json.id}}\" target=\"_blank\">\n      View Project Details\n    </a></td>\n    </tr>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the project details, validate timelines, and initiate the necessary planning and execution activities.\n  </p>\n\n  <p>\n    Regards,<br/>\n    <strong>Project Management Office</strong>\n  </p>\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          80,
+          160
+        ],
+        "id": "336ba000-dc87-4db5-b9c3-8c7ad478d288",
+        "name": "Send email to team members",
+        "webhookId": "28a9a902-74d1-4b29-b037-b8ec9b1b3762",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT \n  pm.*,\n  u.email AS owner_email,\n  u.firstname AS first_name,\n  u.lastname AS last_name\nFROM project_managements pm\nJOIN spree_users u\n  ON u.id = pm.owner_id\nWHERE\n  pm.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n  AND u.organization_id IN (13, 14, 59, 84);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -192,
+          -128
+        ],
+        "id": "5f6ca570-fa15-4bfc-b91b-d0be9224e221",
+        "name": "Get Newly Created Projects within 30 minutes",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  pm.*,\n  pm.id                AS project_id,\n  pm.title             AS project_title,\n  pm.project_team_id,\n  ptm.user_id          AS team_user_id,\n  u.firstname          AS first_name,\n  u.lastname           AS last_name,\n  u.email              AS team_user_email\nFROM project_managements pm\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\nJOIN spree_users u\n  ON u.id = ptm.user_id\nWHERE pm.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n  AND u.organization_id IN (13, 14, 59, 84);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -192,
+          160
+        ],
+        "id": "b4d36d06-3eca-4e3d-addb-0a453a9a5179",
+        "name": "Get Project Team Members",
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          400,
+          32
+        ],
+        "id": "d0186870-c7be-4670-ace2-529bfff2c592",
+        "name": "Respond to webhook"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": " SELECT * FROM spree_users WHERE firstname = 'piyush' AND lastname='chaudhari';\n-- SELECT * from project_managements LIMIT 1;\n-- SELECT DISTINCT *\n-- FROM organizations;\n-- SELECT * FROM spree_users WHERE firstname = 'piyush' AND lastname='chaudhari';",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -464,
+          -320
+        ],
+        "id": "00c3d6af-3c35-49ef-a64e-ae1e01b1c834",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * FROM project_team_members WHERE project_team_id ='15'",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -224,
+          -304
+        ],
+        "id": "ce7a63a0-d658-4d6a-b334-412ad12b33a8",
+        "name": "Execute a SQL query1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 10
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -576,
+          0
+        ],
+        "id": "364626e1-59a8-4f91-9b2b-bb1f274a40a4",
+        "name": "10 minutes repetition trigger",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT \n  pm.*,\n  u.email AS owner_email,\n  u.firstname AS first_name,\n  u.lastname AS last_name\nFROM project_managements pm\nJOIN spree_users u\n  ON u.id = pm.owner_id\nWHERE\n  pm.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE;\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -528,
+          208
+        ],
+        "id": "171eba8b-377a-4e2d-9329-cb26f0e60817",
+        "name": "Without Organization id Get Newly Created Projects within 30 minutes1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  pm.*,\n  pm.id                AS project_id,\n  pm.title             AS project_title,\n  pm.project_team_id,\n  ptm.user_id          AS team_user_id,\n  u.firstname          AS first_name,\n  u.lastname           AS last_name,\n  u.email              AS team_user_email\nFROM project_managements pm\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\nJOIN spree_users u\n  ON u.id = ptm.user_id\nWHERE pm.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE;\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -288,
+          352
+        ],
+        "id": "bdde3f8e-9372-49aa-a256-07b1ed0106fa",
+        "name": "Without organization id Get Project Team Members1",
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Respond to webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send email to project manager": {
+        "main": [
+          []
+        ]
+      },
+      "Send email to team members": {
+        "main": [
+          []
+        ]
+      },
+      "Get Newly Created Projects within 30 minutes": {
+        "main": [
+          [
+            {
+              "node": "Send email to project manager",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Project Team Members": {
+        "main": [
+          [
+            {
+              "node": "Send email to team members",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "10 minutes repetition trigger": {
+        "main": [
+          [
+            {
+              "node": "Get Newly Created Projects within 30 minutes",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get Project Team Members",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Execute a SQL query1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:1 hour repetition trigger": {
+        "recurrenceRules": [
+          103
+        ]
+      },
+      "node:10 minutes repetition trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "965617a6-b763-48ee-b432-443217b127a6",
+    "activeVersionId": "965617a6-b763-48ee-b432-443217b127a6",
+    "versionCounter": 148,
+    "triggerCount": 2,
+    "shared": [
+      {
+        "updatedAt": "2026-04-15T11:32:46.711Z",
+        "createdAt": "2026-04-15T11:32:46.711Z",
+        "role": "workflow:owner",
+        "workflowId": "GkdG3tHqKutQcmga",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-23T18:47:48.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-23",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-04-15T11:32:35.314Z",
+        "createdAt": "2026-04-15T11:32:35.314Z",
+        "id": "L0EeV7qZEpOHtqXt",
+        "name": "Production Ready"
+      },
+      {
+        "updatedAt": "2025-12-26T06:34:13.189Z",
+        "createdAt": "2025-12-26T06:34:13.189Z",
+        "id": "ntOn6pa6wD5AUrNk",
+        "name": "Module 1 - Projects"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-04-15T11:31:25.108Z",
+      "createdAt": "2026-04-15T11:31:25.108Z",
+      "id": "Nc6BOMOEzuf8GW1h",
+      "name": "Production Ready",
+      "parentFolderId": "0KjOCLdd8E7kMZsQ"
+    },
+    "activeVersion": {
+      "updatedAt": "2026-04-16T06:30:15.000Z",
+      "createdAt": "2026-04-16T06:30:10.391Z",
+      "versionId": "965617a6-b763-48ee-b432-443217b127a6",
+      "workflowId": "GkdG3tHqKutQcmga",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "7a1bb923-d220-4375-909a-eb0bba2e3d10",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            320,
+            -160
+          ],
+          "id": "8e74218f-5b06-4c5b-b2b4-16bfff20a64b",
+          "name": "Webhook",
+          "webhookId": "7a1bb923-d220-4375-909a-eb0bba2e3d10",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "fromEmail": "notifications@lockated.com",
+            "toEmail": "={{$json.owner_email}}",
+            "subject": "=New Project Initiated: {{$json.title}}",
+            "emailFormat": "both",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n  <p>\n    Dear {{$json.first_name || 'User'}} {{$json.last_name || ''}},\n  </p>\n\n  <p>\n    We are pleased to inform you that a new project, \n    <strong>{{$json.title}}</strong>, has been successfully initiated and you have been assigned as Project Manager.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Project Overview</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.start_date}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Planned End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.end_date}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><a href=\"https://web.gophygital.work/vas/projects/details/{{$json.id}}\" target=\"_blank\">\n      View Project Details\n    </a></td>\n    </tr>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the project details, validate timelines, and initiate the necessary planning and execution activities.\n  </p>\n\n  <p>\n    Regards,<br/>\n    <strong>Project Management Office</strong>\n  </p>\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            64,
+            -128
+          ],
+          "id": "06e069fb-b0a4-4503-b7c0-c50e0c8a1760",
+          "name": "Send email to project manager",
+          "webhookId": "c965ff0f-4eab-4a2c-97fd-4f87a5919e06",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "e6BxRubia0RizPKp",
+              "name": "Lockated Local SMTP"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "fromEmail": "notifications@lockated.com",
+            "toEmail": "={{$json.team_user_email}}\n",
+            "subject": "=New Project Initiated: {{$json.project_title}}",
+            "emailFormat": "both",
+            "text": "=",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n  <p>\n    Dear {{$json.first_name || 'User'}} {{$json.last_name || ''}},\n  </p>\n\n  <p>\n    We are pleased to inform you that a new project, \n    <strong>{{$json.title}}</strong>, has been successfully initiated and you have been assigned as Project Team Member.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Project Overview</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.start_date}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Planned End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.end_date}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n<tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><a href=\"https://web.gophygital.work/vas/projects/details/{{$json.id}}\" target=\"_blank\">\n      View Project Details\n    </a></td>\n    </tr>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the project details, validate timelines, and initiate the necessary planning and execution activities.\n  </p>\n\n  <p>\n    Regards,<br/>\n    <strong>Project Management Office</strong>\n  </p>\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            80,
+            160
+          ],
+          "id": "336ba000-dc87-4db5-b9c3-8c7ad478d288",
+          "name": "Send email to team members",
+          "webhookId": "28a9a902-74d1-4b29-b037-b8ec9b1b3762",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "m6pGNPu76sBcBXtf",
+              "name": "Task Management SMTP Account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT \n  pm.*,\n  u.email AS owner_email,\n  u.firstname AS first_name,\n  u.lastname AS last_name\nFROM project_managements pm\nJOIN spree_users u\n  ON u.id = pm.owner_id\nWHERE\n  pm.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n  AND u.organization_id IN (13, 14, 59, 84);",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -192,
+            -128
+          ],
+          "id": "5f6ca570-fa15-4bfc-b91b-d0be9224e221",
+          "name": "Get Newly Created Projects within 30 minutes",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  pm.*,\n  pm.id                AS project_id,\n  pm.title             AS project_title,\n  pm.project_team_id,\n  ptm.user_id          AS team_user_id,\n  u.firstname          AS first_name,\n  u.lastname           AS last_name,\n  u.email              AS team_user_email\nFROM project_managements pm\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\nJOIN spree_users u\n  ON u.id = ptm.user_id\nWHERE pm.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n  AND u.organization_id IN (13, 14, 59, 84);",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -192,
+            160
+          ],
+          "id": "b4d36d06-3eca-4e3d-addb-0a453a9a5179",
+          "name": "Get Project Team Members",
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            400,
+            32
+          ],
+          "id": "d0186870-c7be-4670-ace2-529bfff2c592",
+          "name": "Respond to webhook"
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": " SELECT * FROM spree_users WHERE firstname = 'piyush' AND lastname='chaudhari';\n-- SELECT * from project_managements LIMIT 1;\n-- SELECT DISTINCT *\n-- FROM organizations;\n-- SELECT * FROM spree_users WHERE firstname = 'piyush' AND lastname='chaudhari';",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -464,
+            -320
+          ],
+          "id": "00c3d6af-3c35-49ef-a64e-ae1e01b1c834",
+          "name": "Execute a SQL query",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT * FROM project_team_members WHERE project_team_id ='15'",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -224,
+            -304
+          ],
+          "id": "ce7a63a0-d658-4d6a-b334-412ad12b33a8",
+          "name": "Execute a SQL query1",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "FGCPCtEG47rFAJ4J",
+              "name": "New FM UAT Task Management Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "minutes",
+                  "minutesInterval": 10
+                }
+              ]
+            }
+          },
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.3,
+          "position": [
+            -576,
+            0
+          ],
+          "id": "364626e1-59a8-4f91-9b2b-bb1f274a40a4",
+          "name": "10 minutes repetition trigger",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT \n  pm.*,\n  u.email AS owner_email,\n  u.firstname AS first_name,\n  u.lastname AS last_name\nFROM project_managements pm\nJOIN spree_users u\n  ON u.id = pm.owner_id\nWHERE\n  pm.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE;\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -528,
+            208
+          ],
+          "id": "171eba8b-377a-4e2d-9329-cb26f0e60817",
+          "name": "Without Organization id Get Newly Created Projects within 30 minutes1",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  pm.*,\n  pm.id                AS project_id,\n  pm.title             AS project_title,\n  pm.project_team_id,\n  ptm.user_id          AS team_user_id,\n  u.firstname          AS first_name,\n  u.lastname           AS last_name,\n  u.email              AS team_user_email\nFROM project_managements pm\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\nJOIN spree_users u\n  ON u.id = ptm.user_id\nWHERE pm.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE;\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -288,
+            352
+          ],
+          "id": "bdde3f8e-9372-49aa-a256-07b1ed0106fa",
+          "name": "Without organization id Get Project Team Members1",
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Respond to webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Send email to project manager": {
+          "main": [
+            []
+          ]
+        },
+        "Send email to team members": {
+          "main": [
+            []
+          ]
+        },
+        "Get Newly Created Projects within 30 minutes": {
+          "main": [
+            [
+              {
+                "node": "Send email to project manager",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Get Project Team Members": {
+          "main": [
+            [
+              {
+                "node": "Send email to team members",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "10 minutes repetition trigger": {
+          "main": [
+            [
+              {
+                "node": "Get Newly Created Projects within 30 minutes",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Get Project Team Members",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Execute a SQL query",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Execute a SQL query1",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version 965617a6",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-04-16T06:30:15.006Z",
+          "id": 116,
+          "workflowId": "GkdG3tHqKutQcmga",
+          "versionId": "965617a6-b763-48ee-b432-443217b127a6",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "b81cb8dc4a01e87ead94831fa4d1ee0be32a3fc3d5a4bd65c3ec0759e1e7080e"
+  }
+}

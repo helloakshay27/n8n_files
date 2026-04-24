@@ -1,0 +1,665 @@
+{
+  "data": {
+    "updatedAt": "2026-04-16T09:32:42.739Z",
+    "createdAt": "2026-04-15T11:48:20.166Z",
+    "id": "T2LDiVh5gx9TvpI8",
+    "name": "Production - File attached copy",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "0c1ebcd1-5f8f-4a14-9875-2b51aa05b8ea",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -560,
+          0
+        ],
+        "id": "b97aaaff-85ed-40e6-95bf-433f177a79c7",
+        "name": "Webhook",
+        "webhookId": "0c1ebcd1-5f8f-4a14-9875-2b51aa05b8ea",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          224,
+          -64
+        ],
+        "id": "8b1dd939-5477-4eea-a5f3-6de11d74ef04",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{$json.task_owner_email}}",
+          "subject": "=File Attached to Task: {{$json.task_title}}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n  <p>Dear {{$json.task_owner_firstname}} {{$json.task_owner_lastname}},</p>\n\n  <p>A file has been added to the task <strong>{{$json.task_title}}</strong>.</p>\n\n  <h3 style=\"color: #2c3e50;\">Attachment Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_name}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Type</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_type}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Uploaded On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_added_at}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_created_at}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_due_date}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task URL</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/tasks/{{$json.task_id}}\" target=\"_blank\">View Task</a>\n      </td>\n    </tr>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the attached document as part of task execution.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Document & Task Management System</strong>\n  </p>\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          16,
+          -192
+        ],
+        "id": "49cbc0d7-a905-4de0-b42a-426db0d7dd0e",
+        "name": "Task Owner",
+        "webhookId": "f1963efe-a57f-4973-a2e6-98dd27d55326",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  af.id                    AS attachment_id,\n  af.document_file_name    AS file_name,\n  af.document_content_type AS file_type,\n  af.created_at            AS file_added_at,\n\n  t.id                     AS task_id,\n  t.title                  AS task_title,\n  t.parent_id              AS parent_id,\n  t.created_at             AS task_created_at,\n  t.target_date            AS task_due_date,\n\n  m.id                     AS milestone_id,\n  m.title                  AS milestone_title,\n\n  pm.id                    AS project_id,\n  pm.title                 AS project_title,\n\n  u.id                     AS task_owner_id,\n  u.email                  AS task_owner_email,\n  u.firstname              AS task_owner_firstname,\n  u.lastname               AS task_owner_lastname,\n\n  GROUP_CONCAT(obs.id ORDER BY obs.id) AS observer_ids,\n  GROUP_CONCAT(obs.firstname ORDER BY obs.id) AS observer_first_names,\n  GROUP_CONCAT(obs.lastname ORDER BY obs.id) AS observer_last_names,\n  GROUP_CONCAT(obs.email ORDER BY obs.id) AS observer_emails\n\nFROM attachfiles af\n\nJOIN task_managements t\n  ON t.id = af.relation_id\n AND af.relation = 'TaskManagement'\n\nLEFT JOIN milestones m\n  ON m.id = t.milestone_id\n\nJOIN project_managements pm\n  ON pm.id = t.project_management_id\n\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\nLEFT JOIN task_users tu\n  ON tu.task_id = t.id\n  AND tu.user_type = 'observer'\n  AND tu.active = 1\n\nLEFT JOIN spree_users obs\n  ON obs.id = tu.user_id\n\nWHERE\n  af.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n  AND af.active = 1\n  AND t.parent_id IS NULL\n  AND u.organization_id IN (13, 14, 59, 84)\n\nGROUP BY af.id;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -240,
+          -224
+        ],
+        "id": "c7dbbefd-90d6-4d19-9946-c1454d4d720f",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 10
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -592,
+          -208
+        ],
+        "id": "b3edcf76-ab1c-442e-873e-b305e90c62c2",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * FROM attachfiles ORDER BY created_at DESC LIMIT 5;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -352,
+          -80
+        ],
+        "id": "4528aad8-7905-4179-95e9-03fbfed7940a",
+        "name": "Execute a SQL query1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  af.id                    AS attachment_id,\n  af.document_file_name    AS file_name,\n  af.document_content_type AS file_type,\n  af.created_at            AS file_added_at,\n\n  t.id                     AS task_id,\n  t.title                  AS task_title,\n  t.parent_id              AS parent_id,\n  t.created_at             AS task_created_at,\n  t.target_date            AS task_due_date,\n\n  -- milestone (optional)\n  m.id                     AS milestone_id,\n  m.title                  AS milestone_title,\n\n  -- project\n  pm.id                    AS project_id,\n  pm.title                 AS project_title,\n\n  -- task owner\n  u.id                     AS task_owner_id,\n  u.email                  AS task_owner_email,\n  u.firstname              AS task_owner_firstname,\n  u.lastname               AS task_owner_lastname\n\nFROM attachfiles af\n\nJOIN task_managements t\n  ON t.id = af.relation_id\n AND af.relation = 'TaskManagement'\n\n-- milestone (optional)\nLEFT JOIN milestones m\n  ON m.id = t.milestone_id\n\n-- project (direct from task)\nJOIN project_managements pm\n  ON pm.id = t.project_management_id\n\n-- task owner\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\nWHERE\n  af.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND af.active = 1\n  AND t.parent_id IS NULL;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -160,
+          16
+        ],
+        "id": "52055bdc-4713-4931-a415-beba618c3356",
+        "name": "Withour Observers",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// This Function Node splits aggregated observers into individual items\n// so each observer gets a personalized email\n\nconst items = [];\n\nfor (const item of $input.all()) {\n  // Split the aggregated observer fields into arrays\n  const observerEmails = (item.json.observer_emails || '').split(',');\n  const observerFirstNames = (item.json.observer_first_names || '').split(',');\n  const observerLastNames = (item.json.observer_last_names || '').split(',');\n\n  // Loop through each observer and create a new item\n  for (let i = 0; i < observerEmails.length; i++) {\n    const email = observerEmails[i]?.trim();\n    if (!email) continue; // skip empty emails\n\n    items.push({\n      json: {\n        ...item.json,  // keep all existing attachment & task fields\n        observer_email: email,\n        observer_first_name: observerFirstNames[i]?.trim() || '',\n        observer_last_name: observerLastNames[i]?.trim() || ''\n      }\n    });\n  }\n}\n\nreturn items;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          0,
+          -48
+        ],
+        "id": "bbe3dc9b-43fa-4186-a486-4f8079e696b2",
+        "name": "Code in JavaScript",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{ $json.observer_email }}",
+          "subject": "=File Attached to Task: {{$json.task_title}}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n  <p>Dear {{ $json.observer_first_name }} {{ $json.observer_last_name }},</p>\n\n  <p>A file has been added to the task <strong>{{$json.task_title}}</strong>.</p>\n\n  <h3 style=\"color: #2c3e50;\">Attachment Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_name}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Type</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_type}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Uploaded On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_added_at}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_created_at}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_due_date}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task URL</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/tasks/{{$json.task_id}}\" target=\"_blank\">View Task</a>\n      </td>\n    </tr>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    As an observer, please review the attached document as part of task execution.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Document & Task Management System</strong>\n  </p>\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          240,
+          112
+        ],
+        "id": "febe6122-32d2-4552-808d-d01a955c327d",
+        "name": "Observers",
+        "webhookId": "c02deb6c-4ca7-4492-8917-7393beb1d1c6",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  af.id                    AS attachment_id,\n  af.document_file_name    AS file_name,\n  af.document_content_type AS file_type,\n  af.created_at            AS file_added_at,\n\n  t.id                     AS task_id,\n  t.title                  AS task_title,\n  t.parent_id              AS parent_id,\n  t.created_at             AS task_created_at,\n  t.target_date            AS task_due_date,\n\n  m.id                     AS milestone_id,\n  m.title                  AS milestone_title,\n\n  pm.id                    AS project_id,\n  pm.title                 AS project_title,\n\n  u.id                     AS task_owner_id,\n  u.email                  AS task_owner_email,\n  u.firstname              AS task_owner_firstname,\n  u.lastname               AS task_owner_lastname,\n\n  GROUP_CONCAT(DISTINCT obs.id ORDER BY obs.id) AS observer_ids,\n  GROUP_CONCAT(DISTINCT obs.firstname ORDER BY obs.id) AS observer_first_names,\n  GROUP_CONCAT(DISTINCT obs.lastname ORDER BY obs.id) AS observer_last_names,\n  GROUP_CONCAT(DISTINCT obs.email ORDER BY obs.id) AS observer_emails\n\nFROM attachfiles af\n\nJOIN task_managements t\n  ON t.id = af.relation_id\n AND af.relation = 'TaskManagement'\n\nLEFT JOIN milestones m\n  ON m.id = t.milestone_id\n\nJOIN project_managements pm\n  ON pm.id = t.project_management_id\n\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\nLEFT JOIN task_users tu\n  ON tu.task_id = t.id\n  AND tu.user_type = 'observer'\n  AND tu.active = 1\n\nLEFT JOIN spree_users obs\n  ON obs.id = tu.user_id\n\nWHERE\n  af.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n  AND af.active = 1\n  AND t.parent_id IS NULL\n\nGROUP BY af.id;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -592,
+          176
+        ],
+        "id": "c0f9522f-8acc-4fbf-9aae-390aa0999412",
+        "name": "Without organizational id Execute a SQL query2",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          []
+        ]
+      },
+      "Task Owner": {
+        "main": [
+          []
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Task Owner",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Execute a SQL query1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Observers",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "c5dac09c-1715-4238-a6dd-48574c89b1ba",
+    "activeVersionId": "c5dac09c-1715-4238-a6dd-48574c89b1ba",
+    "versionCounter": 60,
+    "triggerCount": 2,
+    "shared": [
+      {
+        "updatedAt": "2026-04-15T11:48:20.170Z",
+        "createdAt": "2026-04-15T11:48:20.170Z",
+        "role": "workflow:owner",
+        "workflowId": "T2LDiVh5gx9TvpI8",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-23T18:47:48.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-23",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-04-15T11:32:35.314Z",
+        "createdAt": "2026-04-15T11:32:35.314Z",
+        "id": "L0EeV7qZEpOHtqXt",
+        "name": "Production Ready"
+      },
+      {
+        "updatedAt": "2026-04-15T11:43:40.011Z",
+        "createdAt": "2026-04-15T11:43:40.011Z",
+        "id": "eTJLoPlvourxGwI2",
+        "name": "Module 2 - TASKS, KANBAN"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-04-15T11:42:46.759Z",
+      "createdAt": "2026-04-15T11:42:46.759Z",
+      "id": "wEunMK7VV3S5FJHt",
+      "name": "Production Ready",
+      "parentFolderId": "PU5w19QcjKw8DNO8"
+    },
+    "activeVersion": {
+      "updatedAt": "2026-04-16T09:32:44.000Z",
+      "createdAt": "2026-04-16T09:32:42.740Z",
+      "versionId": "c5dac09c-1715-4238-a6dd-48574c89b1ba",
+      "workflowId": "T2LDiVh5gx9TvpI8",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "0c1ebcd1-5f8f-4a14-9875-2b51aa05b8ea",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            -560,
+            0
+          ],
+          "id": "b97aaaff-85ed-40e6-95bf-433f177a79c7",
+          "name": "Webhook",
+          "webhookId": "0c1ebcd1-5f8f-4a14-9875-2b51aa05b8ea",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            224,
+            -64
+          ],
+          "id": "8b1dd939-5477-4eea-a5f3-6de11d74ef04",
+          "name": "Respond to Webhook"
+        },
+        {
+          "parameters": {
+            "fromEmail": "notifications@lockated.com",
+            "toEmail": "={{$json.task_owner_email}}",
+            "subject": "=File Attached to Task: {{$json.task_title}}",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n  <p>Dear {{$json.task_owner_firstname}} {{$json.task_owner_lastname}},</p>\n\n  <p>A file has been added to the task <strong>{{$json.task_title}}</strong>.</p>\n\n  <h3 style=\"color: #2c3e50;\">Attachment Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_name}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Type</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_type}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Uploaded On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_added_at}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_created_at}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_due_date}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task URL</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/tasks/{{$json.task_id}}\" target=\"_blank\">View Task</a>\n      </td>\n    </tr>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please review the attached document as part of task execution.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Document & Task Management System</strong>\n  </p>\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            16,
+            -192
+          ],
+          "id": "49cbc0d7-a905-4de0-b42a-426db0d7dd0e",
+          "name": "Task Owner",
+          "webhookId": "f1963efe-a57f-4973-a2e6-98dd27d55326",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "e6BxRubia0RizPKp",
+              "name": "Lockated Local SMTP"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  af.id                    AS attachment_id,\n  af.document_file_name    AS file_name,\n  af.document_content_type AS file_type,\n  af.created_at            AS file_added_at,\n\n  t.id                     AS task_id,\n  t.title                  AS task_title,\n  t.parent_id              AS parent_id,\n  t.created_at             AS task_created_at,\n  t.target_date            AS task_due_date,\n\n  m.id                     AS milestone_id,\n  m.title                  AS milestone_title,\n\n  pm.id                    AS project_id,\n  pm.title                 AS project_title,\n\n  u.id                     AS task_owner_id,\n  u.email                  AS task_owner_email,\n  u.firstname              AS task_owner_firstname,\n  u.lastname               AS task_owner_lastname,\n\n  GROUP_CONCAT(obs.id ORDER BY obs.id) AS observer_ids,\n  GROUP_CONCAT(obs.firstname ORDER BY obs.id) AS observer_first_names,\n  GROUP_CONCAT(obs.lastname ORDER BY obs.id) AS observer_last_names,\n  GROUP_CONCAT(obs.email ORDER BY obs.id) AS observer_emails\n\nFROM attachfiles af\n\nJOIN task_managements t\n  ON t.id = af.relation_id\n AND af.relation = 'TaskManagement'\n\nLEFT JOIN milestones m\n  ON m.id = t.milestone_id\n\nJOIN project_managements pm\n  ON pm.id = t.project_management_id\n\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\nLEFT JOIN task_users tu\n  ON tu.task_id = t.id\n  AND tu.user_type = 'observer'\n  AND tu.active = 1\n\nLEFT JOIN spree_users obs\n  ON obs.id = tu.user_id\n\nWHERE\n  af.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n  AND af.active = 1\n  AND t.parent_id IS NULL\n  AND u.organization_id IN (13, 14, 59, 84)\n\nGROUP BY af.id;",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -240,
+            -224
+          ],
+          "id": "c7dbbefd-90d6-4d19-9946-c1454d4d720f",
+          "name": "Execute a SQL query",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "minutes",
+                  "minutesInterval": 10
+                }
+              ]
+            }
+          },
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.3,
+          "position": [
+            -592,
+            -208
+          ],
+          "id": "b3edcf76-ab1c-442e-873e-b305e90c62c2",
+          "name": "Schedule Trigger"
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT * FROM attachfiles ORDER BY created_at DESC LIMIT 5;",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -352,
+            -80
+          ],
+          "id": "4528aad8-7905-4179-95e9-03fbfed7940a",
+          "name": "Execute a SQL query1",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "FGCPCtEG47rFAJ4J",
+              "name": "New FM UAT Task Management Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  af.id                    AS attachment_id,\n  af.document_file_name    AS file_name,\n  af.document_content_type AS file_type,\n  af.created_at            AS file_added_at,\n\n  t.id                     AS task_id,\n  t.title                  AS task_title,\n  t.parent_id              AS parent_id,\n  t.created_at             AS task_created_at,\n  t.target_date            AS task_due_date,\n\n  -- milestone (optional)\n  m.id                     AS milestone_id,\n  m.title                  AS milestone_title,\n\n  -- project\n  pm.id                    AS project_id,\n  pm.title                 AS project_title,\n\n  -- task owner\n  u.id                     AS task_owner_id,\n  u.email                  AS task_owner_email,\n  u.firstname              AS task_owner_firstname,\n  u.lastname               AS task_owner_lastname\n\nFROM attachfiles af\n\nJOIN task_managements t\n  ON t.id = af.relation_id\n AND af.relation = 'TaskManagement'\n\n-- milestone (optional)\nLEFT JOIN milestones m\n  ON m.id = t.milestone_id\n\n-- project (direct from task)\nJOIN project_managements pm\n  ON pm.id = t.project_management_id\n\n-- task owner\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\nWHERE\n  af.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND af.active = 1\n  AND t.parent_id IS NULL;",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -160,
+            16
+          ],
+          "id": "52055bdc-4713-4931-a415-beba618c3356",
+          "name": "Withour Observers",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "FGCPCtEG47rFAJ4J",
+              "name": "New FM UAT Task Management Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "jsCode": "// This Function Node splits aggregated observers into individual items\n// so each observer gets a personalized email\n\nconst items = [];\n\nfor (const item of $input.all()) {\n  // Split the aggregated observer fields into arrays\n  const observerEmails = (item.json.observer_emails || '').split(',');\n  const observerFirstNames = (item.json.observer_first_names || '').split(',');\n  const observerLastNames = (item.json.observer_last_names || '').split(',');\n\n  // Loop through each observer and create a new item\n  for (let i = 0; i < observerEmails.length; i++) {\n    const email = observerEmails[i]?.trim();\n    if (!email) continue; // skip empty emails\n\n    items.push({\n      json: {\n        ...item.json,  // keep all existing attachment & task fields\n        observer_email: email,\n        observer_first_name: observerFirstNames[i]?.trim() || '',\n        observer_last_name: observerLastNames[i]?.trim() || ''\n      }\n    });\n  }\n}\n\nreturn items;"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            0,
+            -48
+          ],
+          "id": "bbe3dc9b-43fa-4186-a486-4f8079e696b2",
+          "name": "Code in JavaScript",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "fromEmail": "notifications@lockated.com",
+            "toEmail": "={{ $json.observer_email }}",
+            "subject": "=File Attached to Task: {{$json.task_title}}",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n  <p>Dear {{ $json.observer_first_name }} {{ $json.observer_last_name }},</p>\n\n  <p>A file has been added to the task <strong>{{$json.task_title}}</strong>.</p>\n\n  <h3 style=\"color: #2c3e50;\">Attachment Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_name}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>File Type</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_type}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Uploaded On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.file_added_at}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_created_at}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.task_due_date}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Task URL</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/tasks/{{$json.task_id}}\" target=\"_blank\">View Task</a>\n      </td>\n    </tr>\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    As an observer, please review the attached document as part of task execution.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Document & Task Management System</strong>\n  </p>\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            240,
+            112
+          ],
+          "id": "febe6122-32d2-4552-808d-d01a955c327d",
+          "name": "Observers",
+          "webhookId": "c02deb6c-4ca7-4492-8917-7393beb1d1c6",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "e6BxRubia0RizPKp",
+              "name": "Lockated Local SMTP"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  af.id                    AS attachment_id,\n  af.document_file_name    AS file_name,\n  af.document_content_type AS file_type,\n  af.created_at            AS file_added_at,\n\n  t.id                     AS task_id,\n  t.title                  AS task_title,\n  t.parent_id              AS parent_id,\n  t.created_at             AS task_created_at,\n  t.target_date            AS task_due_date,\n\n  m.id                     AS milestone_id,\n  m.title                  AS milestone_title,\n\n  pm.id                    AS project_id,\n  pm.title                 AS project_title,\n\n  u.id                     AS task_owner_id,\n  u.email                  AS task_owner_email,\n  u.firstname              AS task_owner_firstname,\n  u.lastname               AS task_owner_lastname,\n\n  GROUP_CONCAT(DISTINCT obs.id ORDER BY obs.id) AS observer_ids,\n  GROUP_CONCAT(DISTINCT obs.firstname ORDER BY obs.id) AS observer_first_names,\n  GROUP_CONCAT(DISTINCT obs.lastname ORDER BY obs.id) AS observer_last_names,\n  GROUP_CONCAT(DISTINCT obs.email ORDER BY obs.id) AS observer_emails\n\nFROM attachfiles af\n\nJOIN task_managements t\n  ON t.id = af.relation_id\n AND af.relation = 'TaskManagement'\n\nLEFT JOIN milestones m\n  ON m.id = t.milestone_id\n\nJOIN project_managements pm\n  ON pm.id = t.project_management_id\n\nJOIN spree_users u\n  ON u.id = t.responsible_person_id\n\nLEFT JOIN task_users tu\n  ON tu.task_id = t.id\n  AND tu.user_type = 'observer'\n  AND tu.active = 1\n\nLEFT JOIN spree_users obs\n  ON obs.id = tu.user_id\n\nWHERE\n  af.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n  AND af.active = 1\n  AND t.parent_id IS NULL\n\nGROUP BY af.id;",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -592,
+            176
+          ],
+          "id": "c0f9522f-8acc-4fbf-9aae-390aa0999412",
+          "name": "Without organizational id Execute a SQL query2",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            []
+          ]
+        },
+        "Task Owner": {
+          "main": [
+            []
+          ]
+        },
+        "Execute a SQL query": {
+          "main": [
+            [
+              {
+                "node": "Task Owner",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Code in JavaScript",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Schedule Trigger": {
+          "main": [
+            [
+              {
+                "node": "Execute a SQL query",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Execute a SQL query1",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Code in JavaScript": {
+          "main": [
+            [
+              {
+                "node": "Observers",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version c5dac09c",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-04-16T09:32:44.981Z",
+          "id": 160,
+          "workflowId": "T2LDiVh5gx9TvpI8",
+          "versionId": "c5dac09c-1715-4238-a6dd-48574c89b1ba",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "072afaad0374b9ca528682737f3929ad392bb84f93c2c7a79bc6bdecf71356cd"
+  }
+}

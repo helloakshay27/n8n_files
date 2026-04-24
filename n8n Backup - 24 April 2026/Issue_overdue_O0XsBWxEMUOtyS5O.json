@@ -1,0 +1,504 @@
+{
+  "data": {
+    "updatedAt": "2026-04-21T07:58:36.065Z",
+    "createdAt": "2025-12-26T08:29:18.985Z",
+    "id": "O0XsBWxEMUOtyS5O",
+    "name": "Issue overdue",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "issue-overdue",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -592,
+          -48
+        ],
+        "id": "c55f2fc6-610e-4941-8115-95513f2fa255",
+        "name": "Webhook",
+        "webhookId": "c3d3e125-e0d3-40e2-a591-7a323038e3d7",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          224,
+          -64
+        ],
+        "id": "264925ef-9e02-4338-8e92-f480218213ce",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  i.*,\n  i.id                    AS issue_id,\n  i.title                 AS issue_title,\n\n  -- convert end_date to IST\n  CONVERT_TZ(i.end_date, '+00:00', '+05:30') AS issue_end_date_ist,\n\n  -- overdue days based on IST date\n  DATEDIFF(\n    DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', '+05:30')),\n    DATE(CONVERT_TZ(i.end_date, '+00:00', '+05:30'))\n  ) AS overdue_days,\n\n  -- project\n  pm.id                   AS project_id,\n  pm.title                AS project_title,\n\n  -- milestone\n  m.id                    AS milestone_id,\n  m.title                 AS milestone_title,\n\n  -- related task (if any)\n  t.id                    AS task_id,\n  t.title                 AS task_title,\n\n  -- issue owner / responsible person\n  rp.id                   AS responsible_person_id,\n  rp.firstname            AS responsible_person_firstname,\n  rp.lastname             AS responsible_person_lastname,\n  rp.email                AS responsible_person_email,\n\n  -- project manager\n  pmo.email               AS project_manager_email,\n  pmo.firstname           AS project_manager_firstname,\n  pmo.lastname            AS project_manager_lastname\n\nFROM issues i\n\n-- responsible person\nJOIN spree_users rp\n  ON rp.id = i.responsible_person_id\n\n-- project\nJOIN project_managements pm\n  ON pm.id = i.project_management_id\n\n-- project manager\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\n-- milestone (optional)\nLEFT JOIN milestones m\n  ON m.id = i.milestone_id\n\n-- related task (optional)\nLEFT JOIN task_managements t\n  ON t.id = i.task_management_id\n\nWHERE\n  DATE(CONVERT_TZ(i.end_date, '+00:00', '+05:30'))\n    < DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', '+05:30'))\n  AND i.status NOT IN ('completed', 'closed');",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -224,
+          -240
+        ],
+        "id": "13266ed9-a627-4e24-a890-f56c06c64721",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "months",
+                "monthsInterval": 10,
+                "triggerAtHour": 23
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -544,
+          -256
+        ],
+        "id": "83adf4ea-e7e9-4049-9b9c-caeb8b0e26f0",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{$json.project_manager_email}}",
+          "subject": "=Issue Overdue Alert: {{$json.issue_title}}\n\n",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>Dear {{$json.project_manager_firstname}} {{$json.project_manager_lastname}},</p>\n\n  <p>The issue <b>{{$json.issue_title}}</b> has exceeded its planned resolution timeline and is currently overdue.</p>\n\n  <h3 style=\"color: #c0392b;\">Overdue Issue Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Severity / Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #c0392b;\">\n        {{$json.priority}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_end_date_ist}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Linked Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.task_title || 'N/A'}})\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Assigned Owner</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.responsible_person_firstname}} {{$json.responsible_person_lastname}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Overdue By</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.overdue_days}} days</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/issues/{{$json.id}}\" target=\"_blank\">\n          View Issue Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p>Please provide an immediate update with revised resolution timelines or closure remarks to prevent further escalation.</p>\n\n  <p>Regards,<br>\n  <b>PMO – Issue Escalation Desk</b></p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          16,
+          -240
+        ],
+        "id": "f76cf9b5-38e1-43e8-a309-692f52135288",
+        "name": "PM",
+        "webhookId": "1946c57f-e0b0-4210-b7e8-d91ac3d4269b",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{$json.responsible_person_email}}",
+          "subject": "=Issue Overdue Alert: {{$json.issue_title}}\n\n",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>Dear {{$json.responsible_person_firstname}} {{$json.responsible_person_lastname}},</p>\n\n  <p>The issue <b>{{$json.issue_title}}</b> has exceeded its planned resolution timeline and is currently overdue.</p>\n\n  <h3 style=\"color: #c0392b;\">Overdue Issue Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Severity / Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #c0392b;\">\n        {{$json.priority}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_end_date_ist}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Linked Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.task_title || 'N/A'}})\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Assigned Owner</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.responsible_person_firstname}} {{$json.responsible_person_lastname}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Overdue By</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.overdue_days}} days</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/issues/{{$json.id}}\" target=\"_blank\">\n          View Issue Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p>Please provide an immediate update with revised resolution timelines or closure remarks to prevent further escalation.</p>\n\n  <p>Regards,<br>\n  <b>PMO – Issue Escalation Desk</b></p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          -32,
+          -32
+        ],
+        "id": "47dd68bb-b8b1-405b-ac76-aaf03750ec3d",
+        "name": "Issue Owner",
+        "webhookId": "1946c57f-e0b0-4210-b7e8-d91ac3d4269b",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{$json.project_manager_email}}",
+          "subject": "=Issue Overdue Alert: {{ $json.total_overdue_issues }} Issues have been overdue under the projects that you are managing.\n\n",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.project_manager_firstname}} {{$json.project_manager_lastname}},\n  </p>\n\n  <p>\n    The following issues under your project(s) have exceeded their planned resolution timelines and are currently overdue.\n  </p>\n\n  <p>\n    Total Overdue Issues: <b>{{$json.total_overdue_issues}}</b>\n  </p>\n\n  <table style=\"border-collapse: collapse; width: 100%; font-size: 13px;\">\n\n    <tr style=\"background:#f2f2f2;\">\n      <th style=\"border:1px solid #ddd; padding:8px;\">Issue</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Description</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Priority</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Status</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Created On</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Due Date (IST)</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Overdue Days</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Project</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Milestone</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Task</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Owner</th>\n      <th style=\"border:1px solid #ddd; padding:8px;\">Link</th>\n    </tr>\n\n    {{ $json.issues.map(issue => `\n      <tr>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${issue.issue_title}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${issue.description || 'N/A'}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px; color:#c0392b; font-weight:bold;\">\n          ${issue.priority || 'N/A'}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${issue.status}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${issue.created_at}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${issue.issue_end_date_ist}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${issue.overdue_days} days\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${issue.project_title || 'N/A'}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${issue.milestone_title || 'N/A'}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${issue.task_title || 'N/A'}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          ${issue.responsible_person_name}\n        </td>\n\n        <td style=\"border:1px solid #ddd; padding:8px;\">\n          <a href=\"https://fm-matrix.lockated.com/vas/issues/${issue.issue_id}\" target=\"_blank\">\n            View\n          </a>\n        </td>\n\n      </tr>\n    `).join('') }}\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please ensure timely resolution or provide updated timelines to avoid further escalation.\n  </p>\n\n  <p>\n    Regards,<br>\n    <b>PMO – Issue Escalation Desk</b>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          368,
+          -544
+        ],
+        "id": "ae87ff6b-e255-4ea6-a727-bccceabd9544",
+        "name": "PM1",
+        "webhookId": "1946c57f-e0b0-4210-b7e8-d91ac3d4269b",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const grouped = {};\n\nfor (const item of items) {\n  const row = item.json;\n  const email = row.project_manager_email;\n\n  if (!email) continue;\n\n  if (!grouped[email]) {\n    grouped[email] = {\n      project_manager_email: email,\n      project_manager_firstname: row.project_manager_firstname || '',\n      project_manager_lastname: row.project_manager_lastname || '',\n      project_manager_name: `${row.project_manager_firstname || ''} ${row.project_manager_lastname || ''}`.trim(),\n      issues: []\n    };\n  }\n\n  grouped[email].issues.push({\n    issue_id: row.issue_id,\n    issue_title: row.issue_title || 'N/A',\n\n    description: row.description || 'N/A',\n    priority: row.priority || 'N/A',\n    status: row.status || 'N/A',\n    created_at: row.created_at || 'N/A',\n\n    issue_end_date_ist: row.issue_end_date_ist || 'N/A',\n    overdue_days: row.overdue_days ?? 0,\n\n    project_id: row.project_id,\n    project_title: row.project_title || 'N/A',\n\n    milestone_id: row.milestone_id,\n    milestone_title: row.milestone_title || 'N/A',\n\n    task_id: row.task_id,\n    task_title: row.task_title || 'N/A',\n\n    responsible_person_id: row.responsible_person_id,\n    responsible_person_firstname: row.responsible_person_firstname || '',\n    responsible_person_lastname: row.responsible_person_lastname || '',\n    responsible_person_name: `${row.responsible_person_firstname || ''} ${row.responsible_person_lastname || ''}`.trim() || 'N/A',\n    responsible_person_email: row.responsible_person_email || 'N/A'\n  });\n}\n\n// optional: sort issues by highest overdue first\nObject.values(grouped).forEach(pm => {\n  pm.issues.sort((a, b) => b.overdue_days - a.overdue_days);\n});\n\nreturn Object.values(grouped).map(pm => ({\n  json: {\n    project_manager_email: pm.project_manager_email,\n    project_manager_firstname: pm.project_manager_firstname,\n    project_manager_lastname: pm.project_manager_lastname,\n    project_manager_name: pm.project_manager_name,\n    total_overdue_issues: pm.issues.length,\n    issues: pm.issues\n  }\n}));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -16,
+          -608
+        ],
+        "id": "8e82158a-15c1-4663-84b0-aed6462a8148",
+        "name": "Grouped Issues PM",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const grouped = {};\n\nfor (const item of items) {\n  const row = item.json;\n  const email = row.responsible_person_email;\n\n  if (!email) continue;\n\n  if (!grouped[email]) {\n    grouped[email] = {\n      responsible_person_email: email,\n      responsible_person_firstname: row.responsible_person_firstname || '',\n      responsible_person_lastname: row.responsible_person_lastname || '',\n      responsible_person_name: `${row.responsible_person_firstname || ''} ${row.responsible_person_lastname || ''}`.trim(),\n      issues: []\n    };\n  }\n\n  grouped[email].issues.push({\n    issue_id: row.issue_id,\n    issue_title: row.issue_title || 'N/A',\n\n    description: row.description || 'N/A',\n    priority: row.priority || 'N/A',\n    status: row.status || 'N/A',\n    created_at: row.created_at || 'N/A',\n\n    issue_end_date_ist: row.issue_end_date_ist || 'N/A',\n    overdue_days: row.overdue_days ?? 0,\n\n    project_id: row.project_id,\n    project_title: row.project_title || 'N/A',\n\n    milestone_id: row.milestone_id,\n    milestone_title: row.milestone_title || 'N/A',\n\n    task_id: row.task_id,\n    task_title: row.task_title || 'N/A',\n\n    project_manager_email: row.project_manager_email || 'N/A',\n    project_manager_firstname: row.project_manager_firstname || '',\n    project_manager_lastname: row.project_manager_lastname || '',\n    project_manager_name: `${row.project_manager_firstname || ''} ${row.project_manager_lastname || ''}`.trim() || 'N/A'\n  });\n}\n\n// optional: sort by highest overdue first\nObject.values(grouped).forEach(user => {\n  user.issues.sort((a, b) => b.overdue_days - a.overdue_days);\n});\n\nreturn Object.values(grouped).map(user => ({\n  json: {\n    responsible_person_email: user.responsible_person_email,\n    responsible_person_firstname: user.responsible_person_firstname,\n    responsible_person_lastname: user.responsible_person_lastname,\n    responsible_person_name: user.responsible_person_name,\n    total_overdue_issues: user.issues.length,\n    issues: user.issues\n  }\n}));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          0,
+          -432
+        ],
+        "id": "baccb1fb-7487-482b-a9d0-82961c6a145d",
+        "name": "Grouped Issues Issue Owner",
+        "alwaysOutputData": true
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          []
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "PM",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Issue Owner",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Grouped Issues PM",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Grouped Issues Issue Owner",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          []
+        ]
+      },
+      "PM": {
+        "main": [
+          []
+        ]
+      },
+      "Issue Owner": {
+        "main": [
+          []
+        ]
+      },
+      "Grouped Issues PM": {
+        "main": [
+          [
+            {
+              "node": "PM1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "d82f8d20-f1e0-456c-ab67-2e5c2f153174",
+    "activeVersionId": "0fdf413e-522b-4ffb-b8ab-dfaa0917a261",
+    "versionCounter": 44,
+    "triggerCount": 2,
+    "shared": [
+      {
+        "updatedAt": "2025-12-26T08:29:18.987Z",
+        "createdAt": "2025-12-26T08:29:18.987Z",
+        "role": "workflow:owner",
+        "workflowId": "O0XsBWxEMUOtyS5O",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-23T18:47:48.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-23",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2025-12-26T08:26:21.479Z",
+      "createdAt": "2025-12-26T08:26:21.479Z",
+      "id": "P23AVCZYgyKbZwTk",
+      "name": "Module 4 - ISSUES",
+      "parentFolderId": null
+    },
+    "activeVersion": {
+      "updatedAt": "2026-01-07T09:42:43.000Z",
+      "createdAt": "2026-01-07T09:42:39.089Z",
+      "versionId": "0fdf413e-522b-4ffb-b8ab-dfaa0917a261",
+      "workflowId": "O0XsBWxEMUOtyS5O",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "issue-overdue",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            -464,
+            -144
+          ],
+          "id": "c55f2fc6-610e-4941-8115-95513f2fa255",
+          "name": "Webhook",
+          "webhookId": "c3d3e125-e0d3-40e2-a591-7a323038e3d7",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            224,
+            -64
+          ],
+          "id": "264925ef-9e02-4338-8e92-f480218213ce",
+          "name": "Respond to Webhook",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "fromEmail": "notificaions@lockated.com",
+            "toEmail": "={{$json.issue_owner_email}},{{$json.project_manager_email}}",
+            "subject": "=Issue I overdue by {{$json.overdue_days}} days.",
+            "html": "=Hello,\n\nThe following issue is overdue.\n\nIssue: {{$json.issue_title}}\nProject: {{$json.project_title}}\nOverdue by: {{$json.overdue_days}} day(s)\n\nPlease take the necessary action.\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            16,
+            -128
+          ],
+          "id": "f76cf9b5-38e1-43e8-a309-692f52135288",
+          "name": "Issue Owner, PM",
+          "webhookId": "1946c57f-e0b0-4210-b7e8-d91ac3d4269b",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "m6pGNPu76sBcBXtf",
+              "name": "Task Management SMTP Account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  i.id                    AS issue_id,\n  i.title                 AS issue_title,\n\n  -- convert end_date to IST\n  CONVERT_TZ(i.end_date, '+00:00', '+05:30') AS issue_end_date_ist,\n\n  -- overdue days based on IST date\n  DATEDIFF(\n    DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', '+05:30')),\n    DATE(CONVERT_TZ(i.end_date, '+00:00', '+05:30'))\n  ) AS overdue_days,\n\n  pm.id                   AS project_id,\n  pm.title                AS project_title,\n\n  -- issue owner\n  io.email                AS issue_owner_email,\n\n  -- project manager\n  pmo.email               AS project_manager_email\n\nFROM issues i\n\nJOIN spree_users io\n  ON io.id = i.responsible_person_id\n\nJOIN project_managements pm\n  ON pm.id = i.project_management_id\n\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nWHERE\n  DATE(CONVERT_TZ(i.end_date, '+00:00', '+05:30'))\n    < DATE(CONVERT_TZ(UTC_TIMESTAMP(), '+00:00', '+05:30'))\n  AND i.status NOT IN ('completed', 'closed');\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -224,
+            -240
+          ],
+          "id": "13266ed9-a627-4e24-a890-f56c06c64721",
+          "name": "Execute a SQL query",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "FGCPCtEG47rFAJ4J",
+              "name": "New FM UAT Task Management Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {}
+              ]
+            }
+          },
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.3,
+          "position": [
+            -272,
+            32
+          ],
+          "id": "83adf4ea-e7e9-4049-9b9c-caeb8b0e26f0",
+          "name": "Schedule Trigger"
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Execute a SQL query",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Issue Owner, PM": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Execute a SQL query": {
+          "main": [
+            [
+              {
+                "node": "Issue Owner, PM",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version 0fdf413e",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-01-07T09:42:43.438Z",
+          "id": 60,
+          "workflowId": "O0XsBWxEMUOtyS5O",
+          "versionId": "0fdf413e-522b-4ffb-b8ab-dfaa0917a261",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "54155d62d06db336cc19f6aab2649782780fa67d1d65b045f56c5f18ecdf18e2"
+  }
+}

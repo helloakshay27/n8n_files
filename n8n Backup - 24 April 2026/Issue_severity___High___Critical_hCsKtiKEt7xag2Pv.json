@@ -1,0 +1,461 @@
+{
+  "data": {
+    "updatedAt": "2026-03-31T08:26:48.859Z",
+    "createdAt": "2025-12-26T08:28:08.660Z",
+    "id": "hCsKtiKEt7xag2Pv",
+    "name": "Issue severity = High / Critical",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "issue-severity",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -576,
+          -96
+        ],
+        "id": "b9affb1a-c0d3-4d8f-9b91-ffc4fff11ed1",
+        "name": "Webhook",
+        "webhookId": "de83c815-eab0-4ead-8707-90ba9374d4c1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          176,
+          -112
+        ],
+        "id": "2e92ee20-8546-44f4-b4e5-8a4cf04901e1",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  i.*,\n  i.id            AS issue_id,\n  i.title         AS issue_title,\n  i.priority      AS issue_priority,\n  i.created_at    AS issue_created_at,\n\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  -- project manager\n  pm_owner.email      AS project_manager_email,\n  pm_owner.firstname  AS project_manager_firstname,\n  pm_owner.lastname   AS project_manager_lastname,\n\n  -- team lead\n  tl.id               AS team_lead_id,\n  tl.email            AS team_lead_email,\n  tl.firstname        AS team_lead_firstname,\n  tl.lastname         AS team_lead_lastname,\n\n  -- ✅ responsible person\n  rp.id               AS responsible_person_id,\n  rp.firstname        AS responsible_person_firstname,\n  rp.lastname         AS responsible_person_lastname,\n  rp.email            AS responsible_person_email,\n\n  -- milestone title\n  m.title             AS milestone_title,\n\n  -- task title\n  tm.title            AS task_title\n\nFROM issues i\n\nJOIN project_managements pm\n  ON pm.id = i.project_management_id\n\n-- project manager\nJOIN spree_users pm_owner\n  ON pm_owner.id = pm.owner_id\n\n-- project team\nLEFT JOIN project_teams pt\n  ON pt.id = pm.project_team_id\n\n-- team lead\nLEFT JOIN spree_users tl\n  ON tl.id = pt.team_lead_id\n\n-- ✅ responsible person join\nLEFT JOIN spree_users rp\n  ON rp.id = i.responsible_person_id\n\n-- milestone\nLEFT JOIN milestones m\n  ON m.id = i.milestone_id\n\n-- task management\nLEFT JOIN task_managements tm\n  ON tm.id = i.task_management_id\n\nWHERE\n  i.created_at >= UTC_TIMESTAMP() - INTERVAL 160 MINUTE\n  AND LOWER(i.priority) IN ('high', 'urgent');",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -272,
+          -224
+        ],
+        "id": "cffb3d18-333c-4e4f-b34a-1b2886c79d00",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -528,
+          -256
+        ],
+        "id": "83eae61e-b99a-4ceb-8d50-3b9639c12938",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{$json.project_manager_email}}",
+          "subject": "=Critical issue logged: {{$json.issue_title}}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.project_manager_firstname}} {{$json.project_manager_lastname}},\n  </p>\n\n  <p>\n    This is to formally notify you that a <b>{{$json.issue_priority}}</b> severity issue has been logged and requires immediate attention.\n  </p>\n\n  <h3 style=\"color: #c0392b;\">Critical Issue Summary</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Severity / Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd; color: #c0392b; font-weight: bold;\">\n        {{$json.priority}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.end_date || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Linked Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.task_title || 'N/A'}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Assigned Owner</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.responsible_person_firstname}} {{$json.responsible_person_lastname}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/issues/{{$json.id}}\" target=\"_blank\">\n          View Issue Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <h4 style=\"margin-top: 20px; color: #c0392b;\">Immediate Action Required</h4>\n  <p>\n    Please prioritize investigation, initiate mitigation steps, and provide frequent status updates until resolution.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Risk, QA & Escalation Office</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          -64,
+          -192
+        ],
+        "id": "cbc97bca-d497-44bd-8103-e8e839534709",
+        "name": "PM",
+        "webhookId": "dfc87cc8-4d17-4da2-9da6-c46d98c82291",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{$json.project_manager_email}}",
+          "subject": "=Critical issue logged: {{$json.issue_title}}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.team_lead_firstname}} {{$json.team_lead_lastname}},\n  </p>\n\n  <p>\n    This is to formally notify you that a <b>{{$json.issue_priority}}</b> severity issue has been logged and requires immediate attention.\n  </p>\n\n  <h3 style=\"color: #c0392b;\">Critical Issue Summary</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Severity / Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd; color: #c0392b; font-weight: bold;\">\n        {{$json.priority}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.end_date || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Linked Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.task_title || 'N/A'}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Assigned Owner</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.responsible_person_firstname}} {{$json.responsible_person_lastname}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/issues/{{$json.id}}\" target=\"_blank\">\n          View Issue Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <h4 style=\"margin-top: 20px; color: #c0392b;\">Immediate Action Required</h4>\n  <p>\n    Please prioritize investigation, initiate mitigation steps, and provide frequent status updates until resolution.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Risk, QA & Escalation Office</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          -96,
+          0
+        ],
+        "id": "60d9efde-1e98-4225-b4f7-fdb66bb017f5",
+        "name": "Leadership Team Lead",
+        "webhookId": "dfc87cc8-4d17-4da2-9da6-c46d98c82291",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{$json.project_manager_email}}",
+          "subject": "=Critical issue logged: {{$json.issue_title}}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.responsible_person_firstname}} {{$json.responsible_person_lastname}},\n  </p>\n\n  <p>\n    This is to formally notify you that a <b>{{$json.issue_priority}}</b> severity issue has been logged and requires immediate attention.\n  </p>\n\n  <h3 style=\"color: #c0392b;\">Critical Issue Summary</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Description</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.description}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Severity / Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd; color: #c0392b; font-weight: bold;\">\n        {{$json.priority}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.issue_created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue End On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.end_date || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title || 'N/A'}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Linked Task</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        {{$json.task_title || 'N/A'}}\n      </td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Assigned Owner</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.responsible_person_firstname}} {{$json.responsible_person_lastname}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Issue Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://fm-matrix.lockated.com/vas/issues/{{$json.id}}\" target=\"_blank\">\n          View Issue Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <h4 style=\"margin-top: 20px; color: #c0392b;\">Immediate Action Required</h4>\n  <p>\n    Please prioritize investigation, initiate mitigation steps, and provide frequent status updates until resolution.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Risk, QA & Escalation Office</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          -112,
+          176
+        ],
+        "id": "aa2f8850-fb5d-480c-a0db-3a829940797d",
+        "name": "Issue Owner",
+        "webhookId": "dfc87cc8-4d17-4da2-9da6-c46d98c82291",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          []
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "PM",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Leadership Team Lead",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Issue Owner",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "PM": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "1c5656d3-f06e-4194-8566-0f47b6b65b67",
+    "activeVersionId": "e669017b-31c7-4aad-9f09-bcd3ffa5b518",
+    "versionCounter": 52,
+    "triggerCount": 2,
+    "shared": [
+      {
+        "updatedAt": "2025-12-26T08:28:08.662Z",
+        "createdAt": "2025-12-26T08:28:08.662Z",
+        "role": "workflow:owner",
+        "workflowId": "hCsKtiKEt7xag2Pv",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-23T18:47:48.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-23",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2025-12-26T08:26:21.479Z",
+      "createdAt": "2025-12-26T08:26:21.479Z",
+      "id": "P23AVCZYgyKbZwTk",
+      "name": "Module 4 - ISSUES",
+      "parentFolderId": null
+    },
+    "activeVersion": {
+      "updatedAt": "2026-01-07T08:55:37.000Z",
+      "createdAt": "2026-01-07T08:55:34.849Z",
+      "versionId": "e669017b-31c7-4aad-9f09-bcd3ffa5b518",
+      "workflowId": "hCsKtiKEt7xag2Pv",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "issue-severity",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            -464,
+            -144
+          ],
+          "id": "b9affb1a-c0d3-4d8f-9b91-ffc4fff11ed1",
+          "name": "Webhook",
+          "webhookId": "de83c815-eab0-4ead-8707-90ba9374d4c1",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            176,
+            -112
+          ],
+          "id": "2e92ee20-8546-44f4-b4e5-8a4cf04901e1",
+          "name": "Respond to Webhook",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "fromEmail": "notificaions@lockated.com",
+            "toEmail": "={{$json.project_manager_email}}",
+            "subject": "=Critical issue logged: {{$json.issue_title}}",
+            "html": "=Hello,\n\nA critical issue has been logged.\n\nIssue: {{$json.issue_title}}\nProject: {{$json.project_title}}\nSeverity: {{$json.issue_priority}}\n\nPlease review and take action immediately.\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            -64,
+            -192
+          ],
+          "id": "cbc97bca-d497-44bd-8103-e8e839534709",
+          "name": "PM, QA, Leadership",
+          "webhookId": "dfc87cc8-4d17-4da2-9da6-c46d98c82291",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "m6pGNPu76sBcBXtf",
+              "name": "Task Management SMTP Account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  i.id            AS issue_id,\n  i.title         AS issue_title,\n  i.priority      AS issue_priority,\n  i.created_at    AS issue_created_at,\n\n  pm.id           AS project_id,\n  pm.title        AS project_title,\n\n  -- project manager\n  pm_owner.email  AS project_manager_email\n\nFROM issues i\n\nJOIN project_managements pm\n  ON pm.id = i.project_management_id\n\nJOIN spree_users pm_owner\n  ON pm_owner.id = pm.owner_id\n\nWHERE\n  i.created_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND LOWER(i.priority) IN ('high', 'urgent');\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -272,
+            -224
+          ],
+          "id": "cffb3d18-333c-4e4f-b34a-1b2886c79d00",
+          "name": "Execute a SQL query",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "FGCPCtEG47rFAJ4J",
+              "name": "New FM UAT Task Management Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "hours"
+                }
+              ]
+            }
+          },
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.3,
+          "position": [
+            -368,
+            32
+          ],
+          "id": "83eae61e-b99a-4ceb-8d50-3b9639c12938",
+          "name": "Schedule Trigger"
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Execute a SQL query",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "PM, QA, Leadership": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Execute a SQL query": {
+          "main": [
+            [
+              {
+                "node": "PM, QA, Leadership",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version e669017b",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-01-07T08:55:37.011Z",
+          "id": 59,
+          "workflowId": "hCsKtiKEt7xag2Pv",
+          "versionId": "e669017b-31c7-4aad-9f09-bcd3ffa5b518",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "f18847e8c4108e850fb875bd4e2149bed22bf8d40ce2f0976fdbe026bd35abe9"
+  }
+}
