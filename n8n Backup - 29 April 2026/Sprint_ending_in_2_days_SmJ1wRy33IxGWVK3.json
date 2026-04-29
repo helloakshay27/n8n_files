@@ -1,0 +1,191 @@
+{
+  "data": {
+    "updatedAt": "2026-01-12T07:40:54.314Z",
+    "createdAt": "2025-12-26T08:32:50.009Z",
+    "id": "SmJ1wRy33IxGWVK3",
+    "name": "Sprint ending in 2 days",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          128,
+          16
+        ],
+        "id": "a58524fd-cede-43af-bc0d-25cfabfb4e3a",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "heypiyush112@gmail.com",
+          "subject": "=Dear {{$json.RecipientName}}",
+          "html": "=This is a reminder that the sprint <b>{{$json.name}}</b> is scheduled to conclude in <b>2 days</b>.\n\n<b>Sprint Status</b>\n* Sprint Name: {{$json.name}}\n* End Date: {{$json.end_date}} {{$json.end_time}}\n* Current Status: {{$json.status}}\n\nPlease review and update the status of your sprint tasks to ensure accurate sprint closure and reporting.\n\nRegards,<b>Scrum Management Office</b>\n\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          -144,
+          -48
+        ],
+        "id": "0d860754-e913-4165-a4be-361bb62c23c7",
+        "name": "All Sprint Members",
+        "webhookId": "4718474e-0402-4ed9-9e09-24b45209b908",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "sprint-ending-in-2-days",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -464,
+          -144
+        ],
+        "id": "085fba16-3b07-4ba5-92bc-09bf893be886",
+        "name": "Webhook",
+        "webhookId": "70d2a415-92e2-4a3e-bb2f-237f1cd0c2ed",
+        "alwaysOutputData": true
+      }
+    ],
+    "connections": {
+      "All Sprint Members": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "All Sprint Members",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "ade498eb-28f6-4277-b19c-bded08a343f4",
+    "activeVersionId": null,
+    "versionCounter": 16,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2025-12-26T08:32:50.011Z",
+        "createdAt": "2025-12-26T08:32:50.011Z",
+        "role": "workflow:owner",
+        "workflowId": "SmJ1wRy33IxGWVK3",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-29T05:29:58.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-28",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2025-12-26T08:31:16.099Z",
+      "createdAt": "2025-12-26T08:31:16.099Z",
+      "id": "lWyrbzOLu0XNECl9",
+      "name": "Module 5 - Sprints",
+      "parentFolderId": null
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "5cc0ef83e5dbfd99069d33a01e992ec607a6dcacb7e223888c2465b50e38e721"
+  }
+}
