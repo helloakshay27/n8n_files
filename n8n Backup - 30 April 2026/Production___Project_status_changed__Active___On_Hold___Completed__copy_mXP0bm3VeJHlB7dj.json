@@ -1,0 +1,580 @@
+{
+  "data": {
+    "updatedAt": "2026-04-16T06:35:24.735Z",
+    "createdAt": "2026-04-15T11:39:41.985Z",
+    "id": "mXP0bm3VeJHlB7dj",
+    "name": "Production - Project status changed (Active → On Hold / Completed) copy",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "b9edda95-50b7-4c4f-b3f7-cfadef0b6a59",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -80,
+          128
+        ],
+        "id": "50567414-6153-4b28-8deb-7f7330fd95fa",
+        "name": "Webhook",
+        "webhookId": "b9edda95-50b7-4c4f-b3f7-cfadef0b6a59",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{$json.email}}",
+          "subject": "=Project Status Updated: {{$json.project_title}}\n\n",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.firstname}} {{$json.lastname}},\n  </p>\n\n  <p>\n    This is to inform you that the status of the project <strong>{{$json.project_title}}</strong> has been updated.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Project Status Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Updated On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status_changed_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_start_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/projects/details/{{$json.project_id}}\" target=\"_blank\">\n          View Project Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please assess the impact on timelines, deliverables, and dependent activities.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          -48,
+          -128
+        ],
+        "id": "08feb7c3-2b3f-4342-9c1b-f673bfc5a8ff",
+        "name": "PM, Team, Leadership",
+        "webhookId": "ea253b72-b4f3-468f-9bde-2c3ae48ffd4a",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          144,
+          144
+        ],
+        "id": "1e1d9b16-ec06-479a-b7cb-de6c63b0f5d0",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  pm.id               AS project_id,\n  pm.title            AS project_title,\n  pm.start_date,\n  pm.end_date,\n  pm.status           AS project_status,\n  pm.updated_at       AS project_updated_at,\n\n  -- project manager (owner)\n  owner.email         AS project_manager_email,\n\n  -- team member\n  tm.id               AS team_user_id,\n  tm.firstname       AS team_user_first_name,\n  tm.lastname        AS team_user_last_name,\n  tm.email            AS team_user_email\n\nFROM project_managements pm\n\n-- project manager\nJOIN spree_users owner\n  ON owner.id = pm.owner_id\n\n-- project team members\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\n\nJOIN spree_users tm\n  ON tm.id = ptm.user_id\n\nWHERE\n  pm.updated_at >= UTC_TIMESTAMP() - INTERVAL 500 MINUTE     -- updated within last 1 hour\n  AND pm.updated_at > pm.created_at               -- exclude newly created projects\n             -- avoid duplicate emails\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -576,
+          160
+        ],
+        "id": "374f3493-a883-4011-a3ea-280047bfc527",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const output = [];\n\nconst notifiedManagers = new Set();\nconst notifiedTeamLeads = new Set();\n\nfor (const item of $input.all()) {\n  const {\n    team_user_first_name,\n    team_user_last_name,\n    team_user_email,\n\n    project_id,\n    project_title,\n    project_start_date,\n    project_end_date,\n    new_project_status,\n    status_changed_at,\n\n    project_manager_email,\n\n    team_lead_email,\n    team_lead_firstname,\n    team_lead_lastname\n  } = item.json;\n\n  // ✅ Team member → every row\n  if (team_user_email) {\n    output.push({\n      json: {\n        firstname: team_user_first_name,\n        lastname: team_user_last_name,\n        email: team_user_email,\n        role: 'team',\n        project_title,\n        project_id,\n        project_start_date,\n        project_end_date,\n        project_status: new_project_status,\n        status_changed_at\n      }\n    });\n  }\n\n  // ✅ Project manager → only once per project\n  if (\n    project_manager_email &&\n    !notifiedManagers.has(project_id)\n  ) {\n    notifiedManagers.add(project_id);\n\n    output.push({\n      json: {\n        firstname: team_user_first_name, // (keeping your original logic unchanged)\n        lastname: team_user_last_name,\n        email: project_manager_email,\n        role: 'manager',\n        project_title,\n        project_id,\n        project_start_date,\n        project_end_date,\n        project_status: new_project_status,\n        status_changed_at\n      }\n    });\n  }\n\n  // ✅ Team lead → only once per project\n  if (\n    team_lead_email &&\n    !notifiedTeamLeads.has(project_id)\n  ) {\n    notifiedTeamLeads.add(project_id);\n\n    output.push({\n      json: {\n        firstname: team_lead_firstname,\n        lastname: team_lead_lastname,\n        email: team_lead_email,\n        role: 'team_lead',\n        project_title,\n        project_id,\n        project_start_date,\n        project_end_date,\n        project_status: new_project_status,\n        status_changed_at\n      }\n    });\n  }\n}\n\nreturn output;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -304,
+          -128
+        ],
+        "id": "a39bd0b7-42ca-47d6-980e-91da0e7b735f",
+        "name": "Eliminate Duplicate Emails",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "WITH latest_status AS (\n  SELECT\n    psl.*,\n    ROW_NUMBER() OVER (\n      PARTITION BY psl.project_management_id\n      ORDER BY psl.created_at DESC\n    ) AS rn\n  FROM project_status_logs psl\n  WHERE psl.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n)\n\nSELECT\n  ls.id                     AS status_log_id,\n  ls.status                 AS new_project_status,\n  CONVERT_TZ(ls.created_at, '+00:00', '+05:30') AS status_changed_at,\n\n  pm.id                     AS project_id,\n  pm.title                  AS project_title,\n  pm.start_date             AS project_start_date,\n  pm.end_date               AS project_end_date,\n\n  pm_owner.email            AS project_manager_email,\n\n  tm.id                     AS team_user_id,\n  tm.firstname              AS team_user_first_name,\n  tm.lastname               AS team_user_last_name,\n  tm.email                  AS team_user_email,\n\n  tl.id                     AS team_lead_id,\n  tl.firstname              AS team_lead_firstname,\n  tl.lastname               AS team_lead_lastname,\n  tl.email                  AS team_lead_email\n\nFROM latest_status ls\n\nJOIN project_managements pm\n  ON pm.id = ls.project_management_id\n\nJOIN spree_users pm_owner\n  ON pm_owner.id = pm.owner_id\n\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\n\nJOIN spree_users tm\n  ON tm.id = ptm.user_id\n\nJOIN project_teams pt\n  ON pt.id = pm.project_team_id\n\nLEFT JOIN spree_users tl\n  ON tl.id = pt.team_lead_id\n\nWHERE\n  ls.rn = 1\n  AND ls.status IN ('on_hold', 'completed', 'in_progress', 'active', 'overdue')\n  AND pm_owner.organization_id IN (13, 14, 59, 84);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -592,
+          -176
+        ],
+        "id": "4c05eac4-24d4-466a-b30b-37329c5775be",
+        "name": "Execute a SQL query1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 10
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -816,
+          -144
+        ],
+        "id": "3911d420-720b-4d50-bc8f-4b262f81e659",
+        "name": "10 Minutes Schedule Trigger",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "WITH latest_status AS (\n  SELECT\n    psl.*,\n    ROW_NUMBER() OVER (\n      PARTITION BY psl.project_management_id\n      ORDER BY psl.created_at DESC\n    ) AS rn\n  FROM project_status_logs psl\n  WHERE psl.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n)\n\nSELECT\n  ls.id                     AS status_log_id,\n  ls.status                 AS new_project_status,\n  CONVERT_TZ(ls.created_at, '+00:00', '+05:30') AS status_changed_at,  -- IST conversion\n\n  pm.id                     AS project_id,\n  pm.title                  AS project_title,\n  pm.start_date             AS project_start_date,\n  pm.end_date               AS project_end_date,\n\n  -- project manager\n  pm_owner.email            AS project_manager_email,\n\n  -- team member\n  tm.id                     AS team_user_id,\n  tm.firstname              AS team_user_first_name,\n  tm.lastname               AS team_user_last_name,\n  tm.email                  AS team_user_email,\n\n  -- team lead\n  tl.id                     AS team_lead_id,\n  tl.firstname              AS team_lead_firstname,\n  tl.lastname               AS team_lead_lastname,\n  tl.email                  AS team_lead_email\n\nFROM latest_status ls\n\nJOIN project_managements pm\n  ON pm.id = ls.project_management_id\n\nJOIN spree_users pm_owner\n  ON pm_owner.id = pm.owner_id\n\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\n\nJOIN spree_users tm\n  ON tm.id = ptm.user_id\n\n-- ✅ join project team\nJOIN project_teams pt\n  ON pt.id = pm.project_team_id\n\n-- ✅ join team lead user\nLEFT JOIN spree_users tl\n  ON tl.id = pt.team_lead_id\n\nWHERE\n  ls.rn = 1\n  AND ls.status IN ('on_hold', 'completed', 'in_progress', 'active', 'overdue');",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -848,
+          64
+        ],
+        "id": "2281d11b-b3e9-4275-bd37-93b1a9916323",
+        "name": "Without organization id Execute a SQL query2",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "PM, Team, Leadership": {
+        "main": [
+          []
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          []
+        ]
+      },
+      "Eliminate Duplicate Emails": {
+        "main": [
+          [
+            {
+              "node": "PM, Team, Leadership",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query1": {
+        "main": [
+          [
+            {
+              "node": "Eliminate Duplicate Emails",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "10 Minutes Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": []
+      },
+      "node:10 Minutes Schedule Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "5352d8a1-8ce5-4ffd-aff1-7adc4924109f",
+    "activeVersionId": "5352d8a1-8ce5-4ffd-aff1-7adc4924109f",
+    "versionCounter": 75,
+    "triggerCount": 2,
+    "shared": [
+      {
+        "updatedAt": "2026-04-15T11:39:41.989Z",
+        "createdAt": "2026-04-15T11:39:41.989Z",
+        "role": "workflow:owner",
+        "workflowId": "mXP0bm3VeJHlB7dj",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-29T19:04:52.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-29",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-04-15T11:32:35.314Z",
+        "createdAt": "2026-04-15T11:32:35.314Z",
+        "id": "L0EeV7qZEpOHtqXt",
+        "name": "Production Ready"
+      },
+      {
+        "updatedAt": "2025-12-26T06:34:13.189Z",
+        "createdAt": "2025-12-26T06:34:13.189Z",
+        "id": "ntOn6pa6wD5AUrNk",
+        "name": "Module 1 - Projects"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-04-15T11:31:25.108Z",
+      "createdAt": "2026-04-15T11:31:25.108Z",
+      "id": "Nc6BOMOEzuf8GW1h",
+      "name": "Production Ready",
+      "parentFolderId": "0KjOCLdd8E7kMZsQ"
+    },
+    "activeVersion": {
+      "updatedAt": "2026-04-16T06:35:36.000Z",
+      "createdAt": "2026-04-16T06:35:24.737Z",
+      "versionId": "5352d8a1-8ce5-4ffd-aff1-7adc4924109f",
+      "workflowId": "mXP0bm3VeJHlB7dj",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "b9edda95-50b7-4c4f-b3f7-cfadef0b6a59",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            -80,
+            128
+          ],
+          "id": "50567414-6153-4b28-8deb-7f7330fd95fa",
+          "name": "Webhook",
+          "webhookId": "b9edda95-50b7-4c4f-b3f7-cfadef0b6a59",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "fromEmail": "notifications@lockated.com",
+            "toEmail": "={{$json.email}}",
+            "subject": "=Project Status Updated: {{$json.project_title}}\n\n",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.firstname}} {{$json.lastname}},\n  </p>\n\n  <p>\n    This is to inform you that the status of the project <strong>{{$json.project_title}}</strong> has been updated.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Project Status Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Current Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Updated On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.status_changed_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_start_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/projects/details/{{$json.project_id}}\" target=\"_blank\">\n          View Project Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    Please assess the impact on timelines, deliverables, and dependent activities.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>PMO</strong>\n  </p>\n\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            -48,
+            -128
+          ],
+          "id": "08feb7c3-2b3f-4342-9c1b-f673bfc5a8ff",
+          "name": "PM, Team, Leadership",
+          "webhookId": "ea253b72-b4f3-468f-9bde-2c3ae48ffd4a",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "m6pGNPu76sBcBXtf",
+              "name": "Task Management SMTP Account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            144,
+            144
+          ],
+          "id": "1e1d9b16-ec06-479a-b7cb-de6c63b0f5d0",
+          "name": "Respond to Webhook",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  pm.id               AS project_id,\n  pm.title            AS project_title,\n  pm.start_date,\n  pm.end_date,\n  pm.status           AS project_status,\n  pm.updated_at       AS project_updated_at,\n\n  -- project manager (owner)\n  owner.email         AS project_manager_email,\n\n  -- team member\n  tm.id               AS team_user_id,\n  tm.firstname       AS team_user_first_name,\n  tm.lastname        AS team_user_last_name,\n  tm.email            AS team_user_email\n\nFROM project_managements pm\n\n-- project manager\nJOIN spree_users owner\n  ON owner.id = pm.owner_id\n\n-- project team members\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\n\nJOIN spree_users tm\n  ON tm.id = ptm.user_id\n\nWHERE\n  pm.updated_at >= UTC_TIMESTAMP() - INTERVAL 500 MINUTE     -- updated within last 1 hour\n  AND pm.updated_at > pm.created_at               -- exclude newly created projects\n             -- avoid duplicate emails\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -576,
+            160
+          ],
+          "id": "374f3493-a883-4011-a3ea-280047bfc527",
+          "name": "Execute a SQL query",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "FGCPCtEG47rFAJ4J",
+              "name": "New FM UAT Task Management Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "jsCode": "const output = [];\n\nconst notifiedManagers = new Set();\nconst notifiedTeamLeads = new Set();\n\nfor (const item of $input.all()) {\n  const {\n    team_user_first_name,\n    team_user_last_name,\n    team_user_email,\n\n    project_id,\n    project_title,\n    project_start_date,\n    project_end_date,\n    new_project_status,\n    status_changed_at,\n\n    project_manager_email,\n\n    team_lead_email,\n    team_lead_firstname,\n    team_lead_lastname\n  } = item.json;\n\n  // ✅ Team member → every row\n  if (team_user_email) {\n    output.push({\n      json: {\n        firstname: team_user_first_name,\n        lastname: team_user_last_name,\n        email: team_user_email,\n        role: 'team',\n        project_title,\n        project_id,\n        project_start_date,\n        project_end_date,\n        project_status: new_project_status,\n        status_changed_at\n      }\n    });\n  }\n\n  // ✅ Project manager → only once per project\n  if (\n    project_manager_email &&\n    !notifiedManagers.has(project_id)\n  ) {\n    notifiedManagers.add(project_id);\n\n    output.push({\n      json: {\n        firstname: team_user_first_name, // (keeping your original logic unchanged)\n        lastname: team_user_last_name,\n        email: project_manager_email,\n        role: 'manager',\n        project_title,\n        project_id,\n        project_start_date,\n        project_end_date,\n        project_status: new_project_status,\n        status_changed_at\n      }\n    });\n  }\n\n  // ✅ Team lead → only once per project\n  if (\n    team_lead_email &&\n    !notifiedTeamLeads.has(project_id)\n  ) {\n    notifiedTeamLeads.add(project_id);\n\n    output.push({\n      json: {\n        firstname: team_lead_firstname,\n        lastname: team_lead_lastname,\n        email: team_lead_email,\n        role: 'team_lead',\n        project_title,\n        project_id,\n        project_start_date,\n        project_end_date,\n        project_status: new_project_status,\n        status_changed_at\n      }\n    });\n  }\n}\n\nreturn output;"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            -304,
+            -128
+          ],
+          "id": "a39bd0b7-42ca-47d6-980e-91da0e7b735f",
+          "name": "Eliminate Duplicate Emails",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "WITH latest_status AS (\n  SELECT\n    psl.*,\n    ROW_NUMBER() OVER (\n      PARTITION BY psl.project_management_id\n      ORDER BY psl.created_at DESC\n    ) AS rn\n  FROM project_status_logs psl\n  WHERE psl.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n)\n\nSELECT\n  ls.id                     AS status_log_id,\n  ls.status                 AS new_project_status,\n  CONVERT_TZ(ls.created_at, '+00:00', '+05:30') AS status_changed_at,\n\n  pm.id                     AS project_id,\n  pm.title                  AS project_title,\n  pm.start_date             AS project_start_date,\n  pm.end_date               AS project_end_date,\n\n  pm_owner.email            AS project_manager_email,\n\n  tm.id                     AS team_user_id,\n  tm.firstname              AS team_user_first_name,\n  tm.lastname               AS team_user_last_name,\n  tm.email                  AS team_user_email,\n\n  tl.id                     AS team_lead_id,\n  tl.firstname              AS team_lead_firstname,\n  tl.lastname               AS team_lead_lastname,\n  tl.email                  AS team_lead_email\n\nFROM latest_status ls\n\nJOIN project_managements pm\n  ON pm.id = ls.project_management_id\n\nJOIN spree_users pm_owner\n  ON pm_owner.id = pm.owner_id\n\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\n\nJOIN spree_users tm\n  ON tm.id = ptm.user_id\n\nJOIN project_teams pt\n  ON pt.id = pm.project_team_id\n\nLEFT JOIN spree_users tl\n  ON tl.id = pt.team_lead_id\n\nWHERE\n  ls.rn = 1\n  AND ls.status IN ('on_hold', 'completed', 'in_progress', 'active', 'overdue')\n  AND pm_owner.organization_id IN (13, 14, 59, 84);",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -592,
+            -176
+          ],
+          "id": "4c05eac4-24d4-466a-b30b-37329c5775be",
+          "name": "Execute a SQL query1",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "minutes",
+                  "minutesInterval": 10
+                }
+              ]
+            }
+          },
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.3,
+          "position": [
+            -816,
+            -144
+          ],
+          "id": "3911d420-720b-4d50-bc8f-4b262f81e659",
+          "name": "10 Minutes Schedule Trigger",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "WITH latest_status AS (\n  SELECT\n    psl.*,\n    ROW_NUMBER() OVER (\n      PARTITION BY psl.project_management_id\n      ORDER BY psl.created_at DESC\n    ) AS rn\n  FROM project_status_logs psl\n  WHERE psl.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n)\n\nSELECT\n  ls.id                     AS status_log_id,\n  ls.status                 AS new_project_status,\n  CONVERT_TZ(ls.created_at, '+00:00', '+05:30') AS status_changed_at,  -- IST conversion\n\n  pm.id                     AS project_id,\n  pm.title                  AS project_title,\n  pm.start_date             AS project_start_date,\n  pm.end_date               AS project_end_date,\n\n  -- project manager\n  pm_owner.email            AS project_manager_email,\n\n  -- team member\n  tm.id                     AS team_user_id,\n  tm.firstname              AS team_user_first_name,\n  tm.lastname               AS team_user_last_name,\n  tm.email                  AS team_user_email,\n\n  -- team lead\n  tl.id                     AS team_lead_id,\n  tl.firstname              AS team_lead_firstname,\n  tl.lastname               AS team_lead_lastname,\n  tl.email                  AS team_lead_email\n\nFROM latest_status ls\n\nJOIN project_managements pm\n  ON pm.id = ls.project_management_id\n\nJOIN spree_users pm_owner\n  ON pm_owner.id = pm.owner_id\n\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\n\nJOIN spree_users tm\n  ON tm.id = ptm.user_id\n\n-- ✅ join project team\nJOIN project_teams pt\n  ON pt.id = pm.project_team_id\n\n-- ✅ join team lead user\nLEFT JOIN spree_users tl\n  ON tl.id = pt.team_lead_id\n\nWHERE\n  ls.rn = 1\n  AND ls.status IN ('on_hold', 'completed', 'in_progress', 'active', 'overdue');",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -848,
+            64
+          ],
+          "id": "2281d11b-b3e9-4275-bd37-93b1a9916323",
+          "name": "Without organization id Execute a SQL query2",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "PM, Team, Leadership": {
+          "main": [
+            []
+          ]
+        },
+        "Execute a SQL query": {
+          "main": [
+            []
+          ]
+        },
+        "Eliminate Duplicate Emails": {
+          "main": [
+            [
+              {
+                "node": "PM, Team, Leadership",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Execute a SQL query1": {
+          "main": [
+            [
+              {
+                "node": "Eliminate Duplicate Emails",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "10 Minutes Schedule Trigger": {
+          "main": [
+            [
+              {
+                "node": "Execute a SQL query1",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version 5352d8a1",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-04-16T06:35:36.239Z",
+          "id": 117,
+          "workflowId": "mXP0bm3VeJHlB7dj",
+          "versionId": "5352d8a1-8ce5-4ffd-aff1-7adc4924109f",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "dfeeb812c9aa2c1edb2f549c04d2e50034b409e3f62885795f7cc63f351de3f2"
+  }
+}

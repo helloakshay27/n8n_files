@@ -1,0 +1,601 @@
+{
+  "data": {
+    "updatedAt": "2026-04-27T04:55:33.306Z",
+    "createdAt": "2025-12-24T10:13:56.942Z",
+    "id": "Ww44yDY5oVLyx4c7",
+    "name": "Project timeline changed (Gantt Shift)",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "project-timeline-changed",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          752,
+          -352
+        ],
+        "id": "c5d4db19-cbe9-4ed4-a37f-af1a56830531",
+        "name": "Webhook",
+        "webhookId": "557487d9-1dd1-416b-9047-836bb32b364c",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          784,
+          -64
+        ],
+        "id": "5a49206e-b032-43d1-9a18-f44a2f653fd4",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  pm.id          AS project_id,\n  pm.title       AS project_title,\n  tm.id          AS team_user_id,\n  tm.firstname,\n  tm.lastname,\n  tm.email       AS team_user_email\nFROM project_managements pm\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\nJOIN spree_users tm\n  ON tm.id = ptm.user_id\nWHERE\n  pm.updated_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND pm.updated_at > pm.created_at;\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          192,
+          -16
+        ],
+        "id": "8f910ee1-8b49-445b-b5ec-b8bd556d7928",
+        "name": "Send Email to Project Manager",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  pm.id               AS project_id,\n  pm.title            AS project_title,\n  pm.start_date,\n  pm.end_date,\n  pm.updated_at       AS project_updated_at,\n\n  -- project manager (owner)\n  owner.email         AS project_manager_email,\n\n  -- team member\n  tm.id               AS team_user_id,\n  tm.firstname       AS team_user_first_name,\n  tm.lastname        AS team_user_last_name,\n  tm.email            AS team_user_email\n\nFROM project_managements pm\n\n-- project manager\nJOIN spree_users owner\n  ON owner.id = pm.owner_id\n\n-- project team members\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\n\nJOIN spree_users tm\n  ON tm.id = ptm.user_id\n\nWHERE\n  pm.updated_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE     -- updated within last 1 hour\n  AND pm.updated_at > pm.created_at               -- exclude newly created projects\n             -- avoid duplicate emails\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          192,
+          -304
+        ],
+        "id": "2b57b99b-00f5-4295-af44-a61b522706c3",
+        "name": "Send Email to Project Team",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{ $json.project_manager_email }}, {{ $json.team_user_email }}",
+          "subject": "=Project Timeline Revised: {{$json.project_title}}\n\n",
+          "html": "=Dear {{$json.RecipientName}},\n\nPlease note that the project timeline for <b>{{$json.project_title}}</b> has been revised based on recent planning updates.\n\n<b>Updated Project Schedule</b>\n* Project Name: {{$json.project_title}}\n* Revised Start Date: {{$json.start_date}}\n* Revised End Date: {{$json.end_date}}\n* Revision Updated On: {{$json.updated_at}}\n\nThis change may affect task schedules, milestones, and resource planning. Team members are advised to review updated timelines and adjust their execution plans accordingly.\n\nRegards,\n<b>Project Controls & Planning Team</b>\n\n\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          496,
+          -208
+        ],
+        "id": "1a22cc0e-66d6-482f-9b65-0ba69ca7ba1a",
+        "name": "Team",
+        "webhookId": "c643a751-a9ab-4137-9553-30f8fe9e4cdb",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{ $json.team_user_email }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          496,
+          48
+        ],
+        "id": "7860f9c7-724a-4f47-97d0-392f70e3d36f",
+        "name": "PM",
+        "webhookId": "b8b4c52b-1ff1-4222-8a1e-c767a2046d5b",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "daysInterval": 5
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -144,
+          -144
+        ],
+        "id": "7b84800f-9ed5-484b-a1eb-6f516c9f4148",
+        "name": "Schedule Trigger",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * FROM system_logs LIMIT 5;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          288,
+          -176
+        ],
+        "id": "944ca6e0-4f2e-4f6c-96b0-39885647bc54",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "FGCPCtEG47rFAJ4J",
+            "name": "New FM UAT Task Management Database"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Email to Project Manager": {
+        "main": [
+          [
+            {
+              "node": "PM",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send Email to Project Team": {
+        "main": [
+          [
+            {
+              "node": "Team",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Team": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "PM": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": [
+          118
+        ]
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "6dc4cece-b116-446c-aa00-5cb85784a88b",
+    "activeVersionId": "6dc4cece-b116-446c-aa00-5cb85784a88b",
+    "versionCounter": 75,
+    "triggerCount": 2,
+    "shared": [
+      {
+        "updatedAt": "2025-12-24T10:13:56.944Z",
+        "createdAt": "2025-12-24T10:13:56.944Z",
+        "role": "workflow:owner",
+        "workflowId": "Ww44yDY5oVLyx4c7",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-29T19:04:52.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-29",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2025-12-26T06:34:13.189Z",
+        "createdAt": "2025-12-26T06:34:13.189Z",
+        "id": "ntOn6pa6wD5AUrNk",
+        "name": "Module 1 - Projects"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2025-12-26T07:11:54.776Z",
+      "createdAt": "2025-12-26T07:11:54.776Z",
+      "id": "0KjOCLdd8E7kMZsQ",
+      "name": "Module 1 - Projects",
+      "parentFolderId": null
+    },
+    "activeVersion": {
+      "updatedAt": "2026-04-27T04:55:35.000Z",
+      "createdAt": "2026-04-27T04:55:33.309Z",
+      "versionId": "6dc4cece-b116-446c-aa00-5cb85784a88b",
+      "workflowId": "Ww44yDY5oVLyx4c7",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "project-timeline-changed",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            752,
+            -352
+          ],
+          "id": "c5d4db19-cbe9-4ed4-a37f-af1a56830531",
+          "name": "Webhook",
+          "webhookId": "557487d9-1dd1-416b-9047-836bb32b364c",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            784,
+            -64
+          ],
+          "id": "5a49206e-b032-43d1-9a18-f44a2f653fd4",
+          "name": "Respond to Webhook",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  pm.id          AS project_id,\n  pm.title       AS project_title,\n  tm.id          AS team_user_id,\n  tm.firstname,\n  tm.lastname,\n  tm.email       AS team_user_email\nFROM project_managements pm\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\nJOIN spree_users tm\n  ON tm.id = ptm.user_id\nWHERE\n  pm.updated_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE\n  AND pm.updated_at > pm.created_at;\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            192,
+            -16
+          ],
+          "id": "8f910ee1-8b49-445b-b5ec-b8bd556d7928",
+          "name": "Send Email to Project Manager",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "FGCPCtEG47rFAJ4J",
+              "name": "New FM UAT Task Management Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  pm.id               AS project_id,\n  pm.title            AS project_title,\n  pm.start_date,\n  pm.end_date,\n  pm.updated_at       AS project_updated_at,\n\n  -- project manager (owner)\n  owner.email         AS project_manager_email,\n\n  -- team member\n  tm.id               AS team_user_id,\n  tm.firstname       AS team_user_first_name,\n  tm.lastname        AS team_user_last_name,\n  tm.email            AS team_user_email\n\nFROM project_managements pm\n\n-- project manager\nJOIN spree_users owner\n  ON owner.id = pm.owner_id\n\n-- project team members\nJOIN project_team_members ptm\n  ON ptm.project_team_id = pm.project_team_id\n\nJOIN spree_users tm\n  ON tm.id = ptm.user_id\n\nWHERE\n  pm.updated_at >= UTC_TIMESTAMP() - INTERVAL 60 MINUTE     -- updated within last 1 hour\n  AND pm.updated_at > pm.created_at               -- exclude newly created projects\n             -- avoid duplicate emails\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            192,
+            -304
+          ],
+          "id": "2b57b99b-00f5-4295-af44-a61b522706c3",
+          "name": "Send Email to Project Team",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "FGCPCtEG47rFAJ4J",
+              "name": "New FM UAT Task Management Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "fromEmail": "notifications@lockated.com",
+            "toEmail": "={{ $json.project_manager_email }}, {{ $json.team_user_email }}",
+            "subject": "=Project Timeline Revised: {{$json.project_title}}\n\n",
+            "html": "=Dear {{$json.RecipientName}},\n\nPlease note that the project timeline for <b>{{$json.project_title}}</b> has been revised based on recent planning updates.\n\n<b>Updated Project Schedule</b>\n* Project Name: {{$json.project_title}}\n* Revised Start Date: {{$json.start_date}}\n* Revised End Date: {{$json.end_date}}\n* Revision Updated On: {{$json.updated_at}}\n\nThis change may affect task schedules, milestones, and resource planning. Team members are advised to review updated timelines and adjust their execution plans accordingly.\n\nRegards,\n<b>Project Controls & Planning Team</b>\n\n\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            496,
+            -208
+          ],
+          "id": "1a22cc0e-66d6-482f-9b65-0ba69ca7ba1a",
+          "name": "Team",
+          "webhookId": "c643a751-a9ab-4137-9553-30f8fe9e4cdb",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "m6pGNPu76sBcBXtf",
+              "name": "Task Management SMTP Account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "fromEmail": "notifications@lockated.com",
+            "toEmail": "={{ $json.team_user_email }}",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            496,
+            48
+          ],
+          "id": "7860f9c7-724a-4f47-97d0-392f70e3d36f",
+          "name": "PM",
+          "webhookId": "b8b4c52b-1ff1-4222-8a1e-c767a2046d5b",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "m6pGNPu76sBcBXtf",
+              "name": "Task Management SMTP Account"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "daysInterval": 5
+                }
+              ]
+            }
+          },
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.3,
+          "position": [
+            -144,
+            -144
+          ],
+          "id": "7b84800f-9ed5-484b-a1eb-6f516c9f4148",
+          "name": "Schedule Trigger",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT * FROM system_logs LIMIT 5;",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            288,
+            -176
+          ],
+          "id": "944ca6e0-4f2e-4f6c-96b0-39885647bc54",
+          "name": "Execute a SQL query",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "FGCPCtEG47rFAJ4J",
+              "name": "New FM UAT Task Management Database"
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Send Email to Project Manager": {
+          "main": [
+            [
+              {
+                "node": "PM",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Send Email to Project Team": {
+          "main": [
+            [
+              {
+                "node": "Team",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Team": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "PM": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Schedule Trigger": {
+          "main": [
+            []
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version 6dc4cece",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-04-27T04:55:35.165Z",
+          "id": 175,
+          "workflowId": "Ww44yDY5oVLyx4c7",
+          "versionId": "6dc4cece-b116-446c-aa00-5cb85784a88b",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "1c0147bc5cf03219f01c864a47ce2c8690dba36da1cbc30034643acdbb34cd73"
+  }
+}

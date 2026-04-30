@@ -1,0 +1,525 @@
+{
+  "data": {
+    "updatedAt": "2026-04-28T05:02:09.473Z",
+    "createdAt": "2026-03-02T14:42:13.329Z",
+    "id": "iZwIf847OdFjVbFG",
+    "name": "Rustomjee BigQuery Referral- 3 - Credit (Source - Loyalty), (Loyalty and Site Visit Done",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {},
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -208,
+          48
+        ],
+        "id": "f1720061-5d9d-4d4a-bf3f-4495b853dbb8",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.collections_demand_groupby\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          256,
+          -160
+        ],
+        "id": "952b8e9e-3675-4c57-96da-5d36a95cbd20",
+        "name": "Execute a SQL query",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return items\n  .map(item => {\n    const demandDate = new Date(item.json.FKDAT);\n    const paymentDate = new Date(item.json.PAY_DATE);\n\n    const diffDays = (paymentDate - demandDate) / (1000 * 60 * 60 * 24);\n\n    if (diffDays >= 0 && diffDays <= 5) {\n      return {\n        json: {\n          customer_id: item.json.KUNNR,\n          demand_date: item.json.FKDAT,\n          payment_date: item.json.PAY_DATE,\n          diff_days: diffDays,\n          points: 6000,\n          rule: \"Paid within 5 days\"\n        }\n      };\n    }\n\n    return null;\n  })\n  .filter(Boolean);"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          -176
+        ],
+        "id": "22d4977a-f5f0-4e4a-b60f-f1302172144f",
+        "name": "Adding 6000 Incentive for the payment within 5 days",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_leads \n  WHERE LeadSource = \"Loyalty\"",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          448,
+          -144
+        ],
+        "id": "0f7ee8b7-9cf2-4030-a3a4-3a620f2e2efa",
+        "name": "Execute a SQL query1",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "ae0722f2-acec-408a-9a46-3939a8f76048",
+                "leftValue": "={{$json[\"CreatedById\"]}}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "e60adbb6-7dab-4dc1-8cda-b4d4a95fc820",
+                "leftValue": "={{$json[\"LeadSource\"]}}",
+                "rightValue": "Loyalty",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          288,
+          32
+        ],
+        "id": "81434914-6daa-4d1e-afdc-56c0924043f2",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n\n  return {\n    json: {\n      customer_code: item.json.CreatedById,\n      mobile_number: item.json.MobilePhone,\n      amount: 1000,\n      transaction_type: \"CREDIT\",\n      remarks: \"LOYALTY_POINTS\",\n      transaction_note: \"Referral reward\",\n      payment_mode: \"cash\",\n      topup_by: \"automation\",\n      lead_id: item.json.Lead_Id__c,\n      created_at: new Date().toISOString()\n    }\n  };\n\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          656,
+          32
+        ],
+        "id": "aeb53080-3a6d-404c-9d1a-0c722e60ee8d",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM powerbi-implementation.dataWarehouse_prod.sales_leads \nWHERE LeadSource = \"Loyalty\"",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          32,
+          -48
+        ],
+        "id": "87d80891-043d-47d5-bdcc-e38a4fc3ed29",
+        "name": "Query to fetch details of Source - Loyalty",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n\n  const accountMobile =\n    item.json.Account_Mobile_Number__c ||\n    item.json.Account_Mobile_1__c ||\n    null;\n\n  return {\n    json: {\n      customer_code: item.json.ID,\n      lead_id: item.json.Lead_Id__c,\n\n      customer_mobile: accountMobile,\n      reference_id: accountMobile,\n\n      amount: 1000,\n      transaction_type: \"CREDIT\",\n      remarks: \"Loyalty Site Visit Reward\",\n      transaction_note: \"site_visit_loyalty_reward\",\n      payment_mode: \"cash\",\n      topup_by: \"automation\",\n\n      stage: item.json.StageName,\n      lead_source: item.json.LeadSource,\n      project: item.json.Project_Name,\n\n      credited_on: item.json.SV_Date__c,\n\n      created_at: new Date().toISOString()\n    }\n  };\n\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          416,
+          192
+        ],
+        "id": "967104a2-2fcf-468e-950c-518c146a2443",
+        "name": "Code in JavaScript",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM `powerbi-implementation.dataWarehouse_prod.sales_sv_oppr`\nWHERE LeadSource = 'Loyalty'\nAND StageName IN ('Site Visit Done', 'Revisit Done')",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          96,
+          144
+        ],
+        "id": "ebc05166-5c46-463f-a505-ba6e143b8f79",
+        "name": "Query to fetch details of Source - Loyalty and Site Visit Done or Revisit Done",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n\n  const mobile =\n    item.json.Account_Mobile_Number__c ||\n    item.json.Account_Mobile_1__c ||\n    item.json.Mobile_Number__c ||\n    null;\n\n  return {\n    json: {\n      customer_code: item.json.ID,\n      leadId: item.json.Lead_Id__c,\n      opportunityId: item.json.Opportunity_ID__c,\n\n      // unified mobile (future unique constraint)\n      customerMobile: mobile,\n\n      email: item.json.Email_Address__c,\n      customerName: item.json.Name,\n\n      amount: 1000,\n      remarks: \"LOYALTY_BOOKING_REWARD\",\n      transaction_note: \"Points credited for referral Booking Confirmation\",\n      payment_mode: \"cash\",\n      topup_by: \"automation\",\n\n      leadSource: item.json.LeadSource,\n      stage: item.json.StageName,\n\n      createdAt: new Date().toISOString()\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          368,
+          448
+        ],
+        "id": "f2662f03-9a36-4bfd-a1db-c5dc94d30427",
+        "name": "Code in JavaScript2",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM `powerbi-implementation.dataWarehouse_prod.sales_sv_oppr`\nWHERE LeadSource = 'Loyalty'\nAND StageName = 'Booking confirmed'",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          80,
+          368
+        ],
+        "id": "bf58bc49-306d-49d3-82db-61d563640c0b",
+        "name": "Query to fetch details of Source - Loyalty and Booking Done",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{ $json.customer_id }}\",\n  \"amount\": {{ $json.points }},\n  \"remarks\": \"{{ $json.reason }}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          880,
+          240
+        ],
+        "id": "eb6d6037-68db-479a-88fa-6f6c44638579",
+        "name": "HTTP Request",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "content": "Sample Payload - \n\n{\n  \"customer_code\": \"5OW000001sHCzYAM\",\n  \"mobile_number\": \"9822789963\",\n  \"amount\": 1000,\n  \"transaction_type\": \"CREDIT\",\n  \"remarks\": \"LOYALTY_POINTS\",\n  \"transaction_note\": \"Referral reward\",\n  \"payment_mode\": \"cash\",\n  \"topup_by\": \"automation\",\n  \"lead_id\": \"856853\",\n  \"created_at\": \"2026-04-28T04:57:50.714Z\"\n}",
+          "height": 368
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          864,
+          -192
+        ],
+        "id": "ded14e68-5af3-4e99-82f3-1a07ba31c2f9",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "content": "Sample Payload - \n\n{\n  \"customer_code\": \"a0EC5000002Lz1lMAC\",\n  \"lead_id\": \"811871\",\n  \"customer_mobile\": \"8977599666\",\n  \"reference_id\": \"8977599666\",\n  \"amount\": 1000,\n  \"transaction_type\": \"CREDIT\",\n  \"remarks\": \"Loyalty Site Visit Reward\",\n  \"transaction_note\": \"site_visit_loyalty_reward\",\n  \"payment_mode\": \"cash\",\n  \"topup_by\": \"automation\",\n  \"stage\": \"Site Visit Done\",\n  \"lead_source\": \"Loyalty\",\n  \"project\": \"Garden 6\",\n  \"credited_on\": \"2023-07-06\",\n  \"created_at\": \"2026-04-28T04:58:57.863Z\"\n}",
+          "height": 400
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          800,
+          192
+        ],
+        "id": "445241ea-56cb-4b0c-8723-264b60c53f8f",
+        "name": "Sticky Note1"
+      },
+      {
+        "parameters": {
+          "content": "Sample Payload - \n\n{\n  \"customer_code\": \"a0EOW000004b4vB2AQ\",\n  \"leadId\": \"946372\",\n  \"opportunityId\": \"155456\",\n  \"customerMobile\": \"9820212399\",\n  \"email\": \"ramesh.malliya@gmail.com\",\n  \"customerName\": \"Ramesh Vishwanath Mallya\",\n  \"amount\": 1000,\n  \"remarks\": \"LOYALTY_BOOKING_REWARD\",\n  \"transaction_note\": \"Points credited for referral Booking Confirmation\",\n  \"payment_mode\": \"cash\",\n  \"topup_by\": \"automation\",\n  \"leadSource\": \"Loyalty\",\n  \"stage\": \"Booking confirmed\",\n  \"createdAt\": \"2026-04-28T05:00:22.537Z\"\n}",
+          "height": 528
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          480,
+          336
+        ],
+        "id": "97a90db2-a026-4446-ba15-ce0deb4e928a",
+        "name": "Sticky Note2"
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Query to fetch details of Source - Loyalty",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Query to fetch details of Source - Loyalty and Site Visit Done or Revisit Done",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Query to fetch details of Source - Loyalty and Booking Done",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          []
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Query to fetch details of Source - Loyalty": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Query to fetch details of Source - Loyalty and Site Visit Done or Revisit Done": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Query to fetch details of Source - Loyalty and Booking Done": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "b7ee782c-e392-4dca-82a7-2bb2cdd5b009",
+    "activeVersionId": null,
+    "versionCounter": 31,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-03-02T14:42:13.334Z",
+        "createdAt": "2026-03-02T14:42:13.334Z",
+        "role": "workflow:owner",
+        "workflowId": "iZwIf847OdFjVbFG",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-29T19:04:52.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-29",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2026-03-02T14:34:11.511Z",
+      "createdAt": "2026-03-02T14:34:11.511Z",
+      "id": "Y9zGEIC6huRvstXD",
+      "name": "Rustomjee Bigquery",
+      "parentFolderId": null
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "c4ff7f01b33af1b747e12c26e4002b354f48c47002fd7634c0ef60a24ed3ce99"
+  }
+}

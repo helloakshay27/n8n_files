@@ -1,0 +1,419 @@
+{
+  "data": {
+    "updatedAt": "2026-04-16T08:47:27.588Z",
+    "createdAt": "2026-04-15T12:01:53.327Z",
+    "id": "x2dF5S3kbY2Yiiq2",
+    "name": "Production - To-do assigned copy",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          288,
+          -64
+        ],
+        "id": "2b40d1d6-0589-4f09-b250-d6f1af36ca64",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "152d57f2-d91a-4409-bb60-ee793253aea3",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -464,
+          -144
+        ],
+        "id": "0d40c31c-a6f1-4812-92a1-1576a9091535",
+        "name": "Webhook",
+        "webhookId": "152d57f2-d91a-4409-bb60-ee793253aea3",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "={{ $json.todo_owner_email }}",
+          "subject": "= New To-Do Assigned – {{$json.todo_title}}\n",
+          "emailFormat": "=html",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>Dear {{$json.todo_owner_firstname}} {{$json.todo_owner_lastname}},</p>\n\n  <p>A new to-do item has been assigned to you.</p>\n\n  <h3 style=\"color: #2980b9;\">To-Do Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>To-Do Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.todo_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.todo_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>End On / Target Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.target_date}}</td>\n    </tr>\n\n  </table>\n\n  <p>Please ensure timely completion.</p>\n\n  <p>Regards,<br>\n  <b>Task System</b></p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          48,
+          -160
+        ],
+        "id": "e514e490-2944-48e0-96cb-72a76618031c",
+        "name": "User",
+        "webhookId": "e76eb7db-e8bf-4f1f-a774-3b61ef773fa5",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n  t.*,\n  t.id            AS todo_id,\n  t.title         AS todo_title,\n  t.status        AS todo_status,\n  t.target_date,\n  t.created_at,\n\n  u.email         AS todo_owner_email,\n  u.firstname     AS todo_owner_firstname,\n  u.lastname      AS todo_owner_lastname\n\nFROM todos t\n\nJOIN spree_users u\n  ON u.id = t.user_id\n\nWHERE\n  t.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n  AND u.organization_id IN (13, 14, 59, 84);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -192,
+          -224
+        ],
+        "id": "b88faac0-d679-48de-8818-8ba7cd0e8198",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes",
+                "minutesInterval": 10
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -480,
+          -304
+        ],
+        "id": "f1c9b625-82fd-4f82-9f7b-a27d8dfb86ca",
+        "name": "Schedule Trigger",
+        "alwaysOutputData": true
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          []
+        ]
+      },
+      "User": {
+        "main": [
+          []
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "User",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "9eb9450b-9464-4e52-bb83-90b3bbd13c28",
+    "activeVersionId": "9eb9450b-9464-4e52-bb83-90b3bbd13c28",
+    "versionCounter": 80,
+    "triggerCount": 2,
+    "shared": [
+      {
+        "updatedAt": "2026-04-15T12:01:53.334Z",
+        "createdAt": "2026-04-15T12:01:53.334Z",
+        "role": "workflow:owner",
+        "workflowId": "x2dF5S3kbY2Yiiq2",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-29T19:04:52.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-29",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-04-15T11:32:35.314Z",
+        "createdAt": "2026-04-15T11:32:35.314Z",
+        "id": "L0EeV7qZEpOHtqXt",
+        "name": "Production Ready"
+      },
+      {
+        "updatedAt": "2026-04-15T12:01:49.767Z",
+        "createdAt": "2026-04-15T12:01:49.767Z",
+        "id": "qDrho6ixtjSrfleA",
+        "name": "Module 9 - To-Do List"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-04-15T12:01:32.319Z",
+      "createdAt": "2026-04-15T12:01:32.319Z",
+      "id": "LZbAulQsOshACYdB",
+      "name": "Production Ready",
+      "parentFolderId": "Rxhl8LN55QJFCvsf"
+    },
+    "activeVersion": {
+      "updatedAt": "2026-04-16T08:47:31.000Z",
+      "createdAt": "2026-04-16T08:47:27.589Z",
+      "versionId": "9eb9450b-9464-4e52-bb83-90b3bbd13c28",
+      "workflowId": "x2dF5S3kbY2Yiiq2",
+      "nodes": [
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            288,
+            -64
+          ],
+          "id": "2b40d1d6-0589-4f09-b250-d6f1af36ca64",
+          "name": "Respond to Webhook",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "152d57f2-d91a-4409-bb60-ee793253aea3",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            -464,
+            -144
+          ],
+          "id": "0d40c31c-a6f1-4812-92a1-1576a9091535",
+          "name": "Webhook",
+          "webhookId": "152d57f2-d91a-4409-bb60-ee793253aea3",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "fromEmail": "notificaions@lockated.com",
+            "toEmail": "={{ $json.todo_owner_email }}",
+            "subject": "= New To-Do Assigned – {{$json.todo_title}}\n",
+            "emailFormat": "=html",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>Dear {{$json.todo_owner_firstname}} {{$json.todo_owner_lastname}},</p>\n\n  <p>A new to-do item has been assigned to you.</p>\n\n  <h3 style=\"color: #2980b9;\">To-Do Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>To-Do Title</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.todo_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Status</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.todo_status}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Priority</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.priority}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Created On</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.created_at}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>End On / Target Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.target_date}}</td>\n    </tr>\n\n  </table>\n\n  <p>Please ensure timely completion.</p>\n\n  <p>Regards,<br>\n  <b>Task System</b></p>\n\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            48,
+            -160
+          ],
+          "id": "e514e490-2944-48e0-96cb-72a76618031c",
+          "name": "User",
+          "webhookId": "e76eb7db-e8bf-4f1f-a774-3b61ef773fa5",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "e6BxRubia0RizPKp",
+              "name": "Lockated Local SMTP"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n  t.*,\n  t.id            AS todo_id,\n  t.title         AS todo_title,\n  t.status        AS todo_status,\n  t.target_date,\n  t.created_at,\n\n  u.email         AS todo_owner_email,\n  u.firstname     AS todo_owner_firstname,\n  u.lastname      AS todo_owner_lastname\n\nFROM todos t\n\nJOIN spree_users u\n  ON u.id = t.user_id\n\nWHERE\n  t.created_at >= UTC_TIMESTAMP() - INTERVAL 10 MINUTE\n  AND u.organization_id IN (13, 14, 59, 84);",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -192,
+            -224
+          ],
+          "id": "b88faac0-d679-48de-8818-8ba7cd0e8198",
+          "name": "Execute a SQL query",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "minutes",
+                  "minutesInterval": 10
+                }
+              ]
+            }
+          },
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.3,
+          "position": [
+            -480,
+            -304
+          ],
+          "id": "f1c9b625-82fd-4f82-9f7b-a27d8dfb86ca",
+          "name": "Schedule Trigger",
+          "alwaysOutputData": true
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            []
+          ]
+        },
+        "User": {
+          "main": [
+            []
+          ]
+        },
+        "Execute a SQL query": {
+          "main": [
+            [
+              {
+                "node": "User",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Schedule Trigger": {
+          "main": [
+            [
+              {
+                "node": "Execute a SQL query",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version 9eb9450b",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-04-16T08:47:31.160Z",
+          "id": 144,
+          "workflowId": "x2dF5S3kbY2Yiiq2",
+          "versionId": "9eb9450b-9464-4e52-bb83-90b3bbd13c28",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "4c5ecac14baab21a612c5c7331d1c9ca05f7ec7995cdca271deba4c949bb8900"
+  }
+}

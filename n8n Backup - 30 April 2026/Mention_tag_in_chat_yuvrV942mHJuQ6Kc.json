@@ -1,0 +1,191 @@
+{
+  "data": {
+    "updatedAt": "2026-01-12T07:46:44.730Z",
+    "createdAt": "2025-12-26T08:36:26.694Z",
+    "id": "yuvrV942mHJuQ6Kc",
+    "name": "Mention/tag in chat",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          128,
+          16
+        ],
+        "id": "b5c9b16e-30ec-4737-983e-9c54d82c9dfe",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "mention-tag-in-chat",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -464,
+          -144
+        ],
+        "id": "1643145f-264e-4ccf-97d8-e18fd18746e9",
+        "name": "Webhook",
+        "webhookId": "03f52a49-c7c2-4d6c-9eda-29a4766a386f",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notificaions@lockated.com",
+          "toEmail": "heypiyush112@gmail.com",
+          "subject": "You Were Mentioned in {{$json.channel_name}",
+          "html": "=Dear {{$json.RecipientName}},\n\nYou were mentioned by <b>{{$json.mentioned_by_name}}</b> in the channel <b>{{$json.channel_name}}</b>.\n\n<b>Message Context</b>\n* Channel: {{$json.channel_name}}\n* Mentioned By: {{$json.mentioned_by_name}}\n* Message Snippet:\n“{{$json.message_excerpt}}”\n\nPlease review the conversation and respond if required.\n\nOpen Conversation:\n{{$json.channel_url}}\n\nRegards,\n<b>Collaboration & Communication System</b>\n\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          -144,
+          -48
+        ],
+        "id": "e0aeca85-d8ae-4cf5-b3ed-5cfc9e4bcf36",
+        "name": "Mentioned User",
+        "webhookId": "760e9e24-0d5a-4ebd-a696-5526f52c510d",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "m6pGNPu76sBcBXtf",
+            "name": "Task Management SMTP Account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Mentioned User",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mentioned User": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "eb365272-fe92-4031-ab9b-217337c9e957",
+    "activeVersionId": null,
+    "versionCounter": 21,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2025-12-26T08:36:26.696Z",
+        "createdAt": "2025-12-26T08:36:26.696Z",
+        "role": "workflow:owner",
+        "workflowId": "yuvrV942mHJuQ6Kc",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-04-29T19:04:52.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-04-29",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2025-12-26T08:36:46.576Z",
+      "createdAt": "2025-12-26T08:36:46.576Z",
+      "id": "oVy4fMHtFbOxLGmm",
+      "name": "Module 6 - CHANNELS (CHAT)",
+      "parentFolderId": null
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "eaa3dd174004e45d5a22d7e152917d93b45d01b759ab29f5ba9afea47dbf0649"
+  }
+}
