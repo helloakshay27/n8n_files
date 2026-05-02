@@ -1,0 +1,629 @@
+{
+  "data": {
+    "updatedAt": "2026-05-02T08:39:17.549Z",
+    "createdAt": "2026-04-10T04:14:33.301Z",
+    "id": "PD95VJgIYMD1RnuQ",
+    "name": "Rustomjee BigQuery Category - Survey- 1 - Clients who respond to surveys related to sales",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {},
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -288,
+          -64
+        ],
+        "id": "6e21f200-f586-4771-abfb-3b3a11e68e09",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_sv_oppr LIMIT 1000\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          -160,
+          -288
+        ],
+        "id": "650740bf-04ed-43ca-9cec-c47f5fa1b48c",
+        "name": "Execute a SQL query",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.opportunity_survey LIMIT 100",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          192,
+          -240
+        ],
+        "id": "5b5276a3-4e09-4b79-a766-b9de8081db48",
+        "name": "Execute a SQL query1",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT \n  ID,\n  Account_Email__c,\n\n  -- ✅ Single unified mobile field\n  REGEXP_REPLACE(\n    COALESCE(\n      Account_Mobile_1__c,\n      Account_Mobile_2__c,\n      Account_Mobile_Number__c\n    ),\n    r'[^0-9]',\n    ''\n  ) AS customer_mobile,\n\n  today_delta_additions\n\nFROM `powerbi-implementation.dataWarehouse_prod.opportunity_survey`\n\nWHERE \n  Survey_Name__c = 'OpportunityClosedLostSurvey'\n  AND Status__c = 'Completed'\n  --AND StageName IN ('Closed Won', 'Booking In Process', 'Booking Confirmed', 'Closed Won', 'BookingInProcess', 'BookingConfirmed') --\n  AND today_delta_additions = CURRENT_DATE()\n\n  -- ✅ Ensure at least one mobile exists\n  AND (\n    Account_Mobile_1__c IS NOT NULL OR\n    Account_Mobile_2__c IS NOT NULL OR\n    Account_Mobile_Number__c IS NOT NULL\n  )\n\n  -- ✅ Ensure email exists\n  AND Account_Email__c IS NOT NULL",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          -16,
+          -32
+        ],
+        "id": "499a4b8a-27ff-4684-a7be-f0fe4b2d9cdb",
+        "name": "Query to fetch details of person done booking within first 30 days from the site visit",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{ $json.customer_id }}\",\n  \"amount\": {{ $json.points }},\n  \"remarks\": \"{{ $json.reason }}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          592,
+          128
+        ],
+        "id": "a5bfd950-9e2a-40ee-8cfe-7ce4c9d502b2",
+        "name": "HTTP Request",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "content": "Payload Sample - \nUnique Identifiers - \n\ncustomer_id = ID,\ntoday_delta_additions\n\n{\n  \"customer_code\": \"6OW00000KYSIBYA5\",\n  \"customer_mobile\": \"9967630264\",\n  \"email\": \"shital.nevarekar@yahoo.com\",\n  \"customer_unique_key\": \"9967630264_shital.nevarekar@yahoo.com\",\n  \"today_date\": \"2026-04-28\",\n  \"amount\": 1000,\n  \"remarks\": \"OpportunityClosedLostSurvey\",\n  \"transaction_note\": \"Credit point for taking survey\",\n  \"payment_mode\": \"cash\",\n  \"topup_by\": \"automation\",\n  \"today_delta_additions\": \"2026-04-28\"\n}",
+          "height": 400,
+          "width": 528
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          416,
+          -416
+        ],
+        "id": "1010024e-02d2-48da-87ff-c92e55629d3f",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT EXISTS (\n  SELECT 1\n  FROM wallet_transaction_logs\n  WHERE customer_code = '{{$json.customer_code}}'\n  AND remarks = '{{$json.remarks}}'\n  AND status = 'SUCCESS'\n);\n\n/* SELECT status\nFROM wallet_transaction_logs\nWHERE customer_code = '{{$json.customer_code}}'\nAND remarks = '{{$json.remarks}}'\nAND status = 'SUCCESS'\nLIMIT 1; */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          480,
+          -48
+        ],
+        "id": "cb1e5929-e6e9-45f6-9107-81b3d3a2dbee",
+        "name": "Check Duplicates",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          688,
+          0
+        ],
+        "id": "195f84e2-322d-40a5-a56b-a9c04d2ecd3e",
+        "name": "Merge",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "0a538946-c5b1-47ce-aada-9f10cca56fc2",
+                "leftValue": "={{$json.exists}}",
+                "rightValue": "false",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          896,
+          80
+        ],
+        "id": "5c6de5a7-da91-42e5-8727-bc5a5fbacec7",
+        "name": "If",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{$json.customer_code}}\",\n  \"amount\": {{$json.amount || 0}},\n  \"remarks\": \"{{$json.remarks || 'NA'}}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1104,
+          160
+        ],
+        "id": "26973436-e446-41d1-8999-79658b2289e1",
+        "name": "HTTP Request to credit points3",
+        "alwaysOutputData": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 1500,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8b311af8-f014-4910-b04d-608e1847c9a0",
+                "name": "customer_code",
+                "value": "={{$node[\"Streamline data for credit point on completing survey\"].json.customer_code}}",
+                "type": "string"
+              },
+              {
+                "id": "751ef75e-fe0a-4f82-ac88-6434d2a0629b",
+                "name": "amount",
+                "value": "={{$node[\"Streamline data for credit point on completing survey\"].json.amount}}",
+                "type": "number"
+              },
+              {
+                "id": "b1145a55-a695-4cfa-81d1-79f7f51abc14",
+                "name": "remarks",
+                "value": "={{$node[\"Streamline data for credit point on completing survey\"].json.remarks}}",
+                "type": "string"
+              },
+              {
+                "id": "38f3dae0-4ba1-4391-a7f6-5af5b6f2fcbe",
+                "name": "=reference_id",
+                "value": "={{$node[\"Streamline data for credit point on completing survey\"].json.reference_id}}",
+                "type": "string"
+              },
+              {
+                "id": "dcf52459-b151-4db8-b465-7a890da209c6",
+                "name": "transaction_note",
+                "value": "={{$node[\"Streamline data for credit point on completing survey\"].json.transaction_note}}",
+                "type": "string"
+              },
+              {
+                "id": "9045fe70-369a-4af3-bc3a-3780061fbae0",
+                "name": "status",
+                "value": "={{$json.error ? \"FAILED\" : ($json.statusCode >= 200 && $json.statusCode < 300 ? \"SUCCESS\" : \"FAILED\")}}",
+                "type": "string"
+              },
+              {
+                "id": "fc9a41e4-3d87-47ef-bec1-ec7679e81d0a",
+                "name": "status_code",
+                "value": "={{$json.statusCode || $json.error?.status || 500}}",
+                "type": "number"
+              },
+              {
+                "id": "2a2f8faa-b24f-46c3-ae66-201da970f5db",
+                "name": "transaction_id",
+                "value": "={{$json.body?.transaction_id || null}}",
+                "type": "string"
+              },
+              {
+                "id": "a6029dde-70bd-44d7-a004-ff1e9d317785",
+                "name": "message",
+                "value": "={{$json.body?.error || $json.error?.message?.split(\"\\n\")[0]}}",
+                "type": "string"
+              },
+              {
+                "id": "ab7c1a10-7953-4d1e-bbe1-ae422f4bc70e",
+                "name": "request_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "44f2b0f0-8e91-439f-aec5-a355e2705ff9",
+                "name": "response_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "96ed068c-7dc1-4cbf-9384-4abcdde9eb86",
+                "name": "execution_id",
+                "value": "{{$json.execution_id}}",
+                "type": "string"
+              },
+              {
+                "id": "d4fdcaae-ae9c-4296-96fb-eb4ac2c8c591",
+                "name": "created_at",
+                "value": "={{new Date().toISOString()}}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1296,
+          240
+        ],
+        "id": "7988cb4e-4662-4498-a2cc-38c356785f0c",
+        "name": "Edit Fields3",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wallet_transaction_logs (\n    customer_code,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    '{{$json.customer_code}}',\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1520,
+          304
+        ],
+        "id": "664cc6dd-ca3f-4e67-8f34-d616803c935a",
+        "name": "Add entry to logs4",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n  return {\n    json: {\n      customer_code: item.json.ID,\n      customer_mobile: item.json.customer_mobile,\n      email: item.json.Account_Email__c,\n      customer_unique_key: `${item.json.customer_mobile}_${item.json.Account_Email__c}`,\n      opportunity_id: item.json.Id,\n      today_date: item.json.today_delta_additions,\n      amount: 1000,\n      remarks: \"OpportunityClosedLostSurvey\",\n      transaction_note: \"Credit point for taking survey\",\n      payment_mode: \"cash\",\n      topup_by: \"automation\",\n      today_delta_additions: item.json.today_delta_additions\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          320,
+          48
+        ],
+        "id": "d1267ba5-7cbd-4db6-9213-49327b2b2da4",
+        "name": "Streamline data for credit point on completing survey",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * \nFROM wallet_transaction_logs WHERE remarks = 'OpportunityClosedLostSurvey'\nORDER BY created_at DESC;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          800,
+          288
+        ],
+        "id": "53c736ae-ff23-4ab4-9af4-8e9cfba9a727",
+        "name": "Check entries for logs",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Query to fetch details of person done booking within first 30 days from the site visit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          []
+        ]
+      },
+      "Query to fetch details of person done booking within first 30 days from the site visit": {
+        "main": [
+          [
+            {
+              "node": "Streamline data for credit point on completing survey",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Duplicates": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request to credit points3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request to credit points3": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields3": {
+        "main": [
+          [
+            {
+              "node": "Add entry to logs4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Streamline data for credit point on completing survey": {
+        "main": [
+          [
+            {
+              "node": "Check Duplicates",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "9965a23f-d534-4194-a667-0b88abc1582c",
+    "activeVersionId": null,
+    "versionCounter": 59,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-04-10T04:14:33.305Z",
+        "createdAt": "2026-04-10T04:14:33.305Z",
+        "role": "workflow:owner",
+        "workflowId": "PD95VJgIYMD1RnuQ",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-05-02T07:29:56.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-05-01",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2026-03-02T14:34:11.511Z",
+      "createdAt": "2026-03-02T14:34:11.511Z",
+      "id": "Y9zGEIC6huRvstXD",
+      "name": "Rustomjee Bigquery",
+      "parentFolderId": null
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "56396a0304fade8e5ce08d64488de42bbbe6d6d9ad30632354ff736fb5ed9e72"
+  }
+}

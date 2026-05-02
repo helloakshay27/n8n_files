@@ -1,0 +1,345 @@
+{
+  "data": {
+    "updatedAt": "2026-03-23T12:15:18.592Z",
+    "createdAt": "2026-03-18T07:19:58.345Z",
+    "id": "c0QWnGJstfmadgYW",
+    "name": "42 Pages PATM User Guide",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -288,
+          -272
+        ],
+        "id": "e9973fb1-81d0-4200-b857-8d4684c0d5eb",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "sitemap-input",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -496,
+          16
+        ],
+        "id": "0d7c94dd-b4cf-492c-8880-18eab661800f",
+        "name": "Webhook",
+        "webhookId": "f3ca27f9-d861-4868-9820-3d4884108721"
+      },
+      {
+        "parameters": {
+          "jsCode": "const body = $input.first().json.body;\nconst states = Array.isArray(body) ? body : JSON.parse(body);\n\nconst stateList = states.map((s, i) => ({\n  index: i,\n  title: s.title,\n  fullPath: s.fullPath,\n  module: s.module,\n  url: s.url,\n  bbox: s.bbox,\n  elements: (s.elements || []).map(e => ({\n    text: e.text,\n    selector: e.selector,\n    x: e.x,\n    y: e.y\n  }))\n}));\n\nconst detectedModules = [...new Set(states.map(s => s.module))];\nconst detectedTitles = [...new Set(states.map(s => s.title.toLowerCase()))];\n\nreturn [{ json: {\n  states: stateList,\n  screenshots: states.reduce((acc, s, i) => { acc[i] = s.screenshot; return acc; }, {}),\n  bboxes: states.reduce((acc, s, i) => { acc[i] = s.bbox; return acc; }, {}),\n  detectedModules,\n  detectedTitles\n}}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -288,
+          16
+        ],
+        "id": "fdac1740-19ee-4315-9744-4b3d9c5580bd",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyAhLvtTiOsyY-9AnVwnwbdFpkdz9xAuYtw",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ contents: [{ parts: [{ text: \"You are a product demo expert for FM Matrix (Facility Management SaaS).\\n\\nHere are \" + $json.states.length + \" screen states crawled from the FM Matrix admin panel — module: \" + $json.detectedModules.join(', ') + \"\\n\\n\" + ($json.mandatoryFlows && $json.mandatoryFlows.length > 0 ? \"MANDATORY FLOWS — match these to the crawled states:\\n\" + $json.mandatoryFlows.map(f => \"- \" + f.module + \" → \" + f.feature + \": \" + f.steps.join(\" | \")).join(\"\\n\") + \"\\n\\n\" : \"No mandatory flows for this module — generate flows based only on what you see in the crawled states.\\n\\n\") + \"CRAWLED STATES:\\n\" + JSON.stringify($json.states, null, 2) + \"\\n\\nINSTRUCTIONS:\\n1. Generate logical 'How to' flows based on the crawled states\\n2. Each flow should have 3-6 steps in logical order\\n3. Only use state indices that exist in the crawled states above\\n4. Write clear 1-2 sentence tooltip per step\\n5. For each step identify which element to click — put in highlightElement\\n\\nReturn ONLY valid JSON array, no markdown:\\n[\\n  {\\n    \\\"id\\\": \\\"unique-id\\\",\\n    \\\"name\\\": \\\"How to [action]\\\",\\n    \\\"module\\\": \\\"module name\\\",\\n    \\\"description\\\": \\\"one sentence\\\",\\n    \\\"steps\\\": [\\n      { \\\"index\\\": 0, \\\"tooltip\\\": \\\"Click here to...\\\", \\\"highlightElement\\\": \\\"Add\\\" }\\n    ]\\n  }\\n]\" }] }] }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          352,
+          16
+        ],
+        "id": "47f54c3a-b2f2-4801-8d68-ce91c7faf303",
+        "name": "HTTP Request"
+      },
+      {
+        "parameters": {
+          "jsCode": "const geminiResponse = $input.item.json;\nconst sourceData = $node[\"Code in JavaScript\"].json;\n\nlet flowsJson = '';\ntry {\n  flowsJson = geminiResponse.candidates[0].content.parts[0].text.trim();\n  flowsJson = flowsJson.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n} catch(e) {\n  throw new Error('Failed to parse Gemini response: ' + JSON.stringify(geminiResponse));\n}\n\nlet flows;\ntry {\n  flows = JSON.parse(flowsJson);\n} catch(e) {\n  throw new Error('Invalid JSON from Gemini: ' + flowsJson.substring(0, 500));\n}\n\nconst states = sourceData.states;\nconst screenshots = sourceData.screenshots;\nconst bboxes = sourceData.bboxes;\n\n// Find element bbox from state's elements array using x,y positions\nfunction getElementBbox(state, elementText) {\n  if (!state || !state.elements || !elementText) return null;\n  const el = state.elements.find(e =>\n    e.text && e.text.toLowerCase().includes(elementText.toLowerCase())\n    && e.x !== undefined && e.y !== undefined\n    && e.x > 240 // must be in content area, not sidebar\n  );\n  if (!el) return null;\n  return {\n    x: parseFloat(((el.x / 1440) * 100).toFixed(1)),\n    y: parseFloat(((el.y / 900) * 100).toFixed(1)),\n    w: parseFloat(((el.w / 1440) * 100).toFixed(1)) || 8,\n    h: parseFloat(((el.h / 900) * 100).toFixed(1)) || 4\n  };\n}\n\n// Zone-based fallback using element text\nfunction getZoneBbox(text) {\n  if (!text) return null;\n  const t = text.toLowerCase().trim();\n  if (/^(add|create|new|action)$/i.test(t)) return { x: 19, y: 44, w: 8, h: 5 };\n  if (/^(import|export|upload|download)$/i.test(t)) return { x: 28, y: 44, w: 10, h: 5 };\n  if (/^(filter)$/i.test(t)) return { x: 85, y: 44, w: 5, h: 5 };\n  if (/^(analytics)$/i.test(t)) return { x: 65, y: 15, w: 10, h: 4 };\n  if (/list$/i.test(t)) return { x: 19, y: 15, w: 12, h: 4 };\n  if (/^(save|submit|update|confirm)$/i.test(t)) return { x: 70, y: 80, w: 10, h: 5 };\n  if (/^(update all)$/i.test(t)) return { x: 70, y: 44, w: 12, h: 5 };\n  if (/setup|setting/i.test(t)) return { x: 19, y: 15, w: 15, h: 4 };\n  return null;\n}\n\nconst enrichedFlows = flows.map(flow => {\n  const steps = flow.steps.map(step => {\n    const idx = typeof step === 'object' ? step.index : step;\n    const tooltip = typeof step === 'object' ? (step.tooltip || '') : '';\n    const highlightElement = typeof step === 'object' ? (step.highlightElement || '') : '';\n    const state = states[idx];\n    if (!state) return null;\n\n    const triggerBbox = bboxes[idx] || null;\n\n    // Priority: 1) element lookup by highlightElement, 2) element lookup by title, 3) zone bbox, 4) trigger bbox\n    const bbox =\n      getElementBbox(state, highlightElement) ||\n      getElementBbox(state, state.title) ||\n      getZoneBbox(highlightElement || state.title) ||\n      (triggerBbox && triggerBbox.x > 17 ? triggerBbox : null) ||\n      { x: 45, y: 45, w: 10, h: 5 };\n\n    return {\n      index: idx,\n      title: state.title,\n      fullPath: state.fullPath,\n      url: state.url,\n      bbox,\n      screenshot: screenshots[idx],\n      tooltip: tooltip || state.title,\n      highlightElement\n    };\n  }).filter(Boolean);\n\n  return { ...flow, steps };\n}).filter(f => f.steps.length > 0);\n\nconsole.log('Total flows:', enrichedFlows.length);\nreturn enrichedFlows.map(flow => ({ json: flow }));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1088,
+          16
+        ],
+        "id": "49a6b17c-f2b1-43e1-98fd-f9a066a35fb9",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  const flow = item.json;\n  const steps = Array.isArray(flow.steps) ? flow.steps : [];\n  const title = flow.name || 'Demo';\n  const fileName = title.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.html';\n\n  const stepsData = steps.map((step, i) => ({\n    index: i,\n    title: step.title || 'Step ' + (i+1),\n    tooltip: step.tooltip || step.title || 'Click to continue.',\n    bbox: step.bbox || { x: 45, y: 45, w: 10, h: 10 },\n    screenshot: step.screenshot || ''\n  }));\n\n  const html = `<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n<title>${title}</title>\n<style>\n* { margin: 0; padding: 0; box-sizing: border-box; }\nbody { font-family: -apple-system, sans-serif; background: #0f0f0f; color: #fff; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px; }\nh1 { font-size: 20px; font-weight: 600; margin-bottom: 8px; opacity: 0.9; }\n.meta { font-size: 13px; opacity: 0.4; margin-bottom: 20px; }\n.step-label { font-size: 14px; opacity: 0.7; margin-bottom: 10px; font-weight: 500; }\n.demo-wrap { position: relative; display: inline-block; }\n.demo-wrap img { display: block; width: 960px; max-width: 90vw; border-radius: 10px; box-shadow: 0 8px 40px rgba(0,0,0,0.6); }\n.ring {\n  position: absolute;\n  border: 3px solid #ff3333;\n  border-radius: 6px;\n  box-shadow: 0 0 0 4px rgba(255,51,51,0.25), 0 0 20px rgba(255,51,51,0.5);\n  pointer-events: none;\n  animation: pulse 1.5s ease-in-out infinite;\n}\n@keyframes pulse {\n  0%, 100% { box-shadow: 0 0 0 4px rgba(255,51,51,0.25), 0 0 20px rgba(255,51,51,0.5); }\n  50% { box-shadow: 0 0 0 8px rgba(255,51,51,0.1), 0 0 36px rgba(255,51,51,0.7); }\n}\n.tooltip {\n  position: absolute;\n  background: rgba(15,15,15,0.95);\n  color: #fff;\n  font-size: 13px;\n  padding: 12px 16px;\n  border-radius: 8px;\n  max-width: 240px;\n  line-height: 1.6;\n  pointer-events: none;\n  border-left: 3px solid #ff3333;\n  backdrop-filter: blur(8px);\n  box-shadow: 0 4px 20px rgba(0,0,0,0.4);\n}\n.nav { display: flex; align-items: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }\n.nav button {\n  background: rgba(255,255,255,0.1);\n  color: #fff;\n  border: 1px solid rgba(255,255,255,0.15);\n  padding: 10px 24px;\n  border-radius: 8px;\n  font-size: 14px;\n  cursor: pointer;\n  transition: background 0.2s;\n}\n.nav button:hover { background: rgba(255,255,255,0.2); }\n.nav button:disabled { opacity: 0.3; cursor: default; }\n.nav .counter { font-size: 13px; opacity: 0.5; min-width: 60px; text-align: center; }\n.speak-btn {\n  background: rgba(255,51,51,0.15);\n  border: 1px solid rgba(255,51,51,0.4);\n  color: #ff6666;\n  padding: 8px 16px;\n  border-radius: 8px;\n  font-size: 13px;\n  cursor: pointer;\n  transition: background 0.2s;\n}\n.speak-btn:hover { background: rgba(255,51,51,0.3); }\n.speak-btn.speaking { background: rgba(255,51,51,0.4); }\n.dots { display: flex; gap: 6px; margin-top: 14px; }\n.dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.2); cursor: pointer; transition: background 0.2s; }\n.dot.active { background: #ff3333; }\n.progress { width: 960px; max-width: 90vw; height: 2px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-bottom: 12px; }\n.progress-bar { height: 100%; background: #ff3333; border-radius: 2px; transition: width 0.3s ease; }\n</style>\n</head>\n<body>\n<h1>${title}</h1>\n<div class=\"meta\">${flow.description || ''} &nbsp;·&nbsp; ${steps.length} step${steps.length !== 1 ? 's' : ''}</div>\n<div class=\"progress\"><div class=\"progress-bar\" id=\"progressBar\"></div></div>\n<div class=\"step-label\" id=\"stepLabel\"></div>\n<div class=\"demo-wrap\" id=\"demoWrap\">\n  <img id=\"screenshot\" src=\"\" alt=\"Demo screenshot\" />\n  <div class=\"ring\" id=\"ring\"></div>\n  <div class=\"tooltip\" id=\"tooltip\"></div>\n</div>\n<div class=\"nav\">\n  <button id=\"prevBtn\" onclick=\"go(-1)\" disabled>← Back</button>\n  <span class=\"counter\" id=\"counter\"></span>\n  <button id=\"nextBtn\" onclick=\"go(1)\">Next →</button>\n  <button class=\"speak-btn\" id=\"speakBtn\" onclick=\"speak()\">🔊 Listen</button>\n</div>\n<div class=\"dots\" id=\"dots\"></div>\n\n<script>\nconst steps = ${JSON.stringify(stepsData)};\nlet current = 0;\nlet speaking = false;\n\nfunction render() {\n  const s = steps[current];\n  const img = document.getElementById('screenshot');\n  const ring = document.getElementById('ring');\n  const tooltip = document.getElementById('tooltip');\n\n  img.src = 'data:image/png;base64,' + s.screenshot;\n\n  ring.style.left = s.bbox.x + '%';\n  ring.style.top = s.bbox.y + '%';\n  ring.style.width = s.bbox.w + '%';\n  ring.style.height = s.bbox.h + '%';\n\n  const tipLeft = Math.min(s.bbox.x + s.bbox.w + 1, 62);\n  tooltip.style.left = tipLeft + '%';\n  tooltip.style.top = Math.max(s.bbox.y, 2) + '%';\n  tooltip.textContent = s.tooltip;\n\n  document.getElementById('stepLabel').textContent = 'Step ' + (current+1) + ' of ' + steps.length + ': ' + s.title;\n  document.getElementById('counter').textContent = (current+1) + ' / ' + steps.length;\n  document.getElementById('prevBtn').disabled = current === 0;\n  document.getElementById('nextBtn').disabled = current === steps.length - 1;\n  document.getElementById('progressBar').style.width = ((current+1)/steps.length*100) + '%';\n\n  document.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i===current));\n}\n\nfunction go(dir) {\n  window.speechSynthesis && window.speechSynthesis.cancel();\n  current = Math.max(0, Math.min(steps.length-1, current + dir));\n  render();\n}\n\nfunction speak() {\n  if (!window.speechSynthesis) return;\n  const s = steps[current];\n  const text = 'Step ' + (current+1) + ' of ' + steps.length + '. ' + s.title + '. ' + s.tooltip;\n  window.speechSynthesis.cancel();\n  const utterance = new SpeechSynthesisUtterance(text);\n  utterance.rate = 0.85;\n  utterance.pitch = 1;\n  const btn = document.getElementById('speakBtn');\n  utterance.onstart = () => btn.classList.add('speaking');\n  utterance.onend = () => btn.classList.remove('speaking');\n  window.speechSynthesis.speak(utterance);\n}\n\n// Build dots\nconst dotsEl = document.getElementById('dots');\nsteps.forEach((_, i) => {\n  const d = document.createElement('div');\n  d.className = 'dot' + (i===0?' active':'');\n  d.onclick = () => { window.speechSynthesis && window.speechSynthesis.cancel(); current = i; render(); };\n  dotsEl.appendChild(d);\n});\n\nwindow.onload = render;\n</script>\n</body>\n</html>`;\n\n  const buf = Buffer.from(html, 'utf8');\n  const binaryData = await this.helpers.prepareBinaryData(buf, fileName, 'text/html');\n\n  results.push({\n    json: {\n      title: title,\n      module: String(flow.module || ''),\n      fileName: fileName\n    },\n    binary: {\n      data: binaryData\n    }\n  });\n}\n\nreturn results;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1440,
+          16
+        ],
+        "id": "a54d431c-e7b5-4218-9cee-ac3664dc8d64",
+        "name": "Code in JavaScript2"
+      },
+      {
+        "parameters": {
+          "name": "={{ $json.fileName }}",
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1F68eWUsb6rD5hDg9SNCn2zUWAjLts8oq",
+            "mode": "list",
+            "cachedResultName": "lockated-screenshots",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1F68eWUsb6rD5hDg9SNCn2zUWAjLts8oq"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          1856,
+          16
+        ],
+        "id": "3a407169-b70c-4fde-a943-7ee14694c3b8",
+        "name": "Upload file",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "vh52X2Zy6jXu0wTy",
+            "name": "Google Drive account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{ json: $input.item.json }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          800,
+          16
+        ],
+        "id": "a1996f09-18d6-42be-b8e9-c9e14308c97a",
+        "name": "Code in JavaScript4"
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $input.item.json;\nconst detectedModules = data.detectedModules || [];\nconst detectedTitles = data.detectedTitles || [];\n\n// All 43 mandatory flows from FM Matrix Excel\nconst allMandatoryFlows = [\n  { module: 'Account setup', feature: 'Building Setup', keywords: ['building', 'setup', 'settings', 'account'], steps: ['Click on Add Building Button', 'Enter Building Name', 'Click Submit button for save.', 'After submission select Wing, Area, Floor, Room options'] },\n  { module: 'Account setup', feature: 'Building Setup - Bulk Upload', keywords: ['building', 'setup', 'settings', 'account'], steps: ['Click Add Building Button > Click Sample Format', 'Fill required fields and save file', 'Click Import Button select excel file and upload'] },\n  { module: 'Account setup', feature: 'Wing Setup', keywords: ['wing', 'setup', 'settings', 'account'], steps: ['Click Add Wing Button', 'Select Building Name', 'Insert Wing Name', 'Click Submit button'] },\n  { module: 'Account setup', feature: 'Area Setup', keywords: ['area', 'setup', 'settings', 'account'], steps: ['Click Add Area Button', 'Select Building', 'Select Wing', 'Enter Area Name', 'Click Submit button'] },\n  { module: 'Account setup', feature: 'Floor Setup', keywords: ['floor', 'setup', 'settings', 'account'], steps: ['Click Add Floor Button', 'Select Building', 'Select Wing', 'Select Area', 'Enter Floor Name', 'Click Submit button'] },\n  { module: 'Account setup', feature: 'Room Setup', keywords: ['room', 'setup', 'settings', 'account'], steps: ['Click Add Room Button', 'Select Building', 'Select Wing', 'Select Area', 'Insert Room Name', 'Click Submit button'] },\n  { module: 'User Role', feature: 'Department', keywords: ['department', 'role', 'user', 'settings'], steps: ['Click Add department button', 'Insert Department name', 'Click Submit'] },\n  { module: 'User Role', feature: 'Role', keywords: ['role', 'user', 'settings'], steps: ['Click Add role button', 'Insert Role name', 'Click Submit button', 'Choose modules to give access to that role', 'Click Submit button'] },\n  { module: 'User Setup', feature: 'FM User', keywords: ['user', 'fm user', 'setup', 'settings'], steps: ['Click on Setup from module list', 'Select FM user', 'Click Add button', 'Fill in the respective details', 'Click Submit button'] },\n  { module: 'User Setup', feature: 'Occupant User', keywords: ['occupant', 'user', 'setup', 'settings'], steps: ['Click on Setup from module list', 'Select Occupant User', 'Click Add button', 'Fill in the respective details', 'Click Submit button'] },\n  { module: 'Supplier', feature: 'Company Info', keywords: ['supplier', 'vendor', 'company', 'crm'], steps: ['Enter Company Name', 'Enter PAN Detail', 'Enter GST Detail', 'Select Supplier Type: PPM, Manufacture, AMC, Service'] },\n  { module: 'Supplier', feature: 'Address', keywords: ['supplier', 'vendor', 'address', 'crm'], steps: ['Enter Country Name', 'Select State and City', 'Enter Pincode', 'Enter Full Address'] },\n  { module: 'Supplier', feature: 'Bank Details', keywords: ['supplier', 'vendor', 'bank', 'crm'], steps: ['Enter Respective Bank Details'] },\n  { module: 'Supplier', feature: 'Contact Person', keywords: ['supplier', 'vendor', 'contact', 'crm'], steps: ['Click Add Button', 'Enter First Name and Last Name', 'Enter Email', 'Enter Mobile Number', 'Click Submit'] },\n  { module: 'Asset', feature: 'Asset Group', keywords: ['asset', 'group', 'maintenance', 'master'], steps: ['Click Add Group button', 'Enter Group Name', 'Click Submit', 'Click Add Sub Group', 'Select Group name and Enter Sub Group name', 'Click Submit'] },\n  { module: 'Asset', feature: 'Asset Setup', keywords: ['asset', 'maintenance', 'master'], steps: ['Click Add Button', 'Select site building wing area floor room', 'Enter Asset name model number serial number purchase cost', 'Select group subgroup', 'Click Submit'] },\n  { module: 'Asset', feature: 'Asset Bulk Upload', keywords: ['asset', 'bulk', 'import', 'maintenance', 'master'], steps: ['Download sample format', 'Fill required fields in excel', 'Click Import button', 'Select file and upload'] },\n  { module: 'Soft Service', feature: 'Service Setup', keywords: ['soft service', 'service', 'maintenance'], steps: ['Configure service details', 'Set frequency and schedule', 'Assign team', 'Click Submit'] },\n  { module: 'Soft Service', feature: 'Bulk Upload', keywords: ['soft service', 'bulk', 'import', 'maintenance'], steps: ['Download sample format', 'Fill required fields', 'Click Import', 'Select file and upload'] },\n  { module: 'PTW', feature: 'PTW Setup', keywords: ['ptw', 'permit', 'work', 'safety'], steps: ['Configure Permit to Work settings', 'Set approval workflow', 'Assign approvers', 'Click Submit'] },\n  { module: 'PTW', feature: 'PTW Safety Checklist Setup', keywords: ['ptw', 'safety', 'checklist', 'permit'], steps: ['Configure safety checklist items', 'Set mandatory items', 'Configure meter applicability', 'Click Submit'] },\n  { module: 'Helpdesk', feature: 'Category Setup', keywords: ['helpdesk', 'ticket', 'category', 'maintenance', 'settings'], steps: ['Go to Ticket Management and click Add Category', 'Enter Category Name', 'Enter Response Time in minutes', 'Upload Icon', 'Select Sites where category is enabled', 'Assign Engineers', 'Save'] },\n  { module: 'Helpdesk', feature: 'Sub Category Setup', keywords: ['helpdesk', 'ticket', 'subcategory', 'sub category', 'maintenance', 'settings'], steps: ['Select Category', 'Enter Subcategory name', 'Upload Icon', 'Assign Engineers', 'Configure Location levels: Building Wing Floor Zone Room', 'Click Submit'] },\n  { module: 'Helpdesk', feature: 'Status Setup', keywords: ['helpdesk', 'ticket', 'status', 'maintenance', 'settings'], steps: ['Enter Status name', 'Select Fixed State', 'Set Color', 'Click Submit'] },\n  { module: 'Helpdesk', feature: 'Escalation Setup', keywords: ['helpdesk', 'ticket', 'escalation', 'maintenance', 'settings'], steps: ['Configure escalation levels', 'Set time thresholds', 'Assign escalation contacts', 'Enable notifications', 'Click Submit'] },\n  { module: 'Helpdesk', feature: 'Cost Approval', keywords: ['helpdesk', 'ticket', 'cost', 'approval', 'maintenance', 'settings'], steps: ['Configure cost approval threshold', 'Assign approvers', 'Set approval workflow', 'Click Submit'] },\n  { module: 'AMC', feature: 'AMC Setup', keywords: ['amc', 'maintenance', 'contract'], steps: ['Click Action button', 'Enter AMC details', 'Select Asset', 'Select Vendor', 'Set contract dates', 'Click Submit'] },\n  { module: 'Inventory', feature: 'Inventory Master', keywords: ['inventory', 'stock', 'maintenance', 'master'], steps: ['Click Add button', 'Enter item name and details', 'Set unit of measurement', 'Set minimum stock level', 'Click Submit'] },\n  { module: 'Inventory', feature: 'Inventory Consumption', keywords: ['inventory', 'consumption', 'stock', 'maintenance'], steps: ['Select inventory item', 'Enter quantity consumed', 'Select location', 'Add remarks', 'Click Submit'] },\n  { module: 'Attendance', feature: 'Attendance Tracking', keywords: ['attendance', 'maintenance'], steps: ['Navigate to Attendance module', 'View attendance records', 'Filter by date or employee', 'Export report'] },\n  { module: 'Waste', feature: 'Waste Management', keywords: ['waste', 'maintenance'], steps: ['Click Add button', 'Select waste type', 'Enter quantity', 'Select location', 'Click Submit'] },\n  { module: 'Survey', feature: 'Survey Setup', keywords: ['survey', 'maintenance'], steps: ['Click Add button', 'Enter survey title', 'Add questions', 'Set frequency', 'Assign to locations', 'Click Submit'] },\n  { module: 'Vendor', feature: 'Vendor Management', keywords: ['vendor', 'supplier', 'maintenance'], steps: ['Click Add button', 'Enter vendor details', 'Set vendor category', 'Click Submit'] }\n];\n\n// Filter mandatory flows relevant to this batch\nconst relevantFlows = allMandatoryFlows.filter(flow => {\n  return flow.keywords.some(keyword => {\n    // Check against detected modules\n    const matchesModule = detectedModules.some(m =>\n      m.toLowerCase().includes(keyword) || keyword.includes(m.toLowerCase())\n    );\n    // Check against detected page titles\n    const matchesTitle = detectedTitles.some(t =>\n      t.includes(keyword) || keyword.includes(t)\n    );\n    return matchesModule || matchesTitle;\n  });\n});\n\nconsole.log('Detected modules:', detectedModules.join(', '));\nconsole.log('Relevant mandatory flows:', relevantFlows.length);\n\nreturn [{\n  json: {\n    states: data.states,\n    screenshots: data.screenshots,\n    bboxes: data.bboxes,\n    detectedModules: data.detectedModules,\n    detectedTitles: data.detectedTitles,\n    mandatoryFlows: relevantFlows\n  }\n}];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -80,
+          16
+        ],
+        "id": "22cef421-8466-4d6a-a268-9ef73a99172a",
+        "name": "Filter Mandatory Flows"
+      }
+    ],
+    "connections": {
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          []
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Filter Mandatory Flows",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "Upload file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript4": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter Mandatory Flows": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "bee11723-493b-47dc-8983-3d5903ca3417",
+    "activeVersionId": null,
+    "versionCounter": 6,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-03-18T07:19:58.351Z",
+        "createdAt": "2026-03-18T07:19:58.351Z",
+        "role": "workflow:owner",
+        "workflowId": "c0QWnGJstfmadgYW",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-05-02T07:29:56.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-05-01",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2026-03-16T06:10:14.138Z",
+      "createdAt": "2026-03-16T06:10:14.138Z",
+      "id": "lLv5xRyxrErs7b5T",
+      "name": "Yash Workflows",
+      "parentFolderId": null
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "efc50339b1338622782bbb12e7a4db5f2cdec17afdd79bc16240ba00aafcd636"
+  }
+}

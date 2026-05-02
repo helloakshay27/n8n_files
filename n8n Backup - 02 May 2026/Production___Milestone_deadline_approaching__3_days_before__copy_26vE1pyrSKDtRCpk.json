@@ -1,0 +1,531 @@
+{
+  "data": {
+    "updatedAt": "2026-04-16T06:42:44.858Z",
+    "createdAt": "2026-04-15T11:40:29.624Z",
+    "id": "26vE1pyrSKDtRCpk",
+    "name": "Production - Milestone deadline approaching (3 days before) copy",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "f8dfd67d-3247-4b25-b31c-da0499372dac",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          -224
+        ],
+        "id": "5cbecd2b-c755-438a-a269-4bc7e995b548",
+        "name": "Webhook",
+        "webhookId": "f8dfd67d-3247-4b25-b31c-da0499372dac",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          96,
+          0
+        ],
+        "id": "acf6c926-3878-4a57-9c20-beb294568f8e",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT DISTINCT\n  m.id        AS milestone_id,\n  m.title     AS milestone_title,\n  CONVERT_TZ(m.start_date, '+00:00', '+05:30') AS milestone_start_date,\n  CONVERT_TZ(m.end_date,   '+00:00', '+05:30') AS milestone_end_date,\n\n  pm.id       AS project_id,\n  pm.title    AS project_title,\n\n  mo.email    AS milestone_owner_email,\n  mo.firstname AS milestone_owner_firstname,\n  mo.lastname  AS milestone_owner_lastname,\n\n  pmo.email   AS project_manager_email,\n  pmo.firstname AS project_manager_firstname,\n  pmo.lastname  AS project_manager_lastname\n\nFROM milestones m\n\nJOIN spree_users mo\n  ON mo.id = m.owner_id\n\nJOIN project_managements pm\n  ON pm.id = m.project_management_id\n\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nWHERE\n  DATE(m.end_date) = DATE(UTC_TIMESTAMP() + INTERVAL 2 DAY)\n  AND pmo.organization_id IN (13, 14, 59, 84);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -368,
+          -96
+        ],
+        "id": "00ee6645-0954-4cbc-82fe-e2bb6a59fc2f",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "triggerAtHour": 10
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -688,
+          -64
+        ],
+        "id": "068c37c9-8485-4340-8936-8a42e5a45886",
+        "name": "Schedule Trigger",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{$json.project_manager_email}}",
+          "subject": "=Upcoming Milestone Deadline: {{$json.milestone_title}}\n\n",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.milestone_owner_firstname}} {{$json.milestone_owner_lastname}},\n  </p>\n\n  <p>\n    This is a reminder that the milestone <strong>{{$json.milestone_title}}</strong> is scheduled to reach its planned completion in <strong>3 days</strong>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Milestone Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_start_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Planned End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/projects/{{$json.project_id}}/milestones/{{$json.milestone_id}}\" target=\"_blank\">\n          View Milestone Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    We recommend reviewing the progress of associated tasks and addressing any potential risks to ensure timely completion.\n  </p>\n\n  <p>\n    Please take necessary action to keep the milestone on track.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Project Management Office</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          -128,
+          -96
+        ],
+        "id": "8f97a41f-b93f-46eb-ba6d-5ff08f8813ed",
+        "name": "PM",
+        "webhookId": "d1b6e492-3b11-4304-9114-68877b5ccc33",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "notifications@lockated.com",
+          "toEmail": "={{$json.milestone_owner_email}}",
+          "subject": "=Upcoming Milestone Deadline: {{$json.milestone_title}}",
+          "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{ $json.milestone_owner_firstname }} {{$json.milestone_owner_firstname}}\n  </p>\n\n  <p>\n    This is a reminder that the milestone <strong>{{$json.milestone_title}}</strong> is scheduled to reach its planned completion in <strong>3 days</strong>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Milestone Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_start_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Planned End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/projects/{{$json.project_id}}/milestones/{{$json.milestone_id}}\" target=\"_blank\">\n          View Milestone Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    We recommend reviewing the progress of associated tasks and addressing any potential risks to ensure timely completion.\n  </p>\n\n  <p>\n    Please take necessary action to keep the milestone on track.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Project Management Office</strong>\n  </p>\n\n</div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          -160,
+          128
+        ],
+        "id": "9e5d7e2b-252c-4a41-a0c1-4f4d83b67920",
+        "name": "Milestone Owner",
+        "webhookId": "97c8ef5b-53da-4c3a-b0e7-929d44f334d8",
+        "alwaysOutputData": true,
+        "credentials": {
+          "smtp": {
+            "id": "e6BxRubia0RizPKp",
+            "name": "Lockated Local SMTP"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT DISTINCT\n  m.id        AS milestone_id,\n  m.title     AS milestone_title,\n  CONVERT_TZ(m.start_date, '+00:00', '+05:30') AS milestone_start_date,\n  CONVERT_TZ(m.end_date,   '+00:00', '+05:30') AS milestone_end_date,\n\n  pm.id       AS project_id,\n  pm.title    AS project_title,\n\n  -- milestone owner\n  mo.email    AS milestone_owner_email,\n  mo.firstname AS milestone_owner_firstname,\n  mo.lastname  AS milestone_owner_lastname,\n\n  -- project manager\n  pmo.email   AS project_manager_email,\n  pmo.firstname AS project_manager_firstname,\n  pmo.lastname  AS project_manager_lastname\n\nFROM milestones m\n\n-- milestone owner\nJOIN spree_users mo\n  ON mo.id = m.owner_id\n\n-- project\nJOIN project_managements pm\n  ON pm.id = m.project_management_id\n\n-- project manager\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nWHERE\n  DATE(m.end_date) = DATE(UTC_TIMESTAMP() + INTERVAL 2 DAY);\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.mySql",
+        "typeVersion": 2.5,
+        "position": [
+          -528,
+          144
+        ],
+        "id": "76d442ae-4c60-465c-b7b9-2dc540e3ac7c",
+        "name": "Without organization id Execute a SQL query1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "mySql": {
+            "id": "cSpNSxxLQn5eFDMK",
+            "name": "Task Management Production Database"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "PM",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Milestone Owner",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "PM": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "8f70bcaf-d95d-4df3-a870-26a7224bd31d",
+    "activeVersionId": "8f70bcaf-d95d-4df3-a870-26a7224bd31d",
+    "versionCounter": 62,
+    "triggerCount": 2,
+    "shared": [
+      {
+        "updatedAt": "2026-04-15T11:40:29.631Z",
+        "createdAt": "2026-04-15T11:40:29.631Z",
+        "role": "workflow:owner",
+        "workflowId": "26vE1pyrSKDtRCpk",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-05-02T07:29:56.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-05-01",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-04-15T11:32:35.314Z",
+        "createdAt": "2026-04-15T11:32:35.314Z",
+        "id": "L0EeV7qZEpOHtqXt",
+        "name": "Production Ready"
+      },
+      {
+        "updatedAt": "2025-12-26T06:34:13.189Z",
+        "createdAt": "2025-12-26T06:34:13.189Z",
+        "id": "ntOn6pa6wD5AUrNk",
+        "name": "Module 1 - Projects"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-04-15T11:31:25.108Z",
+      "createdAt": "2026-04-15T11:31:25.108Z",
+      "id": "Nc6BOMOEzuf8GW1h",
+      "name": "Production Ready",
+      "parentFolderId": "0KjOCLdd8E7kMZsQ"
+    },
+    "activeVersion": {
+      "updatedAt": "2026-04-16T06:42:53.000Z",
+      "createdAt": "2026-04-16T06:42:44.859Z",
+      "versionId": "8f70bcaf-d95d-4df3-a870-26a7224bd31d",
+      "workflowId": "26vE1pyrSKDtRCpk",
+      "nodes": [
+        {
+          "parameters": {
+            "httpMethod": "POST",
+            "path": "f8dfd67d-3247-4b25-b31c-da0499372dac",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            0,
+            -224
+          ],
+          "id": "5cbecd2b-c755-438a-a269-4bc7e995b548",
+          "name": "Webhook",
+          "webhookId": "f8dfd67d-3247-4b25-b31c-da0499372dac",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            96,
+            0
+          ],
+          "id": "acf6c926-3878-4a57-9c20-beb294568f8e",
+          "name": "Respond to Webhook",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT DISTINCT\n  m.id        AS milestone_id,\n  m.title     AS milestone_title,\n  CONVERT_TZ(m.start_date, '+00:00', '+05:30') AS milestone_start_date,\n  CONVERT_TZ(m.end_date,   '+00:00', '+05:30') AS milestone_end_date,\n\n  pm.id       AS project_id,\n  pm.title    AS project_title,\n\n  mo.email    AS milestone_owner_email,\n  mo.firstname AS milestone_owner_firstname,\n  mo.lastname  AS milestone_owner_lastname,\n\n  pmo.email   AS project_manager_email,\n  pmo.firstname AS project_manager_firstname,\n  pmo.lastname  AS project_manager_lastname\n\nFROM milestones m\n\nJOIN spree_users mo\n  ON mo.id = m.owner_id\n\nJOIN project_managements pm\n  ON pm.id = m.project_management_id\n\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nWHERE\n  DATE(m.end_date) = DATE(UTC_TIMESTAMP() + INTERVAL 2 DAY)\n  AND pmo.organization_id IN (13, 14, 59, 84);",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -368,
+            -96
+          ],
+          "id": "00ee6645-0954-4cbc-82fe-e2bb6a59fc2f",
+          "name": "Execute a SQL query",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "triggerAtHour": 10
+                }
+              ]
+            }
+          },
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.3,
+          "position": [
+            -688,
+            -64
+          ],
+          "id": "068c37c9-8485-4340-8936-8a42e5a45886",
+          "name": "Schedule Trigger",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "fromEmail": "notifications@lockated.com",
+            "toEmail": "={{$json.project_manager_email}}",
+            "subject": "=Upcoming Milestone Deadline: {{$json.milestone_title}}\n\n",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{$json.milestone_owner_firstname}} {{$json.milestone_owner_lastname}},\n  </p>\n\n  <p>\n    This is a reminder that the milestone <strong>{{$json.milestone_title}}</strong> is scheduled to reach its planned completion in <strong>3 days</strong>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Milestone Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_start_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Planned End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/projects/{{$json.project_id}}/milestones/{{$json.milestone_id}}\" target=\"_blank\">\n          View Milestone Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    We recommend reviewing the progress of associated tasks and addressing any potential risks to ensure timely completion.\n  </p>\n\n  <p>\n    Please take necessary action to keep the milestone on track.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Project Management Office</strong>\n  </p>\n\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            -128,
+            -96
+          ],
+          "id": "8f97a41f-b93f-46eb-ba6d-5ff08f8813ed",
+          "name": "PM",
+          "webhookId": "d1b6e492-3b11-4304-9114-68877b5ccc33",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "e6BxRubia0RizPKp",
+              "name": "Lockated Local SMTP"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "fromEmail": "notifications@lockated.com",
+            "toEmail": "={{$json.milestone_owner_email}}",
+            "subject": "=Upcoming Milestone Deadline: {{$json.milestone_title}}",
+            "html": "=<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\n\n  <p>\n    Dear {{ $json.milestone_owner_firstname }} {{$json.milestone_owner_firstname}}\n  </p>\n\n  <p>\n    This is a reminder that the milestone <strong>{{$json.milestone_title}}</strong> is scheduled to reach its planned completion in <strong>3 days</strong>.\n  </p>\n\n  <h3 style=\"color: #2c3e50;\">Milestone Details</h3>\n\n  <table style=\"border-collapse: collapse; width: 100%; max-width: 600px;\">\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Project Name</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.project_title}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Start Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_start_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Planned End Date</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">{{$json.milestone_end_date}}</td>\n    </tr>\n\n    <tr>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\"><strong>Milestone Link</strong></td>\n      <td style=\"padding: 8px; border: 1px solid #ddd;\">\n        <a href=\"https://web.gophygital.work/vas/projects/{{$json.project_id}}/milestones/{{$json.milestone_id}}\" target=\"_blank\">\n          View Milestone Details\n        </a>\n      </td>\n    </tr>\n\n  </table>\n\n  <p style=\"margin-top: 15px;\">\n    We recommend reviewing the progress of associated tasks and addressing any potential risks to ensure timely completion.\n  </p>\n\n  <p>\n    Please take necessary action to keep the milestone on track.\n  </p>\n\n  <p>\n    Regards,<br>\n    <strong>Project Management Office</strong>\n  </p>\n\n</div>",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.emailSend",
+          "typeVersion": 2.1,
+          "position": [
+            -160,
+            128
+          ],
+          "id": "9e5d7e2b-252c-4a41-a0c1-4f4d83b67920",
+          "name": "Milestone Owner",
+          "webhookId": "97c8ef5b-53da-4c3a-b0e7-929d44f334d8",
+          "alwaysOutputData": true,
+          "credentials": {
+            "smtp": {
+              "id": "e6BxRubia0RizPKp",
+              "name": "Lockated Local SMTP"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT DISTINCT\n  m.id        AS milestone_id,\n  m.title     AS milestone_title,\n  CONVERT_TZ(m.start_date, '+00:00', '+05:30') AS milestone_start_date,\n  CONVERT_TZ(m.end_date,   '+00:00', '+05:30') AS milestone_end_date,\n\n  pm.id       AS project_id,\n  pm.title    AS project_title,\n\n  -- milestone owner\n  mo.email    AS milestone_owner_email,\n  mo.firstname AS milestone_owner_firstname,\n  mo.lastname  AS milestone_owner_lastname,\n\n  -- project manager\n  pmo.email   AS project_manager_email,\n  pmo.firstname AS project_manager_firstname,\n  pmo.lastname  AS project_manager_lastname\n\nFROM milestones m\n\n-- milestone owner\nJOIN spree_users mo\n  ON mo.id = m.owner_id\n\n-- project\nJOIN project_managements pm\n  ON pm.id = m.project_management_id\n\n-- project manager\nJOIN spree_users pmo\n  ON pmo.id = pm.owner_id\n\nWHERE\n  DATE(m.end_date) = DATE(UTC_TIMESTAMP() + INTERVAL 2 DAY);\n",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.mySql",
+          "typeVersion": 2.5,
+          "position": [
+            -528,
+            144
+          ],
+          "id": "76d442ae-4c60-465c-b7b9-2dc540e3ac7c",
+          "name": "Without organization id Execute a SQL query1",
+          "alwaysOutputData": true,
+          "credentials": {
+            "mySql": {
+              "id": "cSpNSxxLQn5eFDMK",
+              "name": "Task Management Production Database"
+            }
+          }
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Execute a SQL query": {
+          "main": [
+            [
+              {
+                "node": "PM",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Milestone Owner",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Schedule Trigger": {
+          "main": [
+            [
+              {
+                "node": "Execute a SQL query",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "PM": {
+          "main": [
+            []
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version 8f70bcaf",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-04-16T06:42:53.065Z",
+          "id": 119,
+          "workflowId": "26vE1pyrSKDtRCpk",
+          "versionId": "8f70bcaf-d95d-4df3-a870-26a7224bd31d",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "7bdf0f61985e4f2ccbf1e2c3cf1e25d91f3695d78a5ba85e622bc4afaba7470e"
+  }
+}

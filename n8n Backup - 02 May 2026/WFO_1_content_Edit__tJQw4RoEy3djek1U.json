@@ -1,0 +1,187 @@
+{
+  "data": {
+    "updatedAt": "2026-04-14T04:51:52.293Z",
+    "createdAt": "2026-04-10T12:47:11.033Z",
+    "id": "tJQw4RoEy3djek1U",
+    "name": "WFO-1(content Edit)",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "path": "linkedin-review-edit",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -912,
+          -48
+        ],
+        "id": "b516a5cd-c492-42f6-a9e9-747a6c7c4e7b",
+        "name": "Webhook",
+        "webhookId": "88e5d0b8-2c5b-4ec4-955d-7e578e75c41e"
+      },
+      {
+        "parameters": {
+          "respondWith": "text",
+          "responseBody": "={{$json.html}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          -528,
+          -48
+        ],
+        "id": "aafd123e-4c99-4c42-8c1a-c0228651a931",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Content Editor</title>\n<style>\n*{box-sizing:border-box;margin:0;padding:0}\n:root{\n  --color-background-primary:#ffffff;\n  --color-background-secondary:#f5f5f4;\n  --color-background-tertiary:#e8e8e6;\n  --color-background-info:#eff6ff;\n  --color-background-success:#f0fdf4;\n  --color-background-warning:#fffbeb;\n  --color-text-primary:#1a1a1a;\n  --color-text-secondary:#6b7280;\n  --color-text-tertiary:#9ca3af;\n  --color-text-info:#1d4ed8;\n  --color-text-success:#166534;\n  --color-text-warning:#92400e;\n  --color-border-tertiary:rgba(0,0,0,0.1);\n  --color-border-secondary:rgba(0,0,0,0.18);\n  --color-border-primary:rgba(0,0,0,0.28);\n  --color-border-info:#93c5fd;\n  --color-border-success:#86efac;\n  --color-border-warning:#fcd34d;\n  --border-radius-md:8px;\n  --border-radius-lg:12px;\n  --font-sans:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;\n  --font-mono:'Courier New',monospace;\n}\n@media(prefers-color-scheme:dark){\n  :root{\n    --color-background-primary:#1c1c1e;\n    --color-background-secondary:#2c2c2e;\n    --color-background-tertiary:#3a3a3c;\n    --color-background-info:#1e3a5f;\n    --color-background-success:#14532d;\n    --color-background-warning:#451a03;\n    --color-text-primary:#f2f2f7;\n    --color-text-secondary:#aeaeb2;\n    --color-text-tertiary:#636366;\n    --color-text-info:#93c5fd;\n    --color-text-success:#86efac;\n    --color-text-warning:#fcd34d;\n    --color-border-tertiary:rgba(255,255,255,0.1);\n    --color-border-secondary:rgba(255,255,255,0.18);\n    --color-border-primary:rgba(255,255,255,0.28);\n    --color-border-info:#1d4ed8;\n    --color-border-success:#166534;\n    --color-border-warning:#92400e;\n  }\n}\nbody{background:var(--color-background-secondary);padding:2rem 1rem;font-family:var(--font-sans);min-height:100vh}\n.wrap{max-width:820px;margin:0 auto}\n.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}\n.hdr{padding:1rem 1.25rem;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;gap:10px}\n.hdr-icon{width:32px;height:32px;border-radius:var(--border-radius-md);background:var(--color-background-info);display:flex;align-items:center;justify-content:center;flex-shrink:0}\n.hdr-icon svg{width:16px;height:16px;stroke:var(--color-text-info);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}\n.hdr-title{font-size:15px;font-weight:500;color:var(--color-text-primary)}\n.body{padding:1.25rem}\n.field-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:500}\n.draft-box{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:10px 14px;font-family:var(--font-mono);font-size:13px;color:var(--color-text-primary);margin-bottom:1.25rem}\n.collapsible{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);margin-bottom:1.25rem;overflow:hidden}\n.coll-header{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:var(--color-background-secondary);user-select:none}\n.coll-header:hover{background:var(--color-background-tertiary)}\n.coll-title{font-size:13px;font-weight:500;color:var(--color-text-secondary)}\n.caret{width:16px;height:16px;stroke:var(--color-text-secondary);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform 0.2s}\n.caret.open{transform:rotate(180deg)}\n.coll-body{padding:14px;font-size:14px;line-height:1.7;color:var(--color-text-primary);max-height:160px;overflow-y:auto;display:none}\n.coll-body.open{display:block}\n.editor-wrap{border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);overflow:hidden;margin-bottom:8px}\n.editor-wrap:focus-within{box-shadow:0 0 0 2px var(--color-border-info);border-color:var(--color-border-info)}\ntextarea{width:100%;min-height:280px;padding:14px;border:none;outline:none;font-size:14px;line-height:1.7;font-family:var(--font-sans);resize:vertical;background:var(--color-background-primary);color:var(--color-text-primary)}\n.meta-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:8px}\n.char-count{font-size:12px;color:var(--color-text-tertiary)}\n.qactions{display:flex;gap:8px;flex-wrap:wrap}\n.qbtn{font-size:12px;padding:5px 11px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);cursor:pointer;color:var(--color-text-secondary);font-family:var(--font-sans)}\n.qbtn:hover{background:var(--color-background-tertiary);color:var(--color-text-primary)}\n.status-bar{padding:10px 14px;border-radius:var(--border-radius-md);font-size:13px;margin-bottom:1.25rem;display:none}\n.status-bar.success{background:var(--color-background-success);color:var(--color-text-success);border:0.5px solid var(--color-border-success)}\n.status-bar.warning{background:var(--color-background-warning);color:var(--color-text-warning);border:0.5px solid var(--color-border-warning)}\n.footer{padding:1rem 1.25rem;border-top:0.5px solid var(--color-border-tertiary);display:flex;gap:10px;background:var(--color-background-secondary)}\n.btn-main{flex:1;padding:11px;border-radius:var(--border-radius-md);font-size:14px;font-weight:500;cursor:pointer;border:0.5px solid;font-family:var(--font-sans);display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity 0.15s}\n.btn-main:hover{opacity:0.85}\n.btn-approve{background:var(--color-background-success);border-color:var(--color-border-success);color:var(--color-text-success)}\n.btn-save{background:var(--color-background-info);border-color:var(--color-border-info);color:var(--color-text-info)}\n.btn-main svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}\n@media(max-width:600px){.footer{flex-direction:column}}\n</style>\n</head>\n<body>\n<div class=\"wrap\">\n  <div class=\"card\">\n    <div class=\"hdr\">\n      <div class=\"hdr-icon\">\n        <svg viewBox=\"0 0 24 24\"><path d=\"M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7\"/><path d=\"M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z\"/></svg>\n      </div>\n      <span class=\"hdr-title\">Content editor</span>\n    </div>\n\n    <div class=\"body\">\n      <div class=\"field-label\">Draft ID</div>\n      <div class=\"draft-box\" id=\"draftId\">{{ $json.query.id }}</div>\n\n      <div class=\"field-label\">Original content</div>\n      <div class=\"collapsible\">\n        <div class=\"coll-header\" onclick=\"toggleOrig()\">\n          <span class=\"coll-title\">Reference — click to expand</span>\n          <svg class=\"caret\" id=\"caret\" viewBox=\"0 0 24 24\"><polyline points=\"6 9 12 15 18 9\"/></svg>\n        </div>\n        <div class=\"coll-body\" id=\"origBody\">{{ $json.query.content }}</div>\n      </div>\n\n      <div class=\"field-label\">Edit content</div>\n      <div class=\"editor-wrap\">\n        <textarea id=\"editor\" placeholder=\"Content will load here automatically…\" oninput=\"updateCount()\"></textarea>\n      </div>\n      <div class=\"meta-row\">\n        <div class=\"qactions\">\n          <button class=\"qbtn\" onclick=\"reset()\">Reset to original</button>\n          <button class=\"qbtn\" onclick=\"clearAll()\">Clear</button>\n        </div>\n        <span class=\"char-count\" id=\"cc\">0 characters</span>\n      </div>\n\n      <div class=\"status-bar\" id=\"status\"></div>\n    </div>\n\n    <div class=\"footer\">\n      <button class=\"btn-main btn-approve\" onclick=\"sendData('Approved')\">\n        <svg viewBox=\"0 0 24 24\"><polyline points=\"20 6 9 17 4 12\"/></svg>\n        Approve\n      </button>\n      <button class=\"btn-main btn-save\" onclick=\"sendData('Draft')\">\n        <svg viewBox=\"0 0 24 24\"><path d=\"M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z\"/><polyline points=\"17 21 17 13 7 13 7 21\"/><polyline points=\"7 3 7 8 15 8\"/></svg>\n        Save draft\n      </button>\n    </div>\n  </div>\n</div>\n\n<script>\nlet orig = \"\";\nwindow.addEventListener('DOMContentLoaded', function(){\n  orig = document.getElementById(\"origBody\").innerText.trim();\n  document.getElementById(\"editor\").value = orig;\n  updateCount();\n});\nfunction toggleOrig(){\n  document.getElementById(\"origBody\").classList.toggle(\"open\");\n  document.getElementById(\"caret\").classList.toggle(\"open\");\n}\nfunction updateCount(){\n  const n = document.getElementById(\"editor\").value.length;\n  document.getElementById(\"cc\").textContent = n.toLocaleString() + \" characters\";\n}\nfunction reset(){\n  document.getElementById(\"editor\").value = orig;\n  updateCount();\n  showStatus(\"Reset to original.\", \"success\");\n}\nfunction clearAll(){\n  if(confirm(\"Clear all content?\")){\n    document.getElementById(\"editor\").value = \"\";\n    updateCount();\n    showStatus(\"Content cleared.\", \"warning\");\n  }\n}\nfunction showStatus(msg, type){\n  const s = document.getElementById(\"status\");\n  s.textContent = msg;\n  s.className = \"status-bar \" + type;\n  s.style.display = \"block\";\n  setTimeout(()=>{ s.style.display=\"none\"; }, 3000);\n}\nfunction sendData(action){\n  const id = document.getElementById(\"draftId\").innerText.trim();\n  const content = document.getElementById(\"editor\").value.trim();\n  if(!content){ showStatus(\"Please add content before submitting.\", \"warning\"); return; }\n  showStatus(\"Submitting as \" + action + \"…\", \"success\");\n  setTimeout(()=>{\n    window.location.href = \"https://automation.lockated.com/webhook-test/linkedin-review-edit-response?id=\" + encodeURIComponent(id) + \"&action=\" + action + \"&content=\" + encodeURIComponent(content) + \"&reply_to=\" + encodeURIComponent(\"{{ $json.query.reply_to }}\") + \"&cc=\" + encodeURIComponent(\"{{ $json.query.cc }}\");\n  }, 500);\n}\n</script>\n</body>\n</html>"
+        },
+        "type": "n8n-nodes-base.html",
+        "typeVersion": 1.2,
+        "position": [
+          -720,
+          -48
+        ],
+        "id": "fed38f05-628c-4467-beaf-397676d7eadb",
+        "name": "HTML"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "HTML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond to Webhook": {
+        "main": [
+          []
+        ]
+      },
+      "HTML": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": {},
+    "versionId": "d5badeb5-88eb-4326-9291-2a1eaca5e0e1",
+    "activeVersionId": null,
+    "versionCounter": 13,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-04-10T12:47:11.039Z",
+        "createdAt": "2026-04-10T12:47:11.039Z",
+        "role": "workflow:owner",
+        "workflowId": "tJQw4RoEy3djek1U",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-05-02T07:29:56.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-05-01",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-04-09T05:50:06.216Z",
+        "createdAt": "2026-04-09T05:50:06.216Z",
+        "id": "G3nbvWMHGcGbTeOI",
+        "name": "marketing-support"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-04-10T12:29:46.071Z",
+      "createdAt": "2026-04-10T12:29:46.071Z",
+      "id": "ENhlHq7G9T0Q12f1",
+      "name": "WF01 — LinkedIn Post Draft Generator",
+      "parentFolderId": "Nv4Mxy1IviRIXWgg"
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "2059f2bc654ebbe9581f37173247eb274dde21cf3abf82c9c7f704a79e3cbc35"
+  }
+}

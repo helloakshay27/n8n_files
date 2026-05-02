@@ -1,0 +1,3135 @@
+{
+  "data": {
+    "updatedAt": "2026-03-17T05:35:41.584Z",
+    "createdAt": "2026-03-01T16:04:44.718Z",
+    "id": "SVSr8VbQUYMGFePW",
+    "name": "Marketing Content Final",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "pollTimes": {
+            "item": [
+              {
+                "mode": "everyMinute"
+              }
+            ]
+          },
+          "triggerOn": "specificFolder",
+          "folderToWatch": {
+            "__rl": true,
+            "value": "1rMxA3sOzxDdShMucttQM1gOj2eN4fdF7",
+            "mode": "list",
+            "cachedResultName": "01_Input_Videos",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1rMxA3sOzxDdShMucttQM1gOj2eN4fdF7"
+          },
+          "event": "fileCreated",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDriveTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "175dbe2c-38c8-43fc-bcfb-8762b8b66969",
+        "name": "Google Drive Trigger",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "8K9zg6ekrWyKO3bA",
+            "name": "Google Drive account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const fileName = $input.item.json.name;\nconst parentFolder = $input.item.json.parents?.[0] || '';\nconst fileId = $input.item.json.id;\n\n// Remove file extension to get a clean name\nconst productName = fileName.replace(/\\.[^/.]+$/, \"\").replace(/_/g, \" \");\n\nreturn {\n  fileId: fileId,\n  fileName: fileName,\n  productName: productName,\n  parentFolder: parentFolder,\n  timestamp: new Date().toISOString()\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          208,
+          0
+        ],
+        "id": "92fbba42-2007-402f-9ed1-694935101d2b",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "operation": "download",
+          "fileId": {
+            "__rl": true,
+            "value": "={{ $json.fileId }}",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          416,
+          0
+        ],
+        "id": "751d9324-1947-4e15-8f90-a906f38d1772",
+        "name": "Download file",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "8K9zg6ekrWyKO3bA",
+            "name": "Google Drive account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 60
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          848,
+          160
+        ],
+        "id": "41f69ec2-942f-4d3f-9123-98f74527d4dc",
+        "name": "Wait",
+        "webhookId": "78f63b55-2417-4543-a9d7-6ee658362a99"
+      },
+      {
+        "parameters": {
+          "jsCode": "const segments = $input.item.json;\n\n// Groq returns segments array, combine all text\nlet fullTranscript = '';\n\n// Handle both array and single segment response\nif (Array.isArray($input.all())) {\n  const allItems = $input.all();\n  allItems.forEach(item => {\n    if (item.json.text) {\n      fullTranscript += item.json.text + ' ';\n    }\n  });\n} else {\n  fullTranscript = $input.item.json.text || '';\n}\n\nreturn {\n  aiTranscript: fullTranscript.trim()\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          848,
+          -64
+        ],
+        "id": "36d8be01-f10b-4ac5-8fbc-54e3fc093917",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://generativelanguage.googleapis.com/upload/v1beta/files?uploadType=multipart",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "metadata",
+                "value": "={\"file\":{\"displayName\":\"{{ $('Code in JavaScript').item.json.productName }}\"}}"
+              },
+              {
+                "parameterType": "formBinaryData",
+                "name": "file",
+                "inputDataFieldName": "data"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          640,
+          160
+        ],
+        "id": "b108c6be-7c33-4f90-bd4a-0505db115aa5",
+        "name": "HTTP Gemini",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "ru1DJv3wHDJJBzVr",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/audio/transcriptions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "multipart-form-data",
+          "bodyParameters": {
+            "parameters": [
+              {
+                "parameterType": "formBinaryData",
+                "name": "file",
+                "inputDataFieldName": "data"
+              },
+              {
+                "name": "model",
+                "value": "whisper-large-v3"
+              },
+              {
+                "name": "response_format",
+                "value": "verbose_json"
+              },
+              {
+                "name": "language",
+                "value": "en"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          640,
+          -64
+        ],
+        "id": "ea464c72-3dad-4dc1-8a56-2b2237c57eae",
+        "name": "HTTP Groq",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XtpdqX0pJntGMw8H",
+            "name": "Header Auth account 2"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://generativelanguage.googleapis.com/v1beta/{{ $json.file.name }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1056,
+          160
+        ],
+        "id": "2ff34d8f-cb1e-4282-9ccf-35b3a673c013",
+        "name": "HTTP Request",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "ru1DJv3wHDJJBzVr",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=AIzaSyCayi-tMtn_IRcf4cwwiXCiLz4DIxVqYAY",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"file_data\": {\n            \"mime_type\": \"{{ $json.mimeType }}\",\n            \"file_uri\": \"{{ $json.uri }}\"\n          }\n        },\n        {\n          \"text\": \"You are an expert SaaS product analyst, technical writer, and professional transcriptionist. Analyze this entire product demo video completely from start to finish. You MUST complete ALL sections below fully. Do not stop until every section is complete.\\n\\nSECTION 1 - COMPLETE VERBATIM TRANSCRIPT:\\nTranscribe every single word spoken in the entire video with [MM:SS] timestamps every 30 seconds. Label speakers. Include filler words. Do not skip any part.\\n\\nSECTION 2 - COMPLETE MODULE & SUB-MODULE MAP:\\nList every single module and sub-module visible in the navigation or demonstrated. For each:\\n- Module name\\n- Purpose\\n- All sub-modules inside it\\n- All tabs, buttons, fields visible\\n\\nSECTION 3 - COMPLETE FEATURE BREAKDOWN:\\nFor every single feature shown in the video:\\n- Feature name\\n- Which module it belongs to\\n- Exact description of what it does\\n- Step by step how to use it\\n- Business value and why it matters\\n- Which user role uses it\\n- All configuration options available\\n\\nSECTION 4 - ALL USER ROLES & PERMISSIONS:\\nFor every user role mentioned or shown:\\n- Role name\\n- What they can access\\n- What actions they can perform\\n- What platform they use (web/mobile)\\n\\nSECTION 5 - ALL COMPLETE WORKFLOWS:\\nFor every workflow demonstrated:\\n- Workflow name\\n- User role performing it\\n- Every single step in exact order\\n- What happens at each step\\n- End result\\n\\nSECTION 6 - ALL CONFIGURATIONS & SETTINGS:\\nEvery configuration option, setting, parameter shown:\\n- Setting name\\n- Where to find it\\n- What it controls\\n- Options available\\n\\nSECTION 7 - COMPLETE BUSINESS CONTEXT:\\n- Product name and branding\\n- Core problem solved\\n- Target market and industries\\n- Value proposition for each user role\\n- All differentiators shown\\n- All metrics and KPIs mentioned\\n- All integrations shown\\n- Platform strategy\\n\\nSECTION 8 - ALL SCREEN ELEMENTS:\\nEvery UI element visible:\\n- All navigation menus and items\\n- All page titles and sections\\n- All data tables and their columns\\n- All forms and their fields\\n- All status indicators and labels\\n- All action buttons and their functions\\n\\nSECTION 9 - COMPLETE USER JOURNEYS:\\nEvery end-to-end journey shown:\\n- Journey name\\n- Starting point\\n- Every step with exact navigation\\n- Data entered at each step\\n- End result achieved\\n\\nSECTION 10 - TECHNICAL & INTEGRATION DETAILS:\\nAny technical information shown:\\n- URLs and endpoints visible\\n- Integration points\\n- Data formats\\n- Security features\\n- Performance indicators\\n\\nCRITICAL RULES:\\n- Complete every section fully before moving to next\\n- Do not summarize anything\\n- Do not skip any feature, module, or workflow\\n- Capture everything spoken AND everything visible on screen\\n- If something is shown but not spoken, still document it\\n- Be exhaustive - this is the single source of truth for all marketing content\"\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.1,\n    \"maxOutputTokens\": 65536\n  }\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1472,
+          160
+        ],
+        "id": "dd85fc0d-720e-4870-9938-e15d892ef538",
+        "name": "HTTP Request1",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "uxl3shMydzqXDW6t",
+            "name": "Header Auth account 4"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\n\nconst analysis = item?.candidates?.[0]?.content?.parts?.[0]?.text || \"\";\n\nif (!analysis) {\n  throw new Error(\"Empty Gemini response. Keys: \" + JSON.stringify(Object.keys(item)));\n}\n\nconst prevNode = $('Code in JavaScript').first().json;\n\nreturn [{\n  json: {\n    productName: prevNode.productName,\n    originalTranscript: analysis,\n    aiTranscript: analysis,\n    geminiAnalysis: analysis,\n    mimeType: prevNode.mimeType || \"\",\n    fileSize: prevNode.fileSize || 0,\n    mergedContext: (\"PRODUCT NAME: \" + prevNode.productName + \"\\n\\n=== GEMINI COMPLETE VIDEO ANALYSIS ===\\n\" + analysis).substring(0, 8000)\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1680,
+          160
+        ],
+        "id": "b88194af-41e4-41e7-b1a4-17f4b2460410",
+        "name": "Code in JavaScript2"
+      },
+      {
+        "parameters": {
+          "jsCode": "const geminiData = $input.first().json;\n\nreturn [{\n  json: {\n    productName: geminiData.productName,\n    originalTranscript: geminiData.originalTranscript || \"\",\n    aiTranscript: geminiData.aiTranscript || \"\",\n    geminiAnalysis: geminiData.geminiAnalysis || \"\",\n    mergedContext: \"PRODUCT NAME: \" + geminiData.productName + \"\\n\\n=== GEMINI COMPLETE VIDEO ANALYSIS ===\\n\" + (geminiData.geminiAnalysis || geminiData.originalTranscript || \"\")\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2000,
+          -48
+        ],
+        "id": "6219cae2-23ea-43fb-96c0-3c6ff4c6c88d",
+        "name": "Code in JavaScript3"
+      },
+      {
+        "parameters": {
+          "jsCode": "return [{\n  json: {\n    productName: $json.productName,\n    originalTranscript: $json.originalTranscript || \"\",\n    aiTranscript: $json.aiTranscript || \"\",\n    geminiAnalysis: $json.geminiAnalysis || \"\",\n    mergedContext: (\"PRODUCT NAME: \" + $json.productName + \"\\n\\n=== GEMINI COMPLETE VIDEO ANALYSIS ===\\n\" + ($json.geminiAnalysis || $json.aiTranscript || $json.originalTranscript || \"\")).substring(0, 50000),\n    cumulativeContext: \"\"\n  }\n}];\n\nconst merged = (\"PRODUCT NAME: \" + $json.productName + \"\\n\\n=== GEMINI COMPLETE VIDEO ANALYSIS ===\\n\" + ($json.geminiAnalysis || $json.aiTranscript || $json.originalTranscript || \"\")).substring(0, 50000);\n\nthrow new Error(\n  \"mergedContext length: \" + merged.length + \n  \" | geminiAnalysis length: \" + ($json.geminiAnalysis || \"\").length +\n  \" | productName: \" + $json.productName\n);"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2240,
+          -48
+        ],
+        "id": "27738d31-e37e-4e4e-b77a-b26092ea825e",
+        "name": "Code in JavaScript5"
+      },
+      {
+        "parameters": {
+          "folderId": "1R1z-vjTIkVEm_Zc_3zeTqhVvprpCT-KY",
+          "title": "={{ $json.productName }} - Marketing Content"
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          5664,
+          -528
+        ],
+        "id": "63dbf1d2-2ec8-4590-bd1d-9fe3a5d9dfd7",
+        "name": "Create a document",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "SrvOTuq5YVFv08DK",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst msg = raw?.choices?.[0]?.message?.content || raw?.choices?.[0]?.message?.reasoning || \"\";\nif (!msg) throw new Error(\"Empty. Keys: \" + JSON.stringify(Object.keys(raw)));\nconst prev = $('Code in JavaScript5').first().json;\nreturn [{ json: { ...prev, videoSummary: msg, cumulativeContext: (prev.mergedContext || \"\") + \"\\n\\n=== VIDEO SUMMARY ===\\n\" + msg }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4336,
+          -1312
+        ],
+        "id": "b509ffaa-de37-4e9e-acf7-a1c4fd160ecd",
+        "name": "Code in JavaScript6"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ \"model\": \"llama-3.3-70b-versatile\", \"messages\": [{ \"role\": \"system\", \"content\": \"You are an expert SaaS product analyst. You MUST complete every single section fully and exhaustively with Minimum of 8000 to 10000 words and maximum of 15000 words output. Do not stop until every section is 100% complete. Never summarize. Never truncate. Write out every single item explicitly.\" }, { \"role\": \"user\", \"content\": \"Analyze this product demo and extract EVERYTHING:\\n\\n1. PRODUCT OVERVIEW: What it is, who its for, what problem it solves, target market, industries served\\n2. ALL MODULES: Every module shown with full description, purpose, and business value\\n3. ALL SUB-MODULES: Every sub-feature, tab, section, configuration option shown inside each module\\n4. ALL FEATURES: Every feature demonstrated - exactly what it does, how it works, who uses it\\n5. ALL WORKFLOWS: Every process flow shown step by step with exact navigation path\\n6. ALL CONFIGURATIONS: Every setting, option, parameter, toggle, dropdown shown\\n7. ALL USER TYPES: Every role mentioned with permissions, access levels, and platform used\\n8. ALL SCREEN ELEMENTS: Every UI element, menu, button, field, table, chart visible\\n9. ALL DATA SHOWN: Every record, example, sample data, column headers visible\\n10. KEY METRICS & STATS: Any numbers, percentages, KPIs mentioned\\n11. UNIQUE DIFFERENTIATORS: What makes this product stand out\\n12. INTEGRATIONS: Any systems, apps, tools mentioned\\n13. NAVIGATION FLOW: Complete exact path presenter took\\n14. \\n PIPELINE RULES — ABSOLUTE: \\n- Minimum of 8000 to 10000 words and maximum of 15000 words output \\n- \\n- Do NOT ask any questions\\n- Do NOT request clarification\\n- Do NOT confirm the task before starting\\n- Do NOT say 'I would be happy to help'\\n- Do NOT say 'please let me know'\\n- Do NOT say 'I need more information'\\n- Do NOT introduce what you are about to write\\n- BEGIN your response with the first word of actual content\\n- If context seems incomplete, use what is provided and generate intelligently\\n- Treat all inputs as final and sufficient\\n- PRODUCE OUTPUT IMMEDIATELY BUSINESS CONTEXT: Company name, branding, URL, platform type\\n\\nProduct: \" + $json.productName + \"\\n\\nGEMINI VIDEO ANALYSIS:\\n\" + $json.mergedContext }], \"temperature\": 0.3, \"max_tokens\": 32000 }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3824,
+          -1312
+        ],
+        "id": "aad8dcf9-523c-480c-a10a-9fffdd34cb22",
+        "name": "Video Summary",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XtpdqX0pJntGMw8H",
+            "name": "Header Auth account 2"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ \"model\": \"llama-3.3-70b-versatile\", \"messages\": [{ \"role\": \"system\", \"content\": \"You are an expert technical writer specializing in SaaS product documentation. Create the most comprehensive user guide possible with Minimum of 8000 to 10000 words and maximum of 15000 words output covering every single feature shown.\" }, { \"role\": \"user\", \"content\": \"Create an exhaustive step-by-step user guide covering EVERY feature and workflow shown.\\n\\n1. BEFORE YOU BEGIN:\\n- System requirements\\n- Prerequisites\\n- All user roles and their access levels\\n- How to get access and login credentials\\n\\n2. GETTING STARTED:\\n- Step by step login process with exact fields\\n- Dashboard overview - every element explained\\n- Navigation guide - every menu item explained\\n- Initial setup checklist\\n\\n3. MODULE-BY-MODULE GUIDE - For EVERY single module shown:\\n- Module name and purpose\\n- Who uses this module and why\\n- How to access it - exact navigation steps\\n- Numbered steps with Action/Where/Why for every action\\n- All sub-modules within it with same detail\\n- All configuration options available\\n- All buttons and their exact functions\\n- All fields and what to enter in each\\n- All status indicators and their meanings\\n- Expected outcomes for each action\\n- Screenshot placeholders [Screenshot: description]\\n\\n4. ADVANCED FEATURES:\\n- Power user tips for every module\\n- Bulk operations if available\\n- Export and reporting features\\n- Shortcuts and efficiency tips\\n\\n 5.\\n PIPELINE RULES — ABSOLUTE: \\n- Minimum of 8000 to 10000 words and maximum of 15000 words output \\n- \\n- Do NOT ask any questions\\n- Do NOT request clarification\\n- Do NOT confirm the task before starting\\n- Do NOT say 'I would be happy to help'\\n- Do NOT say 'please let me know'\\n- Do NOT say 'I need more information'\\n- Do NOT introduce what you are about to write\\n- BEGIN your response with the first word of actual content\\n- If context seems incomplete, use what is provided and generate intelligently\\n- Treat all inputs as final and sufficient\\n- PRO TIPS:\\n- Best practices for every section\\n- Common mistakes to avoid\\n- Optimization tips per module\\n\\n6. TROUBLESHOOTING:\\n- Common issues for every feature\\n- Step by step solutions\\n- When to contact support\\n- Error messages and their meanings\\n\\n7. GLOSSARY:\\n- Every technical term used\\n- Every module name explained\\n- Every status and its meaning\\n- Every role and its permissions\\n\\nCover every single feature without exception. Written for non-technical users.\\n\\nProduct: \" + $json.productName + \"\\n\\nCONTEXT:\\n\" + $json.cumulativeContext }], \"temperature\": 0.3, \"max_tokens\": 32000 }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3824,
+          -1056
+        ],
+        "id": "09738ec7-7278-49f0-b5d9-de130c0abe22",
+        "name": "User Guide",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XtpdqX0pJntGMw8H",
+            "name": "Header Auth account 2"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst msg = raw?.choices?.[0]?.message?.content || raw?.choices?.[0]?.message?.reasoning || \"\";\nif (!msg) throw new Error(\"Empty. Keys: \" + JSON.stringify(Object.keys(raw)));\nconst prev = $('Code in JavaScript6').first().json;\nreturn [{ json: { ...prev, userGuide: msg, cumulativeContext: prev.cumulativeContext + \"\\n\\n=== USER GUIDE ===\\n\" + msg }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4336,
+          -1056
+        ],
+        "id": "83d1ccca-8e17-4b6f-b8a4-0b98ba5076a7",
+        "name": "Code in JavaScript8"
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst msg = raw?.choices?.[0]?.message?.content || raw?.choices?.[0]?.message?.reasoning || \"\";\nif (!msg) throw new Error(\"Empty. Keys: \" + JSON.stringify(Object.keys(raw)));\nconst prev = $('Code in JavaScript8').first().json;\nreturn [{ json: { ...prev, productOverview: msg, cumulativeContext: prev.cumulativeContext + \"\\n\\n=== PRODUCT OVERVIEW ===\\n\" + msg }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4336,
+          -816
+        ],
+        "id": "1b093346-24c2-43bd-bdca-39f7dca9fad4",
+        "name": "Code in JavaScript9"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "json/application",
+          "body": "={{ JSON.stringify({ \"model\": \"llama-3.3-70b-versatile\", \"messages\": [{ \"role\": \"system\", \"content\": \"You are a senior SaaS product strategist with deep expertise in enterprise software. Write the most comprehensive product overview possible.\" }, { \"role\": \"user\", \"content\": \"Write an exhaustive Product Overview Report covering every aspect of this product with minimum 8000 to 10000 words and maximum 15000 words:\\n\\n1. EXECUTIVE SUMMARY:\\n- Product vision and mission\\n- Core value proposition\\n- Target market summary\\n- Key differentiators summary\\n\\n2. PRODUCT VISION:\\n- Long-term strategic direction\\n- Market opportunity\\n- Platform strategy web/mobile/API\\n\\n3. CORE FEATURES - Deep dive into EVERY feature:\\n- Feature name and description\\n- Business problem it solves\\n- How it works step by step\\n- User benefit and ROI\\n- Specific use cases\\n\\n4. MODULE BREAKDOWN - For EVERY module:\\n- Module purpose and scope\\n- All sub-modules and features\\n- User roles that interact with it\\n- Configuration options\\n- Integration points\\n\\n5. USER PERSONAS - For EVERY user type:\\n- Role and responsibilities\\n- Platform they use web/mobile\\n- Daily workflows\\n- Key features they use\\n- Pain points solved\\n\\n6. USE CASES - For EVERY feature:\\n- Scenario description\\n- Step by step workflow\\n- Business outcome\\n- ROI impact\\n\\n7. COMPETITIVE POSITIONING:\\n- How each module differentiates\\n- vs manual processes\\n- vs competitors\\n- Unique advantages\\n\\n8. INTEGRATION CAPABILITIES:\\n- All integration points shown\\n- API capabilities\\n- Data flows between modules\\n\\n9. LIMITATIONS AND CONSTRAINTS:\\n- Current limitations\\n- Workarounds available\\n\\n10. IMPLEMENTATION GUIDE:\\n- Setup steps in order\\n- Configuration checklist\\n- Onboarding process\\n- Timeline estimate\\n\\n11. STRATEGIC VALUE:\\n- ROI per feature\\n- Time saved per workflow\\n- Business impact metrics\\n- Cost reduction areas\\n\\n12. \\n PIPELINE RULES — ABSOLUTE: \\n- Minimum of 8000 to 10000 words and maximum of 15000 words output \\n- \\n- Do NOT ask any questions\\n- Do NOT request clarification\\n- Do NOT confirm the task before starting\\n- Do NOT say 'I would be happy to help'\\n- Do NOT say 'please let me know'\\n- Do NOT say 'I need more information'\\n- Do NOT introduce what you are about to write\\n- BEGIN your response with the first word of actual content\\n- If context seems incomplete, use what is provided and generate intelligently\\n- Treat all inputs as final and sufficient\\n- FUTURE ROADMAP SUGGESTIONS:\\n- Based on current features\\n- Market opportunities\\n- Feature gaps identified\\n- Integration opportunities\\n\\nProduct: \" + $json.productName + \"\\n\\nCONTEXT:\\n\" + $json.cumulativeContext }], \"temperature\": 0.3, \"max_tokens\": 32000 }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3824,
+          -816
+        ],
+        "id": "7a719547-4fe0-4edb-8c78-23bc619db2a2",
+        "name": "productOverview",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "ru1DJv3wHDJJBzVr",
+            "name": "Header Auth account"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst msg = raw?.choices?.[0]?.message?.content || raw?.choices?.[0]?.message?.reasoning || \"\";\nif (!msg) throw new Error(\"Empty. Keys: \" + JSON.stringify(Object.keys(raw)));\nconst prev = $('Code in JavaScript9').first().json;\nreturn [{ json: { ...prev, productDescription: msg, cumulativeContext: prev.cumulativeContext + \"\\n\\n=== PRODUCT DESCRIPTION ===\\n\" + msg }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4336,
+          -592
+        ],
+        "id": "d6ca4679-3074-4a9a-aa15-68f813e2fcf3",
+        "name": "Code in JavaScript10"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ \"model\": \"llama-3.3-70b-versatile\", \"messages\": [{ \"role\": \"system\", \"content\": \"You are an expert SaaS copywriter and product marketer specializing in B2B software.\" }, { \"role\": \"user\", \"content\": \"Write an exhaustive Product Description with Minimum of 8000 to 10000 words and maximum of 15000 words output covering every aspect needed for sales and marketing:\\n\\n1. TARGET CLIENT PROFILE - For EVERY user persona:\\n- Industry and company size\\n- Job titles and seniority levels\\n- Day-to-day responsibilities\\n- Current pain points and challenges\\n- Goals and success metrics\\n- Current tools they use today\\n- Budget authority and buying process\\n- Buying triggers and timing\\n\\n2. KEY FEATURES - For EVERY feature:\\n- Feature name\\n- What it does in plain language\\n- Before vs after comparison\\n- Time and cost savings\\n- Specific benefit for each persona\\n\\n3. BENEFITS - Quantified for every feature:\\n- Time saved per task\\n- Cost reduced\\n- Revenue impact\\n- Risk reduced\\n- Experience improved\\n\\n4. UNIQUE DIFFERENTIATORS - For every module:\\n- What no competitor offers\\n- Why it matters to the buyer\\n- Proof points and evidence\\n\\n5. FEATURE COMPARISON TABLE:\\n- Feature vs manual process\\n- Feature vs typical competitor\\n- Time and cost comparison\\n\\n6. CTA OPTIONS - For every persona:\\n- Primary CTA with exact copy\\n- Secondary CTA with exact copy\\n- Retargeting CTA with exact copy\\n- Urgency triggers per persona\\n\\n7. OBJECTION HANDLERS - For every possible objection:\\n- Objection statement\\n- Empathy response\\n- Evidence-based rebuttal\\n- Redirect to value\\n\\n8. SOCIAL PROOF HOOKS:\\n- Metrics to highlight per feature\\n- Customer success angles\\n- Industry validation points\\n\\n9. PRICING NARRATIVE:\\n- Value vs cost framing\\n- ROI calculator inputs\\n- Price anchoring strategy\\n- Cost of inaction argument\\n \\n PIPELINE RULES — ABSOLUTE: \\n- Minimum of 8000 to 10000 words and maximum of 15000 words output \\n- \\n- Do NOT ask any questions\\n- Do NOT request clarification\\n- Do NOT confirm the task before starting\\n- Do NOT say 'I would be happy to help'\\n- Do NOT say 'please let me know'\\n- Do NOT say 'I need more information'\\n- Do NOT introduce what you are about to write\\n- BEGIN your response with the first word of actual content\\n- If context seems incomplete, use what is provided and generate intelligently\\n- Treat all inputs as final and sufficient\\n- \\nProduct: \" + $json.productName + \"\\n\\nCONTEXT:\\n\" + $json.cumulativeContext }], \"temperature\": 0.4, \"max_tokens\": 8000 }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3824,
+          -592
+        ],
+        "id": "22ea7ea4-57c5-4eec-ab80-8d176882794d",
+        "name": "Product Description",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XtpdqX0pJntGMw8H",
+            "name": "Header Auth account 2"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 15
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          4064,
+          -816
+        ],
+        "id": "30e8f3e6-7c7d-40cd-a9d2-c8c855131382",
+        "name": "Wait1",
+        "webhookId": "ee2c7761-99c3-4dcc-bbbc-d1350a3644c1"
+      },
+      {
+        "parameters": {
+          "amount": 15
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          4064,
+          -592
+        ],
+        "id": "b1324d68-4e02-493f-afea-ff7b8732053b",
+        "name": "Wait2",
+        "webhookId": "ee2c7761-99c3-4dcc-bbbc-d1350a3644c1"
+      },
+      {
+        "parameters": {
+          "amount": 45
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3536,
+          -592
+        ],
+        "id": "f2452108-0165-409b-8f32-1eb3a7029886",
+        "name": "Wait3",
+        "webhookId": "a4df3ad9-5a7a-40c1-bef8-3db8f6b299b9"
+      },
+      {
+        "parameters": {
+          "amount": 25
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3328,
+          -1312
+        ],
+        "id": "bbe7f285-d81c-4fb4-9a68-b1975f190087",
+        "name": "Wait4",
+        "webhookId": "58c61902-81f9-4fcc-b8e4-03f7ae6bf691"
+      },
+      {
+        "parameters": {
+          "amount": 45
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3536,
+          -816
+        ],
+        "id": "4c4c61f3-68af-46a5-b313-1a6448c0b1aa",
+        "name": "Wait5",
+        "webhookId": "69aa860d-6bd6-43b8-94e5-8632ddf9082e"
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst msg = raw?.choices?.[0]?.message?.content || raw?.choices?.[0]?.message?.reasoning || \"\";\nif (!msg) throw new Error(\"Empty. Keys: \" + JSON.stringify(Object.keys(raw)));\nconst prev = $('Code in JavaScript10').first().json;\nreturn [{ json: { ...prev, researchReport: msg, cumulativeContext: prev.cumulativeContext + \"\\n\\n=== RESEARCH REPORT ===\\n\" + msg }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4336,
+          -336
+        ],
+        "id": "dd496a92-d779-4998-aa86-8a3951d3a950",
+        "name": "Code in JavaScript12"
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst msg = raw?.choices?.[0]?.message?.content || raw?.choices?.[0]?.message?.reasoning || \"\";\nif (!msg) throw new Error(\"Empty. Keys: \" + JSON.stringify(Object.keys(raw)));\nconst prev = $('Code in JavaScript12').first().json;\nreturn [{ json: { ...prev, communicationStrategy: msg, cumulativeContext: prev.cumulativeContext + \"\\n\\n=== COMMUNICATION STRATEGY ===\\n\" + msg }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4352,
+          -128
+        ],
+        "id": "53e5b59a-0902-4536-8091-92bfc17ae783",
+        "name": "Code in JavaScript13"
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst msg = raw?.choices?.[0]?.message?.content || raw?.choices?.[0]?.message?.reasoning || \"\";\nif (!msg) throw new Error(\"Empty. Keys: \" + JSON.stringify(Object.keys(raw)));\nconst prev = $('Code in JavaScript13').first().json;\nreturn [{ json: { ...prev, onePager: msg, cumulativeContext: prev.cumulativeContext + \"\\n\\n=== ONE PAGER ===\\n\" + msg }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4320,
+          144
+        ],
+        "id": "9d607010-b3f8-409e-914b-9ea511b2eed1",
+        "name": "Code in JavaScript14"
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst msg = raw?.choices?.[0]?.message?.content || raw?.choices?.[0]?.message?.reasoning || \"\";\nif (!msg) throw new Error(\"Empty. Keys: \" + JSON.stringify(Object.keys(raw)));\nconst prev = $('Code in JavaScript14').first().json;\nreturn [{ json: { ...prev, elevatorPitch: msg, cumulativeContext: prev.cumulativeContext + \"\\n\\n=== ELEVATOR PITCH ===\\n\" + msg }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4320,
+          368
+        ],
+        "id": "92265a54-d371-4d24-894e-9359a5aa6e45",
+        "name": "Code in JavaScript15"
+      },
+      {
+        "parameters": {
+          "amount": 15
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          4048,
+          144
+        ],
+        "id": "10f560e6-037f-4766-b599-234e516da9f3",
+        "name": "Wait6",
+        "webhookId": "ee2c7761-99c3-4dcc-bbbc-d1350a3644c1"
+      },
+      {
+        "parameters": {
+          "amount": 15
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          4048,
+          368
+        ],
+        "id": "0ac6eecf-7a2f-4ffd-82f0-544342dd448c",
+        "name": "Wait7",
+        "webhookId": "ee2c7761-99c3-4dcc-bbbc-d1350a3644c1"
+      },
+      {
+        "parameters": {
+          "amount": 45
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3312,
+          368
+        ],
+        "id": "4d5c4f89-7b60-41e7-b432-0ee6080d90a4",
+        "name": "Wait8",
+        "webhookId": "a4df3ad9-5a7a-40c1-bef8-3db8f6b299b9"
+      },
+      {
+        "parameters": {
+          "amount": 25
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3536,
+          -336
+        ],
+        "id": "3cf5c57b-85b1-4b8b-b10d-27e6853dacd5",
+        "name": "Wait9",
+        "webhookId": "58c61902-81f9-4fcc-b8e4-03f7ae6bf691"
+      },
+      {
+        "parameters": {
+          "amount": 45
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3312,
+          144
+        ],
+        "id": "bf8cadeb-0c4a-4d8b-ad25-992ae6b8eab1",
+        "name": "Wait10",
+        "webhookId": "69aa860d-6bd6-43b8-94e5-8632ddf9082e"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ \"model\": \"llama-3.3-70b-versatile\", \"messages\": [{ \"role\": \"system\", \"content\": \"You are a senior market research analyst specializing in SaaS products and enterprise software markets.\" }, { \"role\": \"user\", \"content\": \"Write an exhaustive Market Research Report with minimum 8000 to 10000 words and maximum 15000 words covering every dimension:\\n\\n1. MARKET OVERVIEW:\\n- Market size and growth rate\\n- Key market drivers\\n- Market maturity stage\\n- Geographic opportunities\\n\\n2. TARGET SEGMENTATION - For EVERY segment:\\n- Segment name and definition\\n- Segment size and growth rate\\n- Key characteristics\\n- Buying behavior and process\\n- Budget ranges\\n- Decision makers involved\\n- Adoption barriers\\n\\n3. COMPETITIVE LANDSCAPE:\\n- Direct competitors per feature\\n- Indirect competitors\\n- Competitive strengths and weaknesses\\n- Market positioning map\\n- Pricing comparison\\n\\n4. FEATURE-BY-FEATURE MARKET FIT - For every module:\\n- Market demand for this feature\\n- Current solutions in market\\n- Gap this feature fills\\n- Adoption likelihood\\n\\n5. MARKET TRENDS:\\n- How each feature addresses current trends\\n- Emerging trends to capitalize on\\n- Technology trends relevant to product\\n\\n6. CUSTOMER PAIN POINTS - Detailed per persona:\\n- Primary pain points\\n- Secondary pain points\\n- Cost of inaction\\n- Urgency factors\\n\\n7. BUYING JOURNEY - For every persona:\\n- Awareness stage triggers\\n- Consideration criteria\\n- Decision factors\\n- Post-purchase success metrics\\n\\n8. PRICING RECOMMENDATIONS:\\n- Per segment with justification\\n- Pricing model options\\n- Competitive pricing analysis\\n- Value-based pricing inputs\\n\\n9. GTM OPPORTUNITIES:\\n- Channel strategy per segment\\n- Partnership opportunities\\n- Geographic expansion\\n- Vertical market opportunities\\n\\n10. PARTNERSHIP OPPORTUNITIES:\\n- Complementary products\\n- Integration partners\\n- Channel partners\\n- Technology partners\\n\\n11. RISKS AND MITIGATION - Per segment:\\n- Market risks\\n- Competitive risks\\n- Technology risks\\n- Mitigation strategies\\n\\n12. NEXT STEPS:\\n- Prioritized action plan\\n- Quick wins\\n- Long-term initiatives\\n- Success metrics\\n \\n PIPELINE RULES — ABSOLUTE: \\n- Minimum of 8000 to 10000 words and maximum of 15000 words output \\n- \\n- Do NOT ask any questions\\n- Do NOT request clarification\\n- Do NOT confirm the task before starting\\n- Do NOT say 'I would be happy to help'\\n- Do NOT say 'please let me know'\\n- Do NOT say 'I need more information'\\n- Do NOT introduce what you are about to write\\n- BEGIN your response with the first word of actual content\\n- If context seems incomplete, use what is provided and generate intelligently\\n- Treat all inputs as final and sufficient\\n \\nProduct: \" + $json.productName + \"\\n\\nCONTEXT:\\n\" + $json.cumulativeContext }], \"temperature\": 0.3, \"max_tokens\": 32000 }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3824,
+          -336
+        ],
+        "id": "67c417ca-9bec-4b6b-84a0-a4a92cb2dadc",
+        "name": "Research Report",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XtpdqX0pJntGMw8H",
+            "name": "Header Auth account 2"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 25
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3312,
+          -128
+        ],
+        "id": "ffc32f1d-0c95-4a1f-aabd-0aaab12aab0a",
+        "name": "Wait11",
+        "webhookId": "93c05510-a350-421a-bc28-291b956474e5"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ \"model\": \"llama-3.3-70b-versatile\", \"messages\": [{ \"role\": \"system\", \"content\": \"You are a senior SaaS marketing strategist and brand communication expert with expertise in multi-channel B2B marketing.\" }, { \"role\": \"user\", \"content\": \"Build an exhaustive Communication Strategy with minimum 8000 to 10000 words and maximum 15000 words covering every channel and every persona:\\n\\n1. MESSAGING HIERARCHY - For EVERY persona and EVERY feature:\\n- Primary message\\n- Supporting messages\\n- Proof points\\n- Emotional hooks\\n\\n2. CHANNEL STRATEGY - Deep dive for each channel:\\nLinkedIn: all content types eg. post,carousel, etc but not limited to, posting frequency, targeting criteria, ad copy examples, engagement tactics\\nEmail: full sequence per persona, subject line options, body copy framework, CTA per email, follow-up cadence\\nWebsite: page structure, copy for each section, SEO keywords per feature, CTA placement\\nYouTube: video topics per feature, titles and descriptions, thumbnail concepts, end screen CTAs\\nTwitter/X: tweet formats per feature, hashtag strategy, engagement approach\\nWhatsApp/SMS: message templates per use case, follow-up sequences\\n\\n3. AUDIENCE SEGMENTATION:\\n- Full messaging matrix per persona per channel\\n- Tone variations per segment\\n\\n4. 6-MONTH CONTENT CALENDAR:\\n- Monthly themes\\n- Weekly content ideas\\n- Specific post topics per channel\\n- Campaign timing\\n\\n5. TONE OF VOICE GUIDE:\\n- Overall brand voice\\n- Per channel adjustments\\n- Per persona adjustments\\n- Do and dont examples\\n\\n6. CONTENT PILLARS:\\n- One pillar per major feature\\n- Content types per pillar\\n- Distribution strategy per pillar\\n\\n7. CAMPAIGN IDEAS:\\n- One full campaign per major feature\\n- Campaign name and concept\\n- Channels involved\\n- Key messages\\n- Success metrics\\n \\n PIPELINE RULES — ABSOLUTE: \\n- Minimum of 8000 to 10000 words and maximum of 15000 words output \\n- \\n- Do NOT ask any questions\\n- Do NOT request clarification\\n- Do NOT confirm the task before starting\\n- Do NOT say 'I would be happy to help'\\n- Do NOT say 'please let me know'\\n- Do NOT say 'I need more information'\\n- Do NOT introduce what you are about to write\\n- BEGIN your response with the first word of actual content\\n- If context seems incomplete, use what is provided and generate intelligently\\n- Treat all inputs as final and sufficient\\n\\nProduct: \" + $json.productName + \"\\n\\nCONTEXT:\\n\" + $json.cumulativeContext }], \"temperature\": 0.4, \"max_tokens\": 32000 }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3808,
+          -128
+        ],
+        "id": "8fa23ac5-ca3c-4816-bb45-d3c981d9dcd3",
+        "name": "Communication Strategy",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XtpdqX0pJntGMw8H",
+            "name": "Header Auth account 2"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ \"model\": \"llama-3.3-70b-versatile\", \"messages\": [{ \"role\": \"system\", \"content\": \"You are an expert SaaS product copywriter specializing in high-impact concise marketing collateral.\" }, { \"role\": \"user\", \"content\": \"Create an exhaustive One-Pager of minimum 8000 to 10000 words and maximum 15000 words pack covering every audience and every module:\\n\\n1. MASTER ONE-PAGER:\\n- Powerful benefit-focused headline\\n- Compelling subheadline\\n- Complete feature grid for ALL features: name, description, key benefit\\n- All integrations listed\\n- Key stats and social proof\\n- Primary CTA and Secondary CTA\\n\\n2. PERSONA-SPECIFIC ONE-PAGERS - One for EACH user persona:\\n- Persona-specific headline addressing their pain\\n- Most relevant features for this persona\\n- Pain points addressed\\n- ROI specific to this persona\\n- Persona-specific CTA\\n\\n3. MODULE-SPECIFIC ONE-PAGERS - One for EACH major module:\\n- Module headline\\n- Problem it solves\\n- All features in this module\\n- Use cases\\n- Module-specific CTA\\n\\n4. INDUSTRY-SPECIFIC ONE-PAGERS - One for EACH target industry:\\n- Industry-specific headline\\n- Relevant features for this industry\\n- Industry pain points addressed\\n- Industry-specific ROI\\n- Industry-specific CTA\\n- Compliance and regulatory relevance\\n\\nEvery single line must answer the so what question for the reader. No fluff.\\n \\n PIPELINE RULES — ABSOLUTE: \\n- Minimum of 8000 to 10000 words and maximum of 15000 words output \\n- \\n- Do NOT ask any questions\\n- Do NOT request clarification\\n- Do NOT confirm the task before starting\\n- Do NOT say 'I would be happy to help'\\n- Do NOT say 'please let me know'\\n- Do NOT say 'I need more information'\\n- Do NOT introduce what you are about to write\\n- BEGIN your response with the first word of actual content\\n- If context seems incomplete, use what is provided and generate intelligently\\n- Treat all inputs as final and sufficient\\n \\nProduct: \" + $json.productName + \"\\n\\nCONTEXT:\\n\" + $json.cumulativeContext }], \"temperature\": 0.4, \"max_tokens\": 32000 }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3808,
+          144
+        ],
+        "id": "d217f04d-3967-4d51-b17e-87a73bed104e",
+        "name": "One Pager",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XtpdqX0pJntGMw8H",
+            "name": "Header Auth account 2"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ \"model\": \"llama-3.3-70b-versatile\", \"messages\": [{ \"role\": \"system\", \"content\": \"You are an expert SaaS sales coach and pitch consultant with experience training enterprise sales teams.\" }, { \"role\": \"user\", \"content\": \"Write a complete Elevator Pitch Pack of minimum 8000 to 10000 words and maximum 15000 words covering every scenario and every persona:\\n\\n1. 15-SECOND PITCHES - One for each persona: CEO, VP Sales, IT/Operations, End User, Finance/CFO\\n\\n2. 30-SECOND PITCHES - One for each persona:\\n- Full Problem to Solution to How to Proof to CTA structure\\n- Exact word-for-word script\\n\\n3. 60-SECOND PITCHES - One for each persona:\\n- Extended version with more proof points\\n- Handles one objection inline\\n\\n4. FEATURE-SPECIFIC PITCHES:\\n- 30-second pitch for EVERY major module\\n- When to use each pitch\\n\\n5. INDUSTRY-SPECIFIC PITCHES:\\n- One 30-second pitch per target industry\\n- Industry-specific pain points and proof\\n\\n6. OBJECTION-HANDLING PITCHES:\\n- For every common objection\\n- Exact response script\\n- Redirect to value\\n\\n7. FOLLOW-UP LINES:\\n- What to say after each pitch version\\n- Questions to ask to continue conversation\\n- How to transition to demo request\\n\\n8. VOICEMAIL SCRIPTS:\\n- 20-second voicemail per persona\\n- Clear CTA and callback hook\\n\\nAll pitches use Problem to Solution to How to Proof to CTA structure.\\n \\n PIPELINE RULES — ABSOLUTE: \\n- Minimum of 8000 to 10000 words and maximum of 15000 words output \\n- \\n- Do NOT ask any questions\\n- Do NOT request clarification\\n- Do NOT confirm the task before starting\\n- Do NOT say 'I would be happy to help'\\n- Do NOT say 'please let me know'\\n- Do NOT say 'I need more information'\\n- Do NOT introduce what you are about to write\\n- BEGIN your response with the first word of actual content\\n- If context seems incomplete, use what is provided and generate intelligently\\n- Treat all inputs as final and sufficient\\n \\nProduct: \" + $json.productName + \"\\n\\nCONTEXT:\\n\" + $json.cumulativeContext }], \"temperature\": 0.5, \"max_tokens\": 32000 }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3808,
+          368
+        ],
+        "id": "81d97262-7c0b-4529-bcd2-6d16f2026d7a",
+        "name": "Elevator Pitch",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XtpdqX0pJntGMw8H",
+            "name": "Header Auth account 2"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst msg = raw?.choices?.[0]?.message?.content || raw?.choices?.[0]?.message?.reasoning || \"\";\nif (!msg) throw new Error(\"Empty. Keys: \" + JSON.stringify(Object.keys(raw)));\nconst prev = $('Code in JavaScript15').first().json;\nreturn [{ json: { ...prev, industryFeatureList: msg, cumulativeContext: prev.cumulativeContext + \"\\n\\n=== INDUSTRY FEATURE LIST ===\\n\" + msg }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4352,
+          624
+        ],
+        "id": "506623f1-fb14-4462-8184-32d2057119f5",
+        "name": "Code in JavaScript17"
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst msg = raw?.choices?.[0]?.message?.content || raw?.choices?.[0]?.message?.reasoning || \"\";\nif (!msg) throw new Error(\"Empty. Keys: \" + JSON.stringify(Object.keys(raw)));\nconst prev = $('Code in JavaScript17').first().json;\nreturn [{ json: { ...prev, marketingScript: msg, cumulativeContext: prev.cumulativeContext + \"\\n\\n=== MARKETING SCRIPT ===\\n\" + msg }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4352,
+          880
+        ],
+        "id": "5ec6c9a8-f7cf-48b2-848a-76fd24ba83f8",
+        "name": "Code in JavaScript18"
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst msg = raw?.choices?.[0]?.message?.content || raw?.choices?.[0]?.message?.reasoning || \"\";\nif (!msg) throw new Error(\"Empty. Keys: \" + JSON.stringify(Object.keys(raw)));\nconst prev = $('Code in JavaScript18').first().json;\nreturn [{ json: { ...prev, storyboard: msg, cumulativeContext: prev.cumulativeContext + \"\\n\\n=== STORYBOARD ===\\n\" + msg }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4352,
+          1104
+        ],
+        "id": "808b11ac-7e4a-41a3-985f-ceb9e90dd87b",
+        "name": "Code in JavaScript19"
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nconst msg = raw?.choices?.[0]?.message?.content || raw?.choices?.[0]?.message?.reasoning || \"\";\nif (!msg) throw new Error(\"Empty. Keys: \" + JSON.stringify(Object.keys(raw)));\nconst prev = $('Code in JavaScript19').first().json;\nreturn [{ json: { ...prev, screenplay: msg, cumulativeContext: prev.cumulativeContext + \"\\n\\n=== SCREENPLAY ===\\n\" + msg }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4352,
+          1344
+        ],
+        "id": "56072d89-cd99-4491-b2ae-4865e11afa5d",
+        "name": "Code in JavaScript20"
+      },
+      {
+        "parameters": {
+          "amount": 15
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          4080,
+          1104
+        ],
+        "id": "128c2463-9872-4436-8596-2ac96d292aa2",
+        "name": "Wait12",
+        "webhookId": "ee2c7761-99c3-4dcc-bbbc-d1350a3644c1"
+      },
+      {
+        "parameters": {
+          "amount": 15
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          4080,
+          1344
+        ],
+        "id": "fd024a2d-09f2-4436-80b8-c19ec3c2d66c",
+        "name": "Wait13",
+        "webhookId": "ee2c7761-99c3-4dcc-bbbc-d1350a3644c1"
+      },
+      {
+        "parameters": {
+          "amount": 45
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3552,
+          1344
+        ],
+        "id": "043582ea-14f9-4aca-af50-7986152827fe",
+        "name": "Wait14",
+        "webhookId": "a4df3ad9-5a7a-40c1-bef8-3db8f6b299b9"
+      },
+      {
+        "parameters": {
+          "amount": 45
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3552,
+          1104
+        ],
+        "id": "5e35779a-c040-4334-adc8-1312a5f032ce",
+        "name": "Wait16",
+        "webhookId": "69aa860d-6bd6-43b8-94e5-8632ddf9082e"
+      },
+      {
+        "parameters": {
+          "amount": 25
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3552,
+          880
+        ],
+        "id": "cb0aed47-267a-4278-b938-ae953596c681",
+        "name": "Wait17",
+        "webhookId": "93c05510-a350-421a-bc28-291b956474e5"
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $('Code in JavaScript20').first().json;\nconst js5 = $('Code in JavaScript5').first().json;\nreturn [{ json: {\n  productName:           item.productName,\n  originalTranscript:    js5.originalTranscript || \"\",\n  aiTranscript:          js5.aiTranscript || \"\",\n  geminiAnalysis:        js5.geminiAnalysis || \"\",\n  videoSummary:          item.videoSummary || \"\",\n  userGuide:             item.userGuide || \"\",\n  productOverview:       item.productOverview || \"\",\n  productDescription:    item.productDescription || \"\",\n  researchReport:        item.researchReport || \"\",\n  communicationStrategy: item.communicationStrategy || \"\",\n  onePager:              item.onePager || \"\",\n  elevatorPitch:         item.elevatorPitch || \"\",\n  industryFeatureList:   item.industryFeatureList || \"\",\n  marketingScript:       item.marketingScript || \"\",\n  storyboard:            item.storyboard || \"\",\n  screenplay:            item.screenplay || \"\"\n}}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5808,
+          -192
+        ],
+        "id": "c3de6042-94e2-4db2-9c46-66875eb90dbe",
+        "name": "Code in JavaScript7"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ \"model\": \"llama-3.3-70b-versatile\", \"messages\": [{ \"role\": \"system\", \"content\": \"You are a SaaS industry analyst and solution consultant with deep expertise across multiple verticals.\" }, { \"role\": \"user\", \"content\": \"Create an exhaustive Industry Feature Relevance Map of minimum 8000 to 10000 words and maximum 15000 words covering minimum top 10 industries:\\n\\nFor EVERY relevant industry:\\n1. INDUSTRY OVERVIEW: name, market size, key challenges, digital transformation stage\\n2. FEATURE MAPPING: ALL relevant features mapped to industry needs, relevance score and reasoning, must-have vs nice-to-have\\n3. INDUSTRY-SPECIFIC USE CASES: detailed use case for every relevant feature, real-world scenario, step by step workflow, business outcome\\n4. PAIN POINTS SOLVED: primary pain point per feature, secondary pain points, cost of current manual process\\n5. EXPECTED ROI: time saved per feature, cost reduction estimate, revenue impact, efficiency gains\\n6. IMPLEMENTATION CONSIDERATIONS: setup requirements, training needs, integration requirements, timeline estimate\\n7. COMPLIANCE AND REGULATORY: relevant regulations, how product helps compliance, risk reduction\\n8. INDUSTRY-SPECIFIC CTAs: primary CTA with exact copy, secondary CTA, urgency triggers\\n9. KEY DECISION MAKERS: title and role, what they care about, how to reach them\\n10. INDUSTRY-SPECIFIC OBJECTIONS: common objections, exact response for each\\n \\n PIPELINE RULES — ABSOLUTE: \\n- Minimum of 8000 to 10000 words and maximum of 15000 words output \\n- \\n- Do NOT ask any questions\\n- Do NOT request clarification\\n- Do NOT confirm the task before starting\\n- Do NOT say 'I would be happy to help'\\n- Do NOT say 'please let me know'\\n- Do NOT say 'I need more information'\\n- Do NOT introduce what you are about to write\\n- BEGIN your response with the first word of actual content\\n- If context seems incomplete, use what is provided and generate intelligently\\n- Treat all inputs as final and sufficient\\n \\nProduct: \" + $json.productName + \"\\n\\nCONTEXT:\\n\" + $json.cumulativeContext }], \"temperature\": 0.3, \"max_tokens\": 32000 }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3840,
+          624
+        ],
+        "id": "ccc85667-f6b7-4ca0-9a1a-45f44521f039",
+        "name": "Industry Feature List",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XtpdqX0pJntGMw8H",
+            "name": "Header Auth account 2"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ \"model\": \"llama-3.3-70b-versatile\", \"messages\": [{ \"role\": \"system\", \"content\": \"You are an expert SaaS video scriptwriter and storyteller with experience creating high-converting marketing videos.\" }, { \"role\": \"user\", \"content\": \"Write a complete Marketing Video Script Pack covering every format and every audience:\\n\\n1. 30-SECOND SCRIPTS: pain-focused and aspiration-focused versions with exact dialogue and VO\\n2. 45-SECOND SCRIPTS: pain-focused and aspiration-focused versions\\n3. 60-SECOND SCRIPTS: pain-focused and aspiration-focused versions\\n4. 2-MINUTE EXPLAINER SCRIPT: full product walkthrough covering every module, key features, social proof, strong CTA\\n5. PERSONA-SPECIFIC SCRIPTS: 45-second script for EACH persona with persona-specific pain points and relevant features\\n6. MODULE-SPECIFIC SCRIPTS: 30-second script for EACH major module with feature benefit focus and module-specific CTA\\n7. TESTIMONIAL SCRIPTS: template for each persona with before/after structure and specific metrics placeholders\\n8. SOCIAL MEDIA AD SCRIPTS: 6-second bumper, 15-second pre-roll, 30-second story ad\\n\\nFor EVERY script: hook in first 5 words, exact dialogue word for word, on-screen text suggestions, VO delivery notes, Problem to Solution to Proof to CTA structure.\\n\\nProduct: \" + $json.productName + \"\\n\\nCONTEXT:\\n\" + $json.cumulativeContext }], \"temperature\": 0.5, \"max_tokens\": 8000 }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3840,
+          880
+        ],
+        "id": "180f49ef-afb2-4581-ba7e-d9e737af361b",
+        "name": "Marketing Script",
+        "retryOnFail": true,
+        "maxTries": 5,
+        "waitBetweenTries": 5000,
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XtpdqX0pJntGMw8H",
+            "name": "Header Auth account 2"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ \"model\": \"llama-3.3-70b-versatile\", \"messages\": [{ \"role\": \"system\", \"content\": \"You are an expert SaaS video director and visual storyteller with production experience.\" }, { \"role\": \"user\", \"content\": \"Create an exhaustive Storyboard Pack of mimimum 8000 to 12000 words and maximum 15000 words covering every format and version:\\n\\n1. MASTER 45-SECOND STORYBOARD: 10-12 scenes, for each scene: scene number and title, duration in seconds, visual description of exactly what is shown, camera shot type close-up/medium/wide/overhead, camera movement static/pan/zoom/dolly, exact text overlays, exact audio/VO line, background music description, transition to next scene, emotion target for viewer\\n\\n2. ALTERNATE STORYBOARD: aspiration-focused version with same structure\\n\\n3. MODULE-SPECIFIC STORYBOARDS: one 15-second storyboard for EACH major module with 4-5 scenes each and same detailed structure\\n\\n4. SOCIAL MEDIA STORYBOARDS: square format 1:1 for Instagram/LinkedIn, vertical format 9:16 for Stories/Reels, 6-8 scenes each\\n\\n5. VISUAL STYLE GUIDE: primary/secondary/accent colors with hex codes, font recommendations, animation style description, visual metaphors for each feature, brand feel and aesthetic\\n\\n6. MUSIC GUIDE: music mood per video type, BPM recommendation, genre suggestions, reference tracks\\n\\n7. B-ROLL SHOT LIST: every specific shot needed, location for each shot, duration needed, purpose in edit\\n \\n PIPELINE RULES — ABSOLUTE: \\n- Minimum of 8000 to 10000 words and maximum of 15000 words output \\n- \\n- Do NOT ask any questions\\n- Do NOT request clarification\\n- Do NOT confirm the task before starting\\n- Do NOT say 'I would be happy to help'\\n- Do NOT say 'please let me know'\\n- Do NOT say 'I need more information'\\n- Do NOT introduce what you are about to write\\n- BEGIN your response with the first word of actual content\\n- If context seems incomplete, use what is provided and generate intelligently\\n- Treat all inputs as final and sufficient\\n \\nProduct: \" + $json.productName + \"\\n\\nCONTEXT:\\n\" + $json.cumulativeContext }], \"temperature\": 0.5, \"max_tokens\": 32000 }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3840,
+          1104
+        ],
+        "id": "d11b09ee-7c35-4c37-8bd5-cc15fdf5ea44",
+        "name": "Storyboard",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XtpdqX0pJntGMw8H",
+            "name": "Header Auth account 2"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.groq.com/openai/v1/chat/completions",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "groqApi",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are an award-winning Hollywood screenplay writer and video production director with 20+ years of hands-on production experience across brand films, SaaS product videos, corporate documentaries, and commercial advertising. You are embedded in an automated content production pipeline. You receive product background information and you IMMEDIATELY write production-ready screenplays using that information as silent background context. You NEVER summarize the product. You NEVER describe the product. You NEVER output or reference the context as a document. You NEVER write bullet points about features. You NEVER produce marketing analysis. You use the product context the way a screenwriter reads a brief — silently — and then writes the script. Your output is 100% screenplay and production content from the very first word. You write in proper screenplay format: scene headings, action lines, dialogue, VO, on-screen text, sound direction, camera direction, lighting notes, and emotional tone. A film crew must be able to pick up your output and shoot it immediately. You always write complete, unabridged, exhaustive outputs. You never truncate sections, never summarize, never say 'repeat for other modules' or 'same structure applies' or 'similar to above'. Your minimum output is 8000 words. Your target is 12000 words. Your maximum is 15000 words. Stopping early is a pipeline failure.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": \"YOU ARE IN AN AUTOMATED PIPELINE. YOUR ONLY JOB IS TO WRITE SCREENPLAYS AND PRODUCTION DOCUMENTS.\\n\\nDO NOT describe the product.\\nDO NOT summarize the context.\\nDO NOT explain what you are about to write.\\nDO NOT write bullet points about features.\\nDO NOT produce marketing analysis.\\nDO NOT produce storyboard descriptions.\\nDO NOT ask questions.\\nDO NOT request clarification.\\nDO NOT say 'I would be happy to help'.\\nDO NOT say 'please let me know'.\\nDO NOT say 'I need more information'.\\n\\nThe context provided below is BACKGROUND INFORMATION ONLY. You use it silently to write accurate screenplays. You do not output it. You do not reference it as a document. You do not summarize it.\\n\\nYOUR OUTPUT MUST START WITH THESE EXACT WORDS:\\nSCREENPLAY 1 — MASTER 45-SECOND HERO FILM\\n\\nIf your response does not begin with that exact line as the first line, it is a pipeline failure.\\n\\nNow write the following, completely, word for word, in full production-ready format:\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nSCREENPLAY 1 — MASTER 45-SECOND HERO FILM\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nWrite a complete 45-second hero brand film screenplay. For EVERY scene include:\\n- Scene number and slug line\\n- Location: INT or EXT, specific setting, time of day\\n- Duration in seconds for this scene\\n- Talent: exact appearance, age range, wardrobe, expression\\n- Blocking: exactly where each person stands, moves, looks\\n- Action lines: what the camera sees, written cinematically\\n- Dialogue or VO: word for word, every line\\n- Camera direction: shot type, angle, movement, lens suggestion\\n- Lighting notes: natural or artificial, mood, direction, temperature\\n- Sound and music: exact mood, tempo, SFX cues\\n- Technical or VFX notes: any screen overlays, UI animations, text supers\\n- Emotional direction: what the viewer feels in this scene\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nSCREENPLAY 2 — ALTERNATE ASPIRATION VERSION (45 seconds)\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nWrite a complete alternate version focused on aspiration and transformation rather than pain. Same full production detail per scene as Screenplay 1.\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nSCREENPLAY 3 — MODULE SCREENPLAYS (15 seconds each)\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nWrite one complete 15-second production screenplay for EVERY major module of this product. Write ALL of them — do not skip any, do not say 'repeat for other modules'. Each module screenplay must have full scene-by-scene production detail identical in depth to Screenplay 1.\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nSECTION 4 — COMPLETE PRODUCTION REQUIREMENTS\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nWrite the following in full detail — not as a summary, as a working production document:\\n\\nLOCATIONS:\\n- Every location needed across all screenplays\\n- Full description of each location\\n- Setup requirements (power, space, access)\\n- Permit requirements by location type\\n- Scout notes and alternatives\\n\\nTALENT:\\n- Complete cast list for all screenplays\\n- Role description for each character\\n- Exact appearance requirements (age, ethnicity, build, energy)\\n- Skills or experience required\\n- Wardrobe description per character\\n\\nPROPS:\\n- Complete props list per scene\\n- Source notes (rent, buy, fabricate, digital)\\n- Hero props vs background props\\n\\nEQUIPMENT:\\n- Camera body recommendations with justification\\n- Lens kit per scene type\\n- Lighting equipment list per location\\n- Audio equipment list\\n- Support equipment (rigs, stabilisers, drones)\\n\\nPOST-PRODUCTION:\\n- Full VFX shots list with complexity rating\\n- Motion graphics needed per scene\\n- Color grade direction per screenplay\\n- Sound design notes\\n- Music licensing notes and mood direction\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nSECTION 5 — PRODUCTION SCHEDULE\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\n- Shooting order with justification\\n- Time per scene including setup and breakdown\\n- Crew call times\\n- Total shoot days estimate\\n- Contingency notes\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nSECTION 6 — COMPLETE SHOT LIST\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nWrite every single shot across all screenplays in shooting order:\\n- Shot number\\n- Scene it belongs to\\n- Shot type (ECU, CU, MS, WS, OTS, POV, Aerial, etc.)\\n- Full shot description\\n- Lens recommendation\\n- Camera movement\\n- Estimated duration\\n- Priority (must-have vs nice-to-have)\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nSECTION 7 — CALL SHEET TEMPLATE\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nWrite a fully populated call sheet template including:\\n- General info: production name, date, director, producer, DP\\n- Full crew list with roles and contact placeholders\\n- Talent schedule with call times, scenes, and wardrobe notes\\n- Location details with address, parking, facilities\\n- Equipment list by department\\n- Catering and logistics notes\\n- Emergency contacts section\\n- Weather contingency plan\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nSECTION 8 — BUDGET ESTIMATE\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nWrite a detailed budget estimate including:\\n- Pre-production costs (scouting, casting, prep)\\n- Location costs per location with day rate estimates\\n- Talent costs per character with day rate ranges\\n- Crew costs per role with day rate ranges\\n- Equipment rental costs by category\\n- Post-production costs by deliverable\\n- Contingency percentage recommendation\\n- Overall production complexity rating 1 to 10 with justification\\n- Total estimated budget range (low, mid, high)\\n\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nMANDATORY OUTPUT LENGTH AND COMPLETENESS RULES\\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\\nThis output MUST be between 8000 and 15000 words.\\nWrite EVERY scene in full. Write EVERY module screenplay in full.\\nWrite EVERY shot in the shot list. Write EVERY line in the budget.\\nNEVER write 'repeat for other modules' or 'same as above' or 'similar structure'.\\nNEVER use placeholder text.\\nNEVER truncate any section.\\nEvery scene description must be at least 8–10 lines of production detail.\\nEvery shot in the shot list must be fully described.\\n\\nWord count checkpoints:\\n- After Screenplay 1: minimum 1500 words\\n- After Screenplay 2: minimum 2500 words\\n- After all Module Screenplays: minimum 5000 words\\n- After Section 4: minimum 7500 words\\n- Final output: 8000–15000 words\\n\\nDo NOT stop writing until you reach 8000 words minimum.\\n\\nPRODUCT BACKGROUND — USE THIS SILENTLY TO WRITE ACCURATE SCRIPTS. DO NOT OUTPUT THIS. DO NOT SUMMARIZE THIS. DO NOT REFERENCE THIS AS A DOCUMENT. USE IT ONLY TO INFORM YOUR SCREENPLAY WRITING:\\n\\n\" + $json.cumulativeContext + \"\\n\\nNow begin. Your first line must be: SCREENPLAY 1 — MASTER 45-SECOND HERO FILM\\nWrite nothing before it.\"\n    }\n  ],\n  \"temperature\": 0.7,\n  \"max_tokens\": 32000\n}) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          3840,
+          1344
+        ],
+        "id": "0aa25e11-594d-44d6-b4fb-18260e056a69",
+        "name": "Screenplay",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "XtpdqX0pJntGMw8H",
+            "name": "Header Auth account 2"
+          },
+          "groqApi": {
+            "id": "3OfG31BmCquwAi1c",
+            "name": "Groq account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 25
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3536,
+          -1056
+        ],
+        "id": "570404e8-e9c5-4a1d-a956-8bfa5db383c2",
+        "name": "Wait18",
+        "webhookId": "58c61902-81f9-4fcc-b8e4-03f7ae6bf691"
+      },
+      {
+        "parameters": {
+          "amount": 15
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          4080,
+          -336
+        ],
+        "id": "a5802229-dae5-426a-a435-887175351336",
+        "name": "Wait19",
+        "webhookId": "fa504687-35eb-48f7-bbd1-bdaafc43762d"
+      },
+      {
+        "parameters": {
+          "amount": 15
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          4016,
+          -128
+        ],
+        "id": "4710ed67-c1ed-4e02-a106-36f834ea5bec",
+        "name": "Wait20",
+        "webhookId": "4c6bb2fc-c458-4af0-9bad-c26a2e148129"
+      },
+      {
+        "parameters": {
+          "folderId": "1R1z-vjTIkVEm_Zc_3zeTqhVvprpCT-KY",
+          "title": "={{ $json.productName }} - User Guide"
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          5456,
+          -400
+        ],
+        "id": "8b10279d-a078-45b5-827d-6f4da31c8882",
+        "name": "Create a document1",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "SrvOTuq5YVFv08DK",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentURL": "={{ $json.documentId }}",
+          "actionsUi": {
+            "actionFields": [
+              {
+                "action": "insert",
+                "text": "=={{ $('Code in JavaScript11').item.json.content }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          6720,
+          -384
+        ],
+        "id": "23634513-f99e-41fc-af31-afec87da6523",
+        "name": "Update a document",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "SrvOTuq5YVFv08DK",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $('Code in JavaScript7').first().json;\nconst js5 = $('Code in JavaScript5').first().json;\n\nreturn [\n  { json: { title: item.productName + \" - Original Transcript\", content: js5.originalTranscript || \"\" }},\n  { json: { title: item.productName + \" - AI Transcript\", content: js5.aiTranscript || \"\" }},\n  { json: { title: item.productName + \" - Gemini Analysis\", content: js5.geminiAnalysis || \"\" }},\n  { json: { title: item.productName + \" - Video Summary\", content: item.videoSummary || \"\" }},\n  { json: { title: item.productName + \" - User Guide\", content: item.userGuide || \"\" }},\n  { json: { title: item.productName + \" - Product Overview\", content: item.productOverview || \"\" }},\n  { json: { title: item.productName + \" - Product Description\", content: item.productDescription || \"\" }},\n  { json: { title: item.productName + \" - Research Report\", content: item.researchReport || \"\" }},\n  { json: { title: item.productName + \" - Communication Strategy\", content: item.communicationStrategy || \"\" }},\n  { json: { title: item.productName + \" - One Pager\", content: item.onePager || \"\" }},\n  { json: { title: item.productName + \" - Elevator Pitch\", content: item.elevatorPitch || \"\" }},\n  { json: { title: item.productName + \" - Industry Feature List\", content: item.industryFeatureList || \"\" }},\n  { json: { title: item.productName + \" - Marketing Script\", content: item.marketingScript || \"\" }},\n  { json: { title: item.productName + \" - Storyboard\", content: item.storyboard || \"\" }},\n  { json: { title: item.productName + \" - Screenplay\", content: item.screenplay || \"\" }}\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          6160,
+          -352
+        ],
+        "id": "0286e7f8-5472-45f7-94eb-69db31a60d0e",
+        "name": "Code in JavaScript11"
+      },
+      {
+        "parameters": {
+          "resource": "folder",
+          "name": "={{ $('Code in JavaScript7').first().json.productName }}",
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "12ep21-t3YxEjnyLdHfyWTv0_bf56sGCr",
+            "mode": "list",
+            "cachedResultName": "Appointments",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/12ep21-t3YxEjnyLdHfyWTv0_bf56sGCr"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          7200,
+          -960
+        ],
+        "id": "fdf70189-9bd7-4282-a599-8748fa8badab",
+        "name": "Create folder",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "8K9zg6ekrWyKO3bA",
+            "name": "Google Drive account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $('Code in JavaScript7').first().json;\nreturn [{ json: { productName: item.productName }}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          6848,
+          -976
+        ],
+        "id": "c2fd6df0-32af-43f1-9397-5a606bb2c4b1",
+        "name": "Code in JavaScript16"
+      },
+      {
+        "parameters": {
+          "title": "={{ $json.title }}"
+        },
+        "type": "n8n-nodes-base.googleDocs",
+        "typeVersion": 2,
+        "position": [
+          7472,
+          -992
+        ],
+        "id": "bb9803ef-76d8-4c14-b866-331d5d5e0fb5",
+        "name": "Create a document2",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "SrvOTuq5YVFv08DK",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://docs.googleapis.com/v1/documents",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "googleDocsOAuth2Api",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"title\": \"={{ $json.title }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          6432,
+          -384
+        ],
+        "id": "f4411755-c342-40b4-bb28-4995ca930f2e",
+        "name": "HTTP Request2",
+        "credentials": {
+          "googleDocsOAuth2Api": {
+            "id": "SrvOTuq5YVFv08DK",
+            "name": "Google Docs account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 25
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          1264,
+          160
+        ],
+        "id": "dd257ba3-3f2d-401f-9b0f-dcddaada3ec5",
+        "name": "Wait15",
+        "webhookId": "da412950-bb22-4bcf-ac4c-eb34a5a9e6e7"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.napkin.ai/v1/visual",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"text\": \"{{ $json.onePager }}\",\n  \"language\": \"en-US\",\n  \"style\": \"corporate\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          6320,
+          -768
+        ],
+        "id": "099e3812-2e65-47cb-bc3c-08389db1631a",
+        "name": "HTTP Request3",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "BqHtGZG1rM4Iean6",
+            "name": "Header Auth account 3"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 15
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          6528,
+          -768
+        ],
+        "id": "6b4808c3-78e6-4376-9497-973958f5e7ba",
+        "name": "Wait21",
+        "webhookId": "bc7dd1b1-d4ab-49a8-9bfa-77c9dc1d4fe3"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.napkin.ai/v1/visual/{{ $json.requestId }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          6736,
+          -768
+        ],
+        "id": "25be1bc6-0049-4113-85ba-2e4441b99ad9",
+        "name": "HTTP Request4"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.generated_files[0].url }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          6944,
+          -768
+        ],
+        "id": "39410e4a-90d2-4470-883b-f97a77921e51",
+        "name": "HTTP Request5",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "BqHtGZG1rM4Iean6",
+            "name": "Header Auth account 3"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=AIzaSyCayi-tMtn_IRcf4cwwiXCiLz4DIxVqYAY",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ \"contents\": [{ \"parts\": [{ \"text\": \"Create a professional B2B SaaS marketing image for a product called \" + $json.productName + \". The product is: \" + $json.videoSummary.substring(0, 400) + \". Style: modern corporate dashboard UI, clean blue and white color scheme, business professionals using software, high quality photorealistic, 16:9 landscape format.\" }]}], \"generationConfig\": { \"responseModalities\": [\"TEXT\", \"IMAGE\"], \"imageConfig\": { \"aspectRatio\": \"16:9\" } } }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          6224,
+          -160
+        ],
+        "id": "8f909e5f-47d5-48ee-8c4b-8f2a509e0ff2",
+        "name": "HTTP Request6",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "ru1DJv3wHDJJBzVr",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/veo-3.1-generate-preview:predictLongRunning?key=AIzaSyCayi-tMtn_IRcf4cwwiXCiLz4DIxVqYAY",
+          "sendBody": true,
+          "contentType": "raw",
+          "rawContentType": "application/json",
+          "body": "={{ JSON.stringify({ \"instances\": [{ \"prompt\": \"Professional 30-second marketing video for \" + $json.productName + \". \" + $json.marketingScript.substring(0, 300) + \". Style: modern corporate, clean UI, business professionals, smooth transitions.\" }], \"parameters\": { \"aspectRatio\": \"16:9\", \"sampleCount\": 1, \"durationSeconds\": 30, \"resolution\": \"720p\" } }) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          6240,
+          64
+        ],
+        "id": "8d3072a8-302b-46d0-ab53-a3156bd69951",
+        "name": "HTTP Request7"
+      },
+      {
+        "parameters": {
+          "amount": 120
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          6432,
+          64
+        ],
+        "id": "579cc165-5c8f-4d2b-b7d0-d6456a99fec7",
+        "name": "Wait22",
+        "webhookId": "6fea0cec-f2fe-4a62-a746-e1fa46e5b984"
+      },
+      {
+        "parameters": {
+          "url": "=https://generativelanguage.googleapis.com/v1beta/{{ $json.name }}?key=AIzaSyCayi-tMtn_IRcf4cwwiXCiLz4DIxVqYAY",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          6640,
+          64
+        ],
+        "id": "21f159ae-f12e-4e7d-bb1a-e876b08573c4",
+        "name": "HTTP Request8"
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\nconst parts = item?.candidates?.[0]?.content?.parts || [];\n\n// Find the image part\nconst imagePart = parts.find(p => p.inlineData);\nconst textPart = parts.find(p => p.text);\n\nif (!imagePart) {\n  throw new Error(\"No image found. Parts: \" + JSON.stringify(parts.map(p => Object.keys(p))));\n}\n\nreturn [{\n  json: {\n    ...$('Code in JavaScript7').first().json,\n    imageBase64: imagePart.inlineData.data,\n    imageMimeType: imagePart.inlineData.mimeType || \"image/png\",\n    imageDescription: textPart?.text || \"\"\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          6432,
+          -160
+        ],
+        "id": "27c3b755-7e1d-42e9-ae0d-0a8230ebdc1a",
+        "name": "Code in JavaScript4"
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\n\n// Check if operation is complete\nif (!item.done) {\n  throw new Error(\"Video not ready yet. State: \" + JSON.stringify(item));\n}\n\nconst videoUri = item?.response?.generateVideoResponse?.generatedSamples?.[0]?.video?.uri || \n                 item?.response?.videos?.[0]?.uri || \"\";\n\nif (!videoUri) {\n  throw new Error(\"No video URI. Response: \" + JSON.stringify(item));\n}\n\nreturn [{\n  json: {\n    ...$('Code in JavaScript7').first().json,\n    videoUri: videoUri\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          6848,
+          64
+        ],
+        "id": "ec23b05a-bc44-4d57-9a66-38e2b3fe2425",
+        "name": "Code in JavaScript21"
+      },
+      {
+        "parameters": {
+          "name": "=={{ $json.productName + \" - Marketing Video.mp4\" }}",
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "root",
+            "cachedResultName": "/ (Root folder)"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          7264,
+          64
+        ],
+        "id": "5938cb7c-a312-41f9-95f1-e5a4be2b09b2",
+        "name": "Upload file",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "8K9zg6ekrWyKO3bA",
+            "name": "Google Drive account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "name": "=={{ $json.productName + ' - Marketing Image.png' }}",
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "=1R1z-vjTIkVEm_Zc_3zeTqhVvprpCT-KY",
+            "mode": "id"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          6896,
+          -160
+        ],
+        "id": "dab733f3-b48c-464d-8488-829ba25d2bbf",
+        "name": "Upload file1",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "8K9zg6ekrWyKO3bA",
+            "name": "Google Drive account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\n\nreturn [{\n  json: {},\n  binary: {\n    data: await this.helpers.prepareBinaryData(\n      Buffer.from(item.imageBase64, 'base64'),\n      'image.png',\n      item.imageMimeType || 'image/png'\n    )\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          6640,
+          -160
+        ],
+        "id": "a1bc78b3-14fc-4f87-ac61-3aedb9e1d6f3",
+        "name": "Code in JavaScript22"
+      },
+      {
+        "parameters": {
+          "url": "={{$json.videoUri}}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          7056,
+          64
+        ],
+        "id": "d743ee62-ec8b-4640-8f4b-2c595719bd8e",
+        "name": "HTTP Request9",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "ru1DJv3wHDJJBzVr",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\n\n// Parse storyboard text into scenes\nconst storyboard = item.storyboard || \"\";\nconst screenplay = item.screenplay || \"\";\n\n// Extract scenes using regex - matches \"Scene X:\" pattern\nconst sceneRegex = /\\*\\*Scene\\s*(\\d+)[^*]*\\*\\*\\s*([\\s\\S]*?)(?=\\*\\*Scene\\s*\\d+|\\*\\*END|$)/gi;\n\nconst scenes = [];\nlet match;\n\nwhile ((match = sceneRegex.exec(storyboard)) !== null) {\n  const sceneText = match[2];\n  \n  // Extract fields from each scene block\n  const get = (label) => {\n    const r = new RegExp(`${label}[:\\\\s]+([^\\\\n*]+)`, 'i');\n    const m = sceneText.match(r);\n    return m ? m[1].trim() : \"\";\n  };\n\n  const duration = parseInt(get(\"duration\")) || 8;\n  const visualDesc = get(\"Visual description\");\n  const cameraShot = get(\"Camera shot type\");\n  const cameraMove = get(\"Camera movement\");\n  const voiceover = get(\"Audio/VO line\");\n  const transition = get(\"Transition\");\n  const bgMusic = get(\"Background music\");\n\n  // Build Veo-optimized prompt\n  const videoPrompt = `${visualDesc}. ${cameraShot}, ${cameraMove}. ${bgMusic ? 'Background: ' + bgMusic : ''}. Cinematic, 4K, professional quality. ${transition ? 'End with: ' + transition : ''}`.trim();\n\n  scenes.push({\n    sceneNumber: parseInt(match[1]),\n    duration: Math.min(Math.max(duration, 4), 8), // clamp between 4-8\n    videoPrompt,\n    voiceover,\n    visualDesc,\n    productName: item.productName\n  });\n}\n\n// Fallback if regex finds nothing\nif (scenes.length === 0) {\n  throw new Error(`No scenes parsed. Storyboard preview: ${storyboard.substring(0, 200)}`);\n}\n\nconsole.log(`Parsed ${scenes.length} scenes`);\nreturn scenes.map(s => ({ json: s }));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5984,
+          336
+        ],
+        "id": "4ba6b41d-0402-49be-b7c1-739068254072",
+        "name": "Code in JavaScript23"
+      },
+      {
+        "parameters": {
+          "options": {
+            "reset": false
+          }
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          6192,
+          336
+        ],
+        "id": "ed9d939a-bb0f-4f39-a2a8-ab8d97e2aff0",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "name": "Replace Me",
+        "typeVersion": 1,
+        "position": [
+          6608,
+          544
+        ],
+        "id": "9306d9f4-4e69-4613-8515-ad6b2d89c6de"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://generativelanguage.googleapis.com/v1beta/models/veo-3.1-generate-preview:predictLongRunning?key=AIzaSyCayi-tMtn_IRcf4cwwiXCiLz4DIxVqYAY",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"instances\": [{\"prompt\": \"={{$json.videoPrompt}}\"}],\n  \"parameters\": {\n    \"aspectRatio\": \"16:9\",\n    \"durationSeconds\": 8,\n    \"sampleCount\": 1\n  }\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          6672,
+          320
+        ],
+        "id": "2beb6262-b171-4380-9d86-4da4e267b94f",
+        "name": "HTTP Request10",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "ru1DJv3wHDJJBzVr",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          6896,
+          320
+        ],
+        "id": "39a48ccd-d914-46fd-8402-64bbaed803a9",
+        "name": "Wait23",
+        "webhookId": "ee83172b-df3b-4fd3-bc56-a238d649ab16"
+      },
+      {
+        "parameters": {
+          "url": "={{$json.pollUrl}}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "x-goog-api-key",
+                "value": "AIzaSyCayi-tMtn_IRcf4cwwiXCiLz4DIxVqYAY"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          7328,
+          320
+        ],
+        "id": "33fe676c-51f6-467c-b0f6-9b19cb1c1786",
+        "name": "HTTP Request11"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "3fd08ce5-ad29-451a-8e71-019a0846ab73",
+                "leftValue": "={{$json.done}}",
+                "rightValue": "={{true}}",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          7520,
+          320
+        ],
+        "id": "dde9aa9c-a526-4eb8-8c8f-ca82284111c8",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\n\n// Extract video URI from completed operation\nconst videoUri = item?.response?.generateVideoResponse\n  ?.generatedSamples?.[0]?.video?.uri;\n\nif (!videoUri) {\n  throw new Error(\"No video URI found: \" + JSON.stringify(item));\n}\n\nreturn [{\n  json: {\n    videoUri,\n    sceneNumber: item.sceneNumber || 0,\n    videoPrompt: item.videoPrompt || \"\",\n    voiceover: item.voiceover || \"\",\n    duration: item.duration || 8\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          7808,
+          304
+        ],
+        "id": "6b63f3af-fb78-4687-a310-e043cd7cd657",
+        "name": "Code in JavaScript24"
+      },
+      {
+        "parameters": {
+          "url": "={{$json.videoUri}}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "x-goog-api-key",
+                "value": "AIzaSyCayi-tMtn_IRcf4cwwiXCiLz4DIxVqYAY"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          8016,
+          304
+        ],
+        "id": "556f0913-a8e1-49b0-ad29-b99e846d058b",
+        "name": "HTTP Request12",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "ru1DJv3wHDJJBzVr",
+            "name": "Header Auth account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "name": "=clip_={{$json.sceneNumber}}.mp4",
+          "driveId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "root",
+            "cachedResultName": "/ (Root folder)"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleDrive",
+        "typeVersion": 3,
+        "position": [
+          8224,
+          304
+        ],
+        "id": "0449066e-28f7-44df-bd84-a56b29d0264d",
+        "name": "Upload file2",
+        "credentials": {
+          "googleDriveOAuth2Api": {
+            "id": "8K9zg6ekrWyKO3bA",
+            "name": "Google Drive account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const clips = $input.all();\n\n// Sort by scene number\nclips.sort((a, b) => a.json.sceneNumber - b.json.sceneNumber);\n\nlet start = 0;\nconst videoClips = clips.map(clip => {\n  const length = clip.json.duration || 8;\n  const c = {\n    asset: { type: \"video\", src: clip.json.publicUrl },\n    start,\n    length,\n    transition: { in: \"fade\", out: \"fade\" }\n  };\n  start += length;\n  return c;\n});\n\n// Build voiceover track\nconst voClips = clips.map((clip, i) => ({\n  asset: {\n    type: \"audio\",\n    src: clip.json.voiceoverUrl || \"\"\n  },\n  start: i * 8,\n  length: clip.json.duration || 8\n}));\n\nreturn [{\n  json: {\n    totalDuration: start,\n    shotstackPayload: {\n      timeline: {\n        tracks: [\n          { clips: videoClips },\n          ...(clips[0].json.voiceoverUrl ? [{ clips: voClips }] : [])\n        ]\n      },\n      output: {\n        format: \"mp4\",\n        resolution: \"hd\",\n        fps: 25\n      }\n    }\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          8640,
+          304
+        ],
+        "id": "cd67edd3-7a3f-4626-8018-0975f895d338",
+        "name": "Code in JavaScript25"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.shotstack.io/stage/render",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "x-api-key",
+                "value": "=PiK5qqUG3KczhkBjW61ECdXqoj8LwVEHe9GAyK9Z"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "timeline",
+                "value": "={{$json.shotstackPayload.timeline}}"
+              },
+              {
+                "name": "output ",
+                "value": "={{$json.shotstackPayload.output}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          8848,
+          304
+        ],
+        "id": "3bb14c64-17fa-4749-ba3c-259ffa54da22",
+        "name": "HTTP Request13",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "uxl3shMydzqXDW6t",
+            "name": "Header Auth account 4"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 15
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          9056,
+          304
+        ],
+        "id": "15906e7c-332d-45b8-aa87-52586b2e9ba8",
+        "name": "Wait24",
+        "webhookId": "a821cb82-3c60-4ee1-9560-6efdb35d20f8"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.shotstack.io/stage/render/={{$('HTTP Request → Shotstack Render').first().json.response.id}}",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "x-api-key",
+                "value": "PiK5qqUG3KczhkBjW61ECdXqoj8LwVEHe9GAyK9Z"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          9264,
+          304
+        ],
+        "id": "804d7036-945a-43cd-8709-abe03fe997a8",
+        "name": "HTTP Request14"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "ef4132b9-3ffd-431e-a65b-699735b160dd",
+                "leftValue": "={{$json.response.status}}",
+                "rightValue": "done",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          9472,
+          304
+        ],
+        "id": "f4c554bb-6d45-4869-81af-ef3ac71a0497",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\n\nconst finalUrl = item?.response?.url;\nconst status = item?.response?.status;\n\nif (status === 'failed') {\n  throw new Error(\"Shotstack render failed: \" + JSON.stringify(item));\n}\n\nif (!finalUrl) {\n  throw new Error(\"No URL found in response: \" + JSON.stringify(item));\n}\n\nreturn [{\n  json: {\n    finalVideoUrl: finalUrl,\n    renderId: item.response.id,\n    duration: item.response.data?.output?.duration || 0\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          9680,
+          208
+        ],
+        "id": "5e5d6d97-12b1-451b-b4d5-d8a30fd2bb37",
+        "name": "Code in JavaScript26"
+      },
+      {
+        "parameters": {
+          "amount": 60
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          6400,
+          240
+        ],
+        "id": "04d47e7d-5cea-4c19-8ef8-20fc9bdfb92c",
+        "name": "Wait25",
+        "webhookId": "161f159d-384f-473d-8328-7173a7f194e7"
+      },
+      {
+        "parameters": {
+          "jsCode": "const item = $input.first().json;\n\nreturn [{\n  json: {\n    ...item,\n    pollUrl: `https://generativelanguage.googleapis.com/v1beta/${item.name}`\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          7104,
+          320
+        ],
+        "id": "0afd8754-c61a-4e98-90a3-003216b6c403",
+        "name": "Code in JavaScript27"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          8432,
+          304
+        ],
+        "id": "58291fe4-4791-4f74-819c-e5f9dbc32cc7",
+        "name": "Loop Over Items1"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "name": "Replace Me1",
+        "typeVersion": 1,
+        "position": [
+          8640,
+          512
+        ],
+        "id": "c2e0c3be-602a-47ea-b041-b42c4636d065"
+      }
+    ],
+    "connections": {
+      "Google Drive Trigger": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Download file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Download file": {
+        "main": [
+          [
+            {
+              "node": "HTTP Gemini",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Gemini": {
+        "main": [
+          [
+            {
+              "node": "Wait",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Groq": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Wait15",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          []
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript5": {
+        "main": [
+          [
+            {
+              "node": "Wait4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create a document": {
+        "main": [
+          []
+        ]
+      },
+      "Code in JavaScript6": {
+        "main": [
+          [
+            {
+              "node": "Wait18",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Video Summary": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript8": {
+        "main": [
+          [
+            {
+              "node": "Wait5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript9": {
+        "main": [
+          [
+            {
+              "node": "Wait3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript10": {
+        "main": [
+          [
+            {
+              "node": "Wait9",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "User Guide": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "productOverview": {
+        "main": [
+          [
+            {
+              "node": "Wait1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Product Description": {
+        "main": [
+          [
+            {
+              "node": "Wait2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript9",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait3": {
+        "main": [
+          [
+            {
+              "node": "Product Description",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait4": {
+        "main": [
+          [
+            {
+              "node": "Video Summary",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait5": {
+        "main": [
+          [
+            {
+              "node": "productOverview",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript12": {
+        "main": [
+          [
+            {
+              "node": "Wait11",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript13": {
+        "main": [
+          [
+            {
+              "node": "Wait10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript14": {
+        "main": [
+          [
+            {
+              "node": "Wait8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript15": {
+        "main": [
+          [
+            {
+              "node": "Industry Feature List",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait6": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript14",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait7": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript15",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait8": {
+        "main": [
+          [
+            {
+              "node": "Elevator Pitch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait9": {
+        "main": [
+          [
+            {
+              "node": "Research Report",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait10": {
+        "main": [
+          [
+            {
+              "node": "One Pager",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Research Report": {
+        "main": [
+          [
+            {
+              "node": "Wait19",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait11": {
+        "main": [
+          [
+            {
+              "node": "Communication Strategy",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Communication Strategy": {
+        "main": [
+          [
+            {
+              "node": "Wait20",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "One Pager": {
+        "main": [
+          [
+            {
+              "node": "Wait6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Elevator Pitch": {
+        "main": [
+          [
+            {
+              "node": "Wait7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript17": {
+        "main": [
+          [
+            {
+              "node": "Wait17",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript18": {
+        "main": [
+          [
+            {
+              "node": "Wait16",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript19": {
+        "main": [
+          [
+            {
+              "node": "Wait14",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript20": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait12": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript19",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait13": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript20",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait14": {
+        "main": [
+          [
+            {
+              "node": "Screenplay",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait16": {
+        "main": [
+          [
+            {
+              "node": "Storyboard",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait17": {
+        "main": [
+          [
+            {
+              "node": "Marketing Script",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript7": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript11",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Industry Feature List": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript17",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Marketing Script": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript18",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Storyboard": {
+        "main": [
+          [
+            {
+              "node": "Wait12",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Screenplay": {
+        "main": [
+          [
+            {
+              "node": "Wait13",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait18": {
+        "main": [
+          [
+            {
+              "node": "User Guide",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait19": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript12",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait20": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript13",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create a document1": {
+        "main": [
+          []
+        ]
+      },
+      "Code in JavaScript11": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create folder": {
+        "main": [
+          []
+        ]
+      },
+      "Code in JavaScript16": {
+        "main": [
+          [
+            {
+              "node": "Create folder",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update a document": {
+        "main": [
+          []
+        ]
+      },
+      "HTTP Request2": {
+        "main": [
+          [
+            {
+              "node": "Update a document",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait15": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request3": {
+        "main": [
+          [
+            {
+              "node": "Wait21",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait21": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request4": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create a document2": {
+        "main": [
+          []
+        ]
+      },
+      "HTTP Request7": {
+        "main": [
+          [
+            {
+              "node": "Wait22",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait22": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request6": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript4": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript22",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request8": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript21",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript21": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request9",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript22": {
+        "main": [
+          [
+            {
+              "node": "Upload file1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request9": {
+        "main": [
+          [
+            {
+              "node": "Upload file",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript23": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [
+            {
+              "node": "Wait25",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Replace Me",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Replace Me": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request10": {
+        "main": [
+          [
+            {
+              "node": "Wait23",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait23": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript27",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request11": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Wait23",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript24": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request12",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request12": {
+        "main": [
+          [
+            {
+              "node": "Upload file2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Upload file2": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript25": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request13",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request13": {
+        "main": [
+          [
+            {
+              "node": "Wait24",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait24": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request14",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request14": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript26",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait24",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait25": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request10",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript27": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request11",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript25",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Replace Me1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Replace Me1": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {
+      "HTTP Request10": [
+        {
+          "json": {
+            "name": "models/veo-3.1-generate-preview/operations/gwpt52r54lqa"
+          },
+          "pairedItem": {
+            "item": 0
+          }
+        }
+      ],
+      "Code in JavaScript24": [
+        {
+          "json": {
+            "videoUri": "https://generativelanguage.googleapis.com/v1beta/files/rkw3np63bsjv:download?alt=media",
+            "sceneNumber": 0,
+            "videoPrompt": "",
+            "voiceover": "",
+            "duration": 8
+          },
+          "pairedItem": {
+            "item": 0
+          }
+        }
+      ]
+    },
+    "versionId": "0f21c879-e873-4b92-a285-f1db73b1d3d8",
+    "activeVersionId": null,
+    "versionCounter": 28,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-03-01T16:04:44.721Z",
+        "createdAt": "2026-03-01T16:04:44.721Z",
+        "role": "workflow:owner",
+        "workflowId": "SVSr8VbQUYMGFePW",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-05-02T07:29:56.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-05-01",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2026-03-16T06:10:14.138Z",
+      "createdAt": "2026-03-16T06:10:14.138Z",
+      "id": "lLv5xRyxrErs7b5T",
+      "name": "Yash Workflows",
+      "parentFolderId": null
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "3bcd03939623d2fa179576731d7b6b0acb4ca0840460191481cd5b14a99e6ac1"
+  }
+}
