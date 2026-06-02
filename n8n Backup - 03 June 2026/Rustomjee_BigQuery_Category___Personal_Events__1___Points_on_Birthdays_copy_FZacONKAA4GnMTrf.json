@@ -1,0 +1,856 @@
+{
+  "data": {
+    "updatedAt": "2026-05-27T18:44:44.577Z",
+    "createdAt": "2026-05-27T14:04:47.769Z",
+    "id": "FZacONKAA4GnMTrf",
+    "name": "Rustomjee BigQuery Category - Personal Events- 1 - Points on Birthdays copy",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {},
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -336,
+          48
+        ],
+        "id": "244b9858-8618-4f3c-a957-d498f6fbd362",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.account_summary_person LIMIT 100\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          -16,
+          -272
+        ],
+        "id": "483d464b-1263-497b-a07a-5ff58ae867a4",
+        "name": "Execute a SQL query",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_leads \n  WHERE LeadSource = \"Loyalty\"",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          512,
+          -352
+        ],
+        "id": "da8360f6-863e-45b0-aad4-e950ad533bce",
+        "name": "Execute a SQL query1",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT\n  Id,\n  today_delta_additions,\n  FirstName,\n  LastName,\n  Person_Account_Email__c AS email,\n  COALESCE(PersonMobilePhone, Person_Account_Mobile__c) AS mobile,\n  Birth_Date__c\nFROM `powerbi-implementation.dataWarehouse_prod.account_summary_person`\nWHERE\n  Birth_Date__c IS NOT NULL\n  AND COALESCE(PersonMobilePhone, Person_Account_Mobile__c) IS NOT NULL\n  AND EXTRACT(MONTH FROM DATE(Birth_Date__c)) = EXTRACT(MONTH FROM CURRENT_DATE())\n  AND EXTRACT(DAY FROM DATE(Birth_Date__c)) = EXTRACT(DAY FROM CURRENT_DATE())",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          -112,
+          48
+        ],
+        "id": "52fdaa18-4fab-4e17-bd3c-e7b20bbac073",
+        "name": "Query to fetch details of Person Having Birthday On Today's Date",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "ab1a59da-346c-4d34-bfff-50d160cb4000",
+                "leftValue": "={{$json[\"mobile\"]}}",
+                "rightValue": "",
+                "operator": {
+                  "type": "number",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          112,
+          48
+        ],
+        "id": "3f6c824c-ff24-415f-895a-709c9187aed4",
+        "name": "If",
+        "alwaysOutputData": true,
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{ $json.customer_mobile }}\",\n  \"amount\": {{ $json.points }},\n  \"remarks\": \"{{ $json.reason }}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          576,
+          160
+        ],
+        "id": "eba2f0d2-8101-44ee-922b-7b2d1aedca0c",
+        "name": "HTTP Request",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "content": "Sample Payload -\nUnique Identifiers -\ncustomer_id = Id\ntoday_delta_additions\n\n{\n  \"customer_code\": \"1C5000007rMxKIAU\",\n  \"customer_mobile\": \"9818100660\",\n  \"customer_name\": \"Sanjay Banga\",\n  \"amount\": 1000,\n  \"remarks\": \"Birthday Reward\",\n  \"transaction_note\": \"Credit points on birthday\",\n  \"payment_mode\": \"cash\",\n  \"topup_by\": \"automation\",\n  \"email\": \"sanjay.banga@tatapower.com\",\n  \"birthday\": \"1944-04-28\",\n  \"today_delta_additions\": null\n}",
+          "height": 400,
+          "width": 352
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -592,
+          -416
+        ],
+        "id": "f291d87f-2867-4b07-bc06-50ad7272f908",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT EXISTS (\n  SELECT 1\n  FROM wallet_transaction_logs\n  WHERE customer_code = '{{$json.customer_code}}'\n  AND remarks = '{{$json.remarks}}'\n  AND status = 'SUCCESS'\n);\n\n/* SELECT status\nFROM wallet_transaction_logs\nWHERE customer_code = '{{$json.customer_code}}'\nAND remarks = '{{$json.remarks}}'\nAND status = 'SUCCESS'\nLIMIT 1; */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          560,
+          -176
+        ],
+        "id": "61506fed-fa03-4428-9e6e-64c61f4d0f4a",
+        "name": "Check Duplicates",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          720,
+          -64
+        ],
+        "id": "667b9eb1-c8dc-457f-9e67-ab3b293e03e8",
+        "name": "Merge",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "0a538946-c5b1-47ce-aada-9f10cca56fc2",
+                "leftValue": "={{$json.exists}}",
+                "rightValue": "false",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          864,
+          -112
+        ],
+        "id": "5571f778-48a0-4bc7-9157-ae6978781237",
+        "name": "If1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://hi-society.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "f4725ada33bd6cd9724db65f352308f913b3d5bea2eea2c6"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{$json.customer_code}}\",\n  \"amount\": {{$json.amount || 0}},\n  \"remarks\": \"{{$json.remarks || 'NA'}}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1056,
+          -16
+        ],
+        "id": "a894cce4-0c31-4258-a7ac-a24c23fb5162",
+        "name": "HTTP Request to credit points3",
+        "alwaysOutputData": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 1500,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8b311af8-f014-4910-b04d-608e1847c9a0",
+                "name": "customer_code",
+                "value": "={{$node[\"Streamline data for birthday points1\"].json.customer_code}}",
+                "type": "string"
+              },
+              {
+                "id": "751ef75e-fe0a-4f82-ac88-6434d2a0629b",
+                "name": "amount",
+                "value": "={{$node[\"Streamline data for birthday points1\"].json.amount}}",
+                "type": "number"
+              },
+              {
+                "id": "b1145a55-a695-4cfa-81d1-79f7f51abc14",
+                "name": "remarks",
+                "value": "={{$node[\"Streamline data for birthday points1\"].json.remarks}}",
+                "type": "string"
+              },
+              {
+                "id": "38f3dae0-4ba1-4391-a7f6-5af5b6f2fcbe",
+                "name": "=reference_id",
+                "value": "={{$node[\"Streamline data for birthday points1\"].json.reference_id}}",
+                "type": "string"
+              },
+              {
+                "id": "dcf52459-b151-4db8-b465-7a890da209c6",
+                "name": "transaction_note",
+                "value": "={{$node[\"Streamline data for birthday points1\"].json.transaction_note}}",
+                "type": "string"
+              },
+              {
+                "id": "9045fe70-369a-4af3-bc3a-3780061fbae0",
+                "name": "status",
+                "value": "={{$json.error ? \"FAILED\" : ($json.statusCode >= 200 && $json.statusCode < 300 ? \"SUCCESS\" : \"FAILED\")}}",
+                "type": "string"
+              },
+              {
+                "id": "fc9a41e4-3d87-47ef-bec1-ec7679e81d0a",
+                "name": "status_code",
+                "value": "={{$json.statusCode || $json.error?.status || 500}}",
+                "type": "number"
+              },
+              {
+                "id": "2a2f8faa-b24f-46c3-ae66-201da970f5db",
+                "name": "transaction_id",
+                "value": "={{$json.body?.transaction_id || null}}",
+                "type": "string"
+              },
+              {
+                "id": "a6029dde-70bd-44d7-a004-ff1e9d317785",
+                "name": "message",
+                "value": "={{$json.body?.error || $json.error?.message?.split(\"\\n\")[0]}}",
+                "type": "string"
+              },
+              {
+                "id": "ab7c1a10-7953-4d1e-bbe1-ae422f4bc70e",
+                "name": "request_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "44f2b0f0-8e91-439f-aec5-a355e2705ff9",
+                "name": "response_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "96ed068c-7dc1-4cbf-9384-4abcdde9eb86",
+                "name": "execution_id",
+                "value": "{{$json.execution_id}}",
+                "type": "string"
+              },
+              {
+                "id": "d4fdcaae-ae9c-4296-96fb-eb4ac2c8c591",
+                "name": "created_at",
+                "value": "={{new Date().toISOString()}}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1248,
+          -112
+        ],
+        "id": "39e92fe3-bb5b-4472-9681-e2ba3e042278",
+        "name": "Edit Fields3",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wallet_transaction_logs (\n    customer_code,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    '{{$json.customer_code}}',\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1424,
+          32
+        ],
+        "id": "7c2b7a7c-7174-447c-808c-38f1962389bf",
+        "name": "Add entry to logs4",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n  return {\n    json: {\n      customer_code: item.json.Id,\n      customer_mobile: item.json.mobile,\n      customer_name: `${item.json.FirstName} ${item.json.LastName}`,\n      amount: 1000,\n      remarks: \"Birthday Reward\",\n      transaction_note: \"Credit points on birthday\",\n      payment_mode: \"cash\",\n      topup_by: \"automation\",\n      email: item.json.email,\n      birthday: item.json.Birth_Date__c,\n      today_delta_additions: item.json.today_delta_additions\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          320,
+          16
+        ],
+        "id": "42d5ce67-9f9e-4e5b-95f5-dd9f05f49c84",
+        "name": "Streamline data for birthday points",
+        "alwaysOutputData": true,
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * \nFROM wallet_transaction_logs WHERE remarks = 'Birthday Reward'\nORDER BY created_at DESC;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          880,
+          240
+        ],
+        "id": "774b8705-5dc0-4e00-b238-62e38770cfbf",
+        "name": "Check entries for logs",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "CREATE TABLE wallet_transaction_logs (\n    customer_code TEXT,\n    points NUMERIC,\n    remarks TEXT,\n    reference_id TEXT,\n    transaction_note TEXT,\n\n    status TEXT,\n    status_code INTEGER,\n    message TEXT,\n\n    request_payload JSONB,\n    response_payload JSONB,\n\n    execution_id TEXT,\n    created_at TIMESTAMP DEFAULT NOW()\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1152,
+          288
+        ],
+        "id": "1e2b1de3-1499-465c-928e-6f076f9414c8",
+        "name": "Create table for logs query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT\n  Id,\n  today_delta_additions,\n  FirstName,\n  LastName,\n  Person_Account_Email__c AS email,\n  COALESCE(PersonMobilePhone, Person_Account_Mobile__c) AS mobile,\n  Birth_Date__c\nFROM `powerbi-implementation.dataWarehouse_prod.account_summary_person`\nWHERE\n  Birth_Date__c IS NOT NULL\n  AND COALESCE(PersonMobilePhone, Person_Account_Mobile__c) IS NOT NULL\n  AND EXTRACT(MONTH FROM DATE(Birth_Date__c)) = EXTRACT(MONTH FROM CURRENT_DATE())\n  AND EXTRACT(DAY FROM DATE(Birth_Date__c)) = EXTRACT(DAY FROM CURRENT_DATE())",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          -464,
+          272
+        ],
+        "id": "e595cdc2-98e2-4885-8af5-ef8501050e0e",
+        "name": "Query to fetch details of Person Having Birthday On Today's Date1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.applicant_details LIMIT 100\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          224,
+          -432
+        ],
+        "id": "4ac4256b-e11e-4b50-9922-16fc0d6f9cb3",
+        "name": "Execute a SQL query2",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1n0Jszalajr8FyKG4X5L4zVD5eT_L8YgardL2LXNAPdo",
+            "mode": "list",
+            "cachedResultName": "Rustomjee Rule Engine Report",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1n0Jszalajr8FyKG4X5L4zVD5eT_L8YgardL2LXNAPdo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 508070133,
+            "mode": "list",
+            "cachedResultName": "Birthday Reward Rule",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1n0Jszalajr8FyKG4X5L4zVD5eT_L8YgardL2LXNAPdo/edit#gid=508070133"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -128,
+          -112
+        ],
+        "id": "e8ac79e8-7f9a-4d63-b4ec-62314365ada3",
+        "name": "Get row(s) in sheet",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "h8W4AxPAHtomi8R3",
+            "name": "Rustomjee Dummy Data Testing"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const today = new Date();\n\nconst currentMonth = today.getMonth();\nconst currentDay = today.getDate();\n\nreturn items\n  .filter(item => {\n\n    if (!item.json.Birth_Date__c) {\n      return false;\n    }\n\n    const birthDate =\n      new Date(item.json.Birth_Date__c);\n\n    return (\n      birthDate.getMonth() === currentMonth &&\n      birthDate.getDate() === currentDay\n    );\n  })\n\n  .map(item => {\n\n    return {\n      json: {\n\n        customer_code: item.json.KUNNR,\n\n        customer_mobile: item.json.mobile,\n\n        customer_name:\n          `${item.json.FirstName} ${item.json.LastName}`,\n\n        amount: 1000,\n\n        remarks: \"Birthday Reward\",\n\n        transaction_note:\n          \"Credit points on birthday\",\n\n        payment_mode: \"cash\",\n\n        topup_by: \"automation\",\n\n        email: item.json.email,\n\n        birthday: item.json.Birth_Date__c,\n\n        today_delta_additions:\n          item.json.today_delta_additions\n      }\n    };\n  });"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          256,
+          -160
+        ],
+        "id": "7aa6bd0a-6d6c-48cc-a6a7-c4d4eb6e3ff2",
+        "name": "Streamline data for birthday points1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "DELETE FROM wallet_transaction_logs\nWHERE customer_code = '476035' AND remarks = 'Birthday Reward';",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          832,
+          -512
+        ],
+        "id": "579c32b5-14c7-4b3d-a892-eae145bc6332",
+        "name": "Check entries for logs1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Query to fetch details of Person Having Birthday On Today's Date",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          []
+        ]
+      },
+      "Query to fetch details of Person Having Birthday On Today's Date": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Streamline data for birthday points",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Duplicates": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request to credit points3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request to credit points3": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields3": {
+        "main": [
+          [
+            {
+              "node": "Add entry to logs4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Streamline data for birthday points": {
+        "main": [
+          []
+        ]
+      },
+      "Get row(s) in sheet": {
+        "main": [
+          [
+            {
+              "node": "Streamline data for birthday points1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Streamline data for birthday points1": {
+        "main": [
+          [
+            {
+              "node": "Check Duplicates",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "d0110305-2e11-4a8a-bc68-7f4483b5a0d6",
+    "activeVersionId": null,
+    "versionCounter": 58,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-05-27T14:04:47.777Z",
+        "createdAt": "2026-05-27T14:04:47.777Z",
+        "role": "workflow:owner",
+        "workflowId": "FZacONKAA4GnMTrf",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-06-02T22:02:42.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-06-02",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-05-27T14:03:19.258Z",
+        "createdAt": "2026-05-27T14:03:19.258Z",
+        "id": "JAzcttXOsL9MnA8J",
+        "name": "Rustomjee Testing"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-05-27T14:08:13.936Z",
+      "createdAt": "2026-05-27T14:08:13.936Z",
+      "id": "2dGiSdbAmTSvpw1f",
+      "name": "Testing Through Dummy Data",
+      "parentFolderId": "Y9zGEIC6huRvstXD"
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "1940537d8d2a46c0c85b2b8bb767cb9d65ab4f349e7f020140ee07714c7425fb"
+  }
+}

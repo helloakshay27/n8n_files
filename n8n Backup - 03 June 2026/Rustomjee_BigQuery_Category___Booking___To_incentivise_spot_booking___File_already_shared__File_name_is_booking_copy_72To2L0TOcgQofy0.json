@@ -1,0 +1,875 @@
+{
+  "data": {
+    "updatedAt": "2026-06-01T07:55:41.082Z",
+    "createdAt": "2026-05-27T14:04:31.595Z",
+    "id": "72To2L0TOcgQofy0",
+    "name": "Rustomjee BigQuery Category - Booking - To incentivise spot booking - File already shared, File name is booking copy",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {},
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -288,
+          32
+        ],
+        "id": "b1e78922-40f2-415d-aff4-5306417aaf9a",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_booking LIMIT 100\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          176,
+          -240
+        ],
+        "id": "98e86b08-880a-4e13-9900-5bdd8b2ecafa",
+        "name": "Execute a SQL query",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_leads \n  WHERE LeadSource = \"Loyalty\"",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          480,
+          -240
+        ],
+        "id": "27d7b76c-2147-4dfe-84b9-9f9174ef68fa",
+        "name": "Execute a SQL query1",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const output = [];\n\nfor (const item of $input.all()) {\n\n  const row = item.json;\n\n  const mobile =\n    row.Account_Mobile_Number__c ||\n    row.Account_Mobile_1__c ||\n    row.Mobile_Number__c ||\n    null;\n\n  if (!mobile) continue;\n\n  const svDate = row.SV_Date__c ? new Date(row.SV_Date__c) : null;\n\n  let bookingDate = null;\n\n  if (row.Booking_Date) {\n    bookingDate = new Date(row.Booking_Date);\n  } else if (row.SM_Next_Action_Date__c) {\n    bookingDate = new Date(row.SM_Next_Action_Date__c);\n  }\n\n  if (!svDate || !bookingDate) continue;\n\n  output.push({\n    json: {\n      id: row.ID,\n      mobile: mobile,\n      customer_id: row.KUNNR || null,\n      sv_date: svDate,\n      booking_date: bookingDate,\n      booking_id: row.X18_Digit_Booking_ID__c,\n      project: row.Project_Name,\n      status: row.Status__c,\n      today_delta_additions: row.today_delta_additions,\n    }\n  });\n\n}\n\nreturn output;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          96,
+          -48
+        ],
+        "id": "1f2cf54a-1eab-44a6-bf98-64cb00f1f6f3",
+        "name": "Code in JavaScript3",
+        "alwaysOutputData": true,
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT\n  ID,\n  today_delta_additions,\n  Account_Mobile_Number__c,\n  Account_Mobile_1__c,\n  Mobile_Number__c,\n  SV_Date__c,\n  Booking_Date,\n  SM_Next_Action_Date__c,\n  KUNNR,\n  X18_Digit_Booking_ID__c,\n  Project_Name,\n  Registration_Date__c,\n  Registration_Number__c,\n  Status__c\nFROM `powerbi-implementation.dataWarehouse_prod.sales_booking`\nWHERE SV_Date__c IS NOT NULL\nAND Registration_Date__c IS NOT NULL\nAND Registration_Number__c IS NOT NULL",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          -112,
+          -112
+        ],
+        "id": "20a5a80a-a8d3-4c0d-858e-a64b28152f28",
+        "name": "Query to fetch details of Booking - File already shared, File name is Booking",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const output = [];\n\n// maximum reward amount (can be changed later easily)\nconst MAX_REWARD = 1000;\n\nfor (const item of $input.all()) {\n\n  const sv = new Date(item.json.sv_date);\n  const booking = new Date(item.json.booking_date);\n\n  const diffDays = Math.floor((booking - sv) / (1000 * 60 * 60 * 24));\n\n  let percentage = 0;\n  let reward_type = \"\";\n\n  if (diffDays === 0) {\n    percentage = 1.0; // 100%\n    reward_type = \"Spot Offer (100%)\";\n  } \n  else if (diffDays > 0 && diffDays <= 7) {\n    percentage = 0.75; // 75%\n    reward_type = \"Within 7 Days (75%)\";\n  } \n  else if (diffDays > 7 && diffDays <= 15) {\n    percentage = 0.50; // 50%\n    reward_type = \"Within 15 Days (50%)\";\n  }\n\n  if (percentage > 0) {\n\n    const reward = Math.round(MAX_REWARD * percentage);\n\n    output.push({\n      json: {\n        ...item.json,\n        days_difference: diffDays,\n        reward_points: reward,\n        reward_percentage: percentage * 100,\n        reward_type: reward_type\n      }\n    });\n\n  }\n\n}\n\nreturn output;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          304,
+          16
+        ],
+        "id": "8d803989-7326-4dfb-b468-39ed9bd6a8a4",
+        "name": "Code in JavaScript",
+        "alwaysOutputData": true,
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{ $json.customer_id }}\",\n  \"amount\": {{ $json.points }},\n  \"remarks\": \"{{ $json.reason }}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          704,
+          64
+        ],
+        "id": "778accc8-83cc-445a-9ef3-3a298ece660a",
+        "name": "HTTP Request",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "content": "Sample Payload - \nUnique Identifiers - \ncustomer_id = KUNNR\nId = id\ntoday_delta_additions\n\n{\n  \"id\": \"a0EOW000003INdy2AG\",\n  \"customer_mobile\": \"9769291438\",\n  \"customer_code\": \"471877\",\n  \"amount\": 750,\n  \"remarks\": \"Within 7 Days (75%)\",\n  \"transaction_note\": \"Booking incentive based on SV timing\",\n  \"payment_mode\": \"cash\",\n  \"topup_by\": \"automation\",\n  \"booking_id\": \"a0POW00000A2J8t2AF\",\n  \"project\": \"180 Bayview\",\n  \"created_at\": \"2026-04-28T04:31:05.557Z\",\n  \"today_delta_additions\": \"2026-04-28\"\n}",
+          "height": 464,
+          "width": 496
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -528,
+          -496
+        ],
+        "id": "f04716d2-b3b5-4272-b8a9-7ca2ee422ef7",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT EXISTS (\n  SELECT 1\n  FROM wallet_transaction_logs\n  WHERE customer_code = '{{$json.customer_code}}'\n  AND remarks = '{{$json.remarks}}'\n  AND status = 'SUCCESS'\n);\n\n/* SELECT status\nFROM wallet_transaction_logs\nWHERE customer_code = '{{$json.customer_code}}'\nAND remarks = '{{$json.remarks}}'\nAND status = 'SUCCESS'\nLIMIT 1; */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1152,
+          -544
+        ],
+        "id": "6fc9a78b-583f-478f-bb76-f45d88adc536",
+        "name": "Check Duplicates",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1328,
+          -320
+        ],
+        "id": "395128cd-078d-4919-9aaf-4e295def2ce9",
+        "name": "Merge",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "0a538946-c5b1-47ce-aada-9f10cca56fc2",
+                "leftValue": "={{$json.exists}}",
+                "rightValue": "false",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1120,
+          -176
+        ],
+        "id": "cfbf8954-4eb5-44a0-b757-6f3677796df4",
+        "name": "If",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://hi-society.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "f4725ada33bd6cd9724db65f352308f913b3d5bea2eea2c6"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{$json.customer_code}}\",\n  \"amount\": {{$json.amount || 0}},\n  \"remarks\": \"{{$json.remarks || 'NA'}}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1248,
+          -32
+        ],
+        "id": "6888b133-76d3-418a-9d58-7959df5af774",
+        "name": "HTTP Request to credit points3",
+        "alwaysOutputData": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 1500,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8b311af8-f014-4910-b04d-608e1847c9a0",
+                "name": "customer_code",
+                "value": "={{$node[\"Streamline data for spot booking1\"].json.customer_code}}",
+                "type": "string"
+              },
+              {
+                "id": "751ef75e-fe0a-4f82-ac88-6434d2a0629b",
+                "name": "amount",
+                "value": "={{$node[\"Streamline data for spot booking1\"].json.amount}}",
+                "type": "number"
+              },
+              {
+                "id": "b1145a55-a695-4cfa-81d1-79f7f51abc14",
+                "name": "remarks",
+                "value": "={{$node[\"Streamline data for spot booking1\"].json.remarks}}",
+                "type": "string"
+              },
+              {
+                "id": "38f3dae0-4ba1-4391-a7f6-5af5b6f2fcbe",
+                "name": "=reference_id",
+                "value": "={{$node[\"Streamline data for spot booking1\"].json.reference_id}}",
+                "type": "string"
+              },
+              {
+                "id": "dcf52459-b151-4db8-b465-7a890da209c6",
+                "name": "transaction_note",
+                "value": "={{$node[\"Streamline data for spot booking1\"].json.transaction_note}}",
+                "type": "string"
+              },
+              {
+                "id": "9045fe70-369a-4af3-bc3a-3780061fbae0",
+                "name": "status",
+                "value": "={{$json.error ? \"FAILED\" : ($json.statusCode >= 200 && $json.statusCode < 300 ? \"SUCCESS\" : \"FAILED\")}}",
+                "type": "string"
+              },
+              {
+                "id": "fc9a41e4-3d87-47ef-bec1-ec7679e81d0a",
+                "name": "status_code",
+                "value": "={{$json.statusCode || $json.error?.status || 500}}",
+                "type": "number"
+              },
+              {
+                "id": "2a2f8faa-b24f-46c3-ae66-201da970f5db",
+                "name": "transaction_id",
+                "value": "={{$json.body?.transaction_id || null}}",
+                "type": "string"
+              },
+              {
+                "id": "a6029dde-70bd-44d7-a004-ff1e9d317785",
+                "name": "message",
+                "value": "={{$json.body?.error || $json.error?.message?.split(\"\\n\")[0]}}",
+                "type": "string"
+              },
+              {
+                "id": "ab7c1a10-7953-4d1e-bbe1-ae422f4bc70e",
+                "name": "request_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "44f2b0f0-8e91-439f-aec5-a355e2705ff9",
+                "name": "response_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "96ed068c-7dc1-4cbf-9384-4abcdde9eb86",
+                "name": "execution_id",
+                "value": "{{$json.execution_id}}",
+                "type": "string"
+              },
+              {
+                "id": "d4fdcaae-ae9c-4296-96fb-eb4ac2c8c591",
+                "name": "created_at",
+                "value": "={{new Date().toISOString()}}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1424,
+          48
+        ],
+        "id": "4156997f-d00b-4157-80bb-da09df31100e",
+        "name": "Edit Fields3",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wallet_transaction_logs (\n    customer_code,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    {{$json.customer_code}},\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1600,
+          128
+        ],
+        "id": "699f3059-cb90-4db7-87c3-054cbd92b8b3",
+        "name": "Add entry to logs4",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return $input.all().map(item => {\n\n  return {\n    json: {\n\n      id: item.json.id,\n\n      customer_mobile: item.json.mobile,\n\n      customer_code: item.json.customer_id,\n\n      amount: item.json.reward_points,\n\n      remarks: item.json.reward_type,\n\n      transaction_note: \"Booking incentive based on SV timing\",\n\n      payment_mode: \"cash\",\n\n      topup_by: \"automation\",\n\n      booking_id: item.json.booking_id,\n\n      project: item.json.project,\n\n      created_at: new Date().toISOString(),\n\n      today_delta_additions: item.json.today_delta_additions\n\n    }\n  };\n\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          480,
+          -64
+        ],
+        "id": "7b46d782-0f3d-4a33-b867-de62e186058c",
+        "name": "Streamline data for spot booking",
+        "alwaysOutputData": true,
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * \nFROM wallet_transaction_logs WHERE remarks = 'Within 15 Days (50%)'\nORDER BY created_at DESC;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          976,
+          112
+        ],
+        "id": "65e4f069-42b4-45aa-92e0-683c47ad2e63",
+        "name": "Check entries for logs",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1n0Jszalajr8FyKG4X5L4zVD5eT_L8YgardL2LXNAPdo",
+            "mode": "list",
+            "cachedResultName": "Rustomjee Rule Engine Report",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1n0Jszalajr8FyKG4X5L4zVD5eT_L8YgardL2LXNAPdo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 921080196,
+            "mode": "list",
+            "cachedResultName": "Spot Booking",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1n0Jszalajr8FyKG4X5L4zVD5eT_L8YgardL2LXNAPdo/edit#gid=921080196"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          32,
+          -400
+        ],
+        "id": "c230d51e-14b8-45cb-b5e0-bab876b78fb7",
+        "name": "Get row(s) in sheet",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "h8W4AxPAHtomi8R3",
+            "name": "Rustomjee Dummy Data Testing"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const output = [];\n\n// Safe date parser\nconst parseDate = (dateValue) => {\n\n  if (!dateValue) return null;\n\n  const d = new Date(dateValue);\n\n  return isNaN(d.getTime()) ? null : d;\n};\n\nfor (const item of $input.all()) {\n\n  const row = item.json;\n\n  // Pick first available mobile\n  const mobile =\n    row.Account_Mobile_Number__c ||\n    row.Account_Mobile_1__c ||\n    row.Mobile_Number__c ||\n    null;\n\n  // Skip if no mobile\n  if (!mobile) continue;\n\n  // Parse dates safely\n  const svDate = parseDate(row.SV_Date__c);\n\n  let bookingDate = null;\n\n  if (row.Booking_Date) {\n    bookingDate = parseDate(row.Booking_Date);\n  }\n  else if (row.SM_Next_Action_Date__c) {\n    bookingDate = parseDate(row.SM_Next_Action_Date__c);\n  }\n\n  // Skip invalid dates\n  if (!svDate || !bookingDate) continue;\n\n  // Required validations\n  if (\n    !row.Registration_Date__c ||\n    !row.Registration_Number__c\n  ) {\n    continue;\n  }\n\n  output.push({\n    json: {\n\n      id: row.ID,\n\n      mobile: mobile,\n\n      customer_id: row.KUNNR || null,\n\n      sv_date: svDate,\n\n      booking_date: bookingDate,\n\n      booking_id: row.X18_Digit_Booking_ID__c,\n\n      project: row.Project_Name,\n\n      status: row.Status__c,\n\n      today_delta_additions:\n        row.today_delta_additions\n    }\n  });\n\n}\n\nreturn output;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          304,
+          -432
+        ],
+        "id": "8406dda9-012b-46a2-836c-231bc3a5134d",
+        "name": "Code in JavaScript4",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const output = [];\n\n// Maximum reward points\nconst MAX_REWARD = 1000;\n\nfor (const item of $input.all()) {\n\n  const sv = new Date(item.json.sv_date);\n\n  const booking =\n    new Date(item.json.booking_date);\n\n  // Difference in days\n  const diffDays = Math.floor(\n    (booking - sv) /\n    (1000 * 60 * 60 * 24)\n  );\n\n  let percentage = 0;\n\n  let reward_type = \"\";\n\n  // Same day booking\n  if (diffDays === 0) {\n\n    percentage = 1.0;\n\n    reward_type =\n      \"Spot Offer (100%)\";\n  }\n\n  // Within 7 days\n  else if (\n    diffDays > 0 &&\n    diffDays <= 7\n  ) {\n\n    percentage = 0.75;\n\n    reward_type =\n      \"Within 7 Days (75%)\";\n  }\n\n  // Within 15 days\n  else if (\n    diffDays > 7 &&\n    diffDays <= 15\n  ) {\n\n    percentage = 0.50;\n\n    reward_type =\n      \"Within 15 Days (50%)\";\n  }\n\n  // Ignore beyond 15 days\n  if (percentage <= 0) {\n    continue;\n  }\n\n  const reward =\n    Math.round(MAX_REWARD * percentage);\n\n  output.push({\n    json: {\n\n      ...item.json,\n\n      days_difference: diffDays,\n\n      reward_points: reward,\n\n      reward_percentage:\n        percentage * 100,\n\n      reward_type: reward_type\n    }\n  });\n\n}\n\nreturn output;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          576,
+          -432
+        ],
+        "id": "e4774fe4-468c-4444-aefc-e42c380acfa7",
+        "name": "Code in JavaScript1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "return $input.all().map(item => {\n\n  return {\n    json: {\n\n      id: item.json.id,\n\n      customer_mobile:\n        item.json.mobile,\n\n      customer_code:\n        item.json.customer_id,\n\n      amount:\n        item.json.reward_points,\n\n      remarks:\n        item.json.reward_type,\n\n      transaction_note:\n        \"Booking incentive based on SV timing\",\n\n      payment_mode: \"cash\",\n\n      topup_by: \"automation\",\n\n      booking_id:\n        item.json.booking_id,\n\n      project:\n        item.json.project,\n\n      days_difference:\n        item.json.days_difference,\n\n      reward_percentage:\n        item.json.reward_percentage,\n\n      created_at:\n        new Date().toISOString(),\n\n      today_delta_additions:\n        item.json.today_delta_additions\n    }\n  };\n\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          848,
+          -416
+        ],
+        "id": "6acaa42b-e4d1-4086-8388-c3be329547f0",
+        "name": "Streamline data for spot booking1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "DELETE FROM wallet_transaction_logs\nWHERE customer_code = '476035' AND remarks = 'Spot Offer (100%)';",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          368,
+          -688
+        ],
+        "id": "48e3fd2e-7812-4789-af55-f0398179fe3b",
+        "name": "Check entries for logs1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "DELETE FROM wallet_transaction_logs\nWHERE customer_code = '476035' AND remarks = 'Within 7 Days (75%)';",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          624,
+          -672
+        ],
+        "id": "f3dc804f-b576-429e-af79-4c5a7ddd2b7e",
+        "name": "Check entries for logs2",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "DELETE FROM wallet_transaction_logs\nWHERE customer_code = '476035' AND remarks = 'Within 15 Days (50%)';",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          848,
+          -672
+        ],
+        "id": "0e239bfc-4dcd-4b07-ab4d-c49e3233c46e",
+        "name": "Check entries for logs3",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Query to fetch details of Booking - File already shared, File name is Booking",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          []
+        ]
+      },
+      "Query to fetch details of Booking - File already shared, File name is Booking": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript3": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Streamline data for spot booking",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Duplicates": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request to credit points3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request to credit points3": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields3": {
+        "main": [
+          [
+            {
+              "node": "Add entry to logs4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Streamline data for spot booking": {
+        "main": [
+          []
+        ]
+      },
+      "Get row(s) in sheet": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript4": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Streamline data for spot booking1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Streamline data for spot booking1": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Check Duplicates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "8a812aba-dded-4d56-b05b-727a2e091e36",
+    "activeVersionId": null,
+    "versionCounter": 68,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-05-27T14:04:31.600Z",
+        "createdAt": "2026-05-27T14:04:31.600Z",
+        "role": "workflow:owner",
+        "workflowId": "72To2L0TOcgQofy0",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-06-02T22:02:42.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-06-02",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-05-27T14:03:19.258Z",
+        "createdAt": "2026-05-27T14:03:19.258Z",
+        "id": "JAzcttXOsL9MnA8J",
+        "name": "Rustomjee Testing"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-05-27T14:08:13.936Z",
+      "createdAt": "2026-05-27T14:08:13.936Z",
+      "id": "2dGiSdbAmTSvpw1f",
+      "name": "Testing Through Dummy Data",
+      "parentFolderId": "Y9zGEIC6huRvstXD"
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "fb1d824db6026200324f6bb80122f4e9c9fcc45b2dba45652e81152252c4ee05"
+  }
+}
