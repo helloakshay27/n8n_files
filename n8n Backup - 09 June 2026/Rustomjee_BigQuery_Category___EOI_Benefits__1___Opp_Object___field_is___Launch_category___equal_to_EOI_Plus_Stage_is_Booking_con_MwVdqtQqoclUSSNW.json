@@ -1,0 +1,729 @@
+{
+  "data": {
+    "updatedAt": "2026-05-30T12:12:41.272Z",
+    "createdAt": "2026-05-27T14:05:13.961Z",
+    "id": "MwVdqtQqoclUSSNW",
+    "name": "Rustomjee BigQuery Category - EOI Benefits- 1 - Opp Object & field is \" Launch category\"  equal to EOI Plus Stage is Booking con",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {},
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -288,
+          -64
+        ],
+        "id": "03495ed8-97f7-45b6-b3db-56e83274fb24",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM powerbi-implementation.dataWarehouse_prod.eoi_benefits LIMIT 50;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          224,
+          -496
+        ],
+        "id": "4c077355-61c9-4cde-87a1-3e2730dfeab5",
+        "name": "Execute a SQL query",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_leads \n  WHERE LeadSource = \"Loyalty\"",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          480,
+          -464
+        ],
+        "id": "918e0c1c-8d42-43b0-9d5b-fd55d8e7d6d3",
+        "name": "Execute a SQL query1",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT\n  ID,\n  today_delta_additions,\n  Name,\n  Account_Email__c,\n  COALESCE(Account_Mobile_1__c, Account_Mobile_Number__c) AS customer_mobile,\n  Launch_Category__c,\n  StageName\nFROM `powerbi-implementation.dataWarehouse_prod.eoi_benefits`\nWHERE Launch_Category__c = 'EOI'\nAND COALESCE(Account_Mobile_1__c, Account_Mobile_Number__c) IS NOT NULL\nAND StageName = \"Booking confirmed\"\nAND Booking__c IS NOT NULL",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          -16,
+          -32
+        ],
+        "id": "e4925a6b-023d-482e-82bc-655428031039",
+        "name": "Query to fetch details of EOI Benefits",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{ $json.customer_mobile }}\",\n  \"amount\": {{ $json.points }},\n  \"remarks\": \"{{ $json.reason }}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          608,
+          96
+        ],
+        "id": "bc713531-45fb-4fa2-88ee-47c733848c0b",
+        "name": "HTTP Request",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "content": "Sample Payload - \nUnique Identfiers - \ncustomer_id = ID,\ntoday_delta_additions\n\n{\n  \"customer_code\": \"6OW00000KySdrYAF\",\n  \"customer_mobile\": \"9819327600\",\n  \"customer_name\": \"Narendra Jadhav\",\n  \"email\": \"narendra@gmail.com\",\n  \"amount\": 1000,\n  \"remarks\": \"EOI Booking Reward\",\n  \"transaction_note\": \"EOI Booking\",\n  \"payment_mode\": \"cash\",\n  \"topup_by\": \"automation\",\n  \"today_delta_additions\": \"2026-04-28\"\n}",
+          "height": 384,
+          "width": 432
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          -592,
+          -480
+        ],
+        "id": "775f0bdf-622b-4cfa-9f5f-73e8eaed62b0",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT EXISTS (\n  SELECT 1\n  FROM wallet_transaction_logs\n  WHERE customer_code = '{{$json.customer_code}}'\n  AND remarks = '{{$json.remarks}}'\n  AND status = 'SUCCESS'\n);\n\n/* SELECT status\nFROM wallet_transaction_logs\nWHERE customer_code = '{{$json.customer_code}}'\nAND remarks = '{{$json.remarks}}'\nAND status = 'SUCCESS'\nLIMIT 1; */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          464,
+          -176
+        ],
+        "id": "1c66487a-4e92-4f1e-82a8-04fababab43a",
+        "name": "Check Duplicates",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          656,
+          -96
+        ],
+        "id": "8cf206a1-f7ac-4d4c-ba92-35023ddadeee",
+        "name": "Merge",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "0a538946-c5b1-47ce-aada-9f10cca56fc2",
+                "leftValue": "={{$json.exists}}",
+                "rightValue": "false",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          848,
+          -160
+        ],
+        "id": "3ad7d5b5-15b4-4041-85ca-1ed8a7c382ed",
+        "name": "If",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://hi-society.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "f4725ada33bd6cd9724db65f352308f913b3d5bea2eea2c6"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{$json.customer_code}}\",\n  \"amount\": {{$json.amount || 0}},\n  \"remarks\": \"{{$json.remarks || 'NA'}}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1056,
+          -48
+        ],
+        "id": "0a5359df-e82c-4fce-86a6-8e298bf3c860",
+        "name": "HTTP Request to credit points3",
+        "alwaysOutputData": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 1500,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8b311af8-f014-4910-b04d-608e1847c9a0",
+                "name": "customer_code",
+                "value": "={{$node[\"Streamline data to credit points to eoi benefits1\"].json.customer_code}}",
+                "type": "string"
+              },
+              {
+                "id": "751ef75e-fe0a-4f82-ac88-6434d2a0629b",
+                "name": "amount",
+                "value": "={{$node[\"Streamline data to credit points to eoi benefits1\"].json.amount}}",
+                "type": "number"
+              },
+              {
+                "id": "b1145a55-a695-4cfa-81d1-79f7f51abc14",
+                "name": "remarks",
+                "value": "={{$node[\"Streamline data to credit points to eoi benefits1\"].json.remarks}}",
+                "type": "string"
+              },
+              {
+                "id": "38f3dae0-4ba1-4391-a7f6-5af5b6f2fcbe",
+                "name": "=reference_id",
+                "value": "={{$node[\"Streamline data to credit points to eoi benefits1\"].json.reference_id}}",
+                "type": "string"
+              },
+              {
+                "id": "dcf52459-b151-4db8-b465-7a890da209c6",
+                "name": "transaction_note",
+                "value": "={{$node[\"Streamline data to credit points to eoi benefits1\"].json.transaction_note}}",
+                "type": "string"
+              },
+              {
+                "id": "9045fe70-369a-4af3-bc3a-3780061fbae0",
+                "name": "status",
+                "value": "={{$json.error ? \"FAILED\" : ($json.statusCode >= 200 && $json.statusCode < 300 ? \"SUCCESS\" : \"FAILED\")}}",
+                "type": "string"
+              },
+              {
+                "id": "fc9a41e4-3d87-47ef-bec1-ec7679e81d0a",
+                "name": "status_code",
+                "value": "={{$json.statusCode || $json.error?.status || 500}}",
+                "type": "number"
+              },
+              {
+                "id": "2a2f8faa-b24f-46c3-ae66-201da970f5db",
+                "name": "transaction_id",
+                "value": "={{$json.body?.transaction_id || null}}",
+                "type": "string"
+              },
+              {
+                "id": "a6029dde-70bd-44d7-a004-ff1e9d317785",
+                "name": "message",
+                "value": "={{$json.body?.error || $json.error?.message?.split(\"\\n\")[0]}}",
+                "type": "string"
+              },
+              {
+                "id": "ab7c1a10-7953-4d1e-bbe1-ae422f4bc70e",
+                "name": "request_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "44f2b0f0-8e91-439f-aec5-a355e2705ff9",
+                "name": "response_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "96ed068c-7dc1-4cbf-9384-4abcdde9eb86",
+                "name": "execution_id",
+                "value": "{{$json.execution_id}}",
+                "type": "string"
+              },
+              {
+                "id": "d4fdcaae-ae9c-4296-96fb-eb4ac2c8c591",
+                "name": "created_at",
+                "value": "={{new Date().toISOString()}}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1248,
+          32
+        ],
+        "id": "f72caee8-0ebe-44b5-b0d1-a9633c644239",
+        "name": "Edit Fields3",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wallet_transaction_logs (\n    customer_code,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    '{{$json.customer_code}}',\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1440,
+          96
+        ],
+        "id": "bc6d2222-8a68-4083-b283-9476653c9d73",
+        "name": "Add entry to logs4",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n\n  return {\n    json: {\n      customer_code: item.json.ID,\n      customer_mobile: item.json.customer_mobile,\n      customer_name: item.json.Name,\n      email: item.json.Account_Email__c,\n      amount: 1000,\n      remarks: \"EOI Booking Reward\",\n      transaction_note: \"EOI Booking\",\n      payment_mode: \"cash\",\n      topup_by: \"automation\",\n      today_delta_additions: item.json.today_delta_additions\n    }\n  };\n\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          320,
+          48
+        ],
+        "id": "fb3e5e63-86fd-4642-b947-b469482f4281",
+        "name": "Streamline data to credit points to eoi benefits",
+        "alwaysOutputData": true,
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * \nFROM wallet_transaction_logs WHERE remarks = 'EOI Booking Reward'\nORDER BY created_at DESC;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1152,
+          192
+        ],
+        "id": "21784cc8-6583-445f-85e2-cca816340a61",
+        "name": "Check entries for logs",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1n0Jszalajr8FyKG4X5L4zVD5eT_L8YgardL2LXNAPdo",
+            "mode": "list",
+            "cachedResultName": "Rustomjee Rule Engine Report",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1n0Jszalajr8FyKG4X5L4zVD5eT_L8YgardL2LXNAPdo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 991033777,
+            "mode": "list",
+            "cachedResultName": "EOI Rule",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1n0Jszalajr8FyKG4X5L4zVD5eT_L8YgardL2LXNAPdo/edit#gid=991033777"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -48,
+          -224
+        ],
+        "id": "4aa96e16-1451-48ce-930a-42075315f77e",
+        "name": "Get row(s) in sheet",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "h8W4AxPAHtomi8R3",
+            "name": "Rustomjee Dummy Data Testing"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return items\n\n  .map(item => {\n\n    const data = item.json;\n\n    // Pick first available mobile\n    const customer_mobile =\n      data.Account_Mobile_1__c ||\n      data.Account_Mobile_Number__c ||\n      null;\n\n    // Validations\n    if (\n\n      data.Launch_Category__c !== \"EOI\" ||\n\n      data.StageName !== \"Booking confirmed\" ||\n\n      !data.Booking__c ||\n\n      !customer_mobile\n\n    ) {\n      return null;\n    }\n\n    return {\n      json: {\n\n        customer_code:\n          data.KUNNR,\n\n        customer_mobile:\n          customer_mobile,\n\n        customer_name:\n          data.Name,\n\n        email:\n          data.Account_Email__c,\n\n        amount: 1000,\n\n        remarks:\n          \"EOI Booking Reward\",\n\n        transaction_note:\n          \"EOI Booking\",\n\n        payment_mode: \"cash\",\n\n        topup_by: \"automation\",\n\n        booking_reference:\n          data.Booking__c,\n\n        today_delta_additions:\n          data.today_delta_additions\n      }\n    };\n\n  })\n\n  .filter(Boolean);"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          192,
+          -288
+        ],
+        "id": "cfd12a96-3a27-4837-ba29-e6e56455a47a",
+        "name": "Streamline data to credit points to eoi benefits1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "DELETE FROM wallet_transaction_logs\nWHERE customer_code = '476035' AND remarks = 'EOI Booking Reward';",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          848,
+          -576
+        ],
+        "id": "ac25a44d-697f-41ec-9d30-4a14a279cbd4",
+        "name": "Check entries for logs1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Query to fetch details of EOI Benefits",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          []
+        ]
+      },
+      "Query to fetch details of EOI Benefits": {
+        "main": [
+          [
+            {
+              "node": "Streamline data to credit points to eoi benefits",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Duplicates": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request to credit points3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request to credit points3": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields3": {
+        "main": [
+          [
+            {
+              "node": "Add entry to logs4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Streamline data to credit points to eoi benefits": {
+        "main": [
+          []
+        ]
+      },
+      "Get row(s) in sheet": {
+        "main": [
+          [
+            {
+              "node": "Streamline data to credit points to eoi benefits1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Streamline data to credit points to eoi benefits1": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Check Duplicates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "2dc4919f-7645-46b9-a1c8-88046dab4e26",
+    "activeVersionId": null,
+    "versionCounter": 63,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-05-27T14:05:13.965Z",
+        "createdAt": "2026-05-27T14:05:13.965Z",
+        "role": "workflow:owner",
+        "workflowId": "MwVdqtQqoclUSSNW",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-06-09T10:04:21.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-06-08",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-05-27T14:03:19.258Z",
+        "createdAt": "2026-05-27T14:03:19.258Z",
+        "id": "JAzcttXOsL9MnA8J",
+        "name": "Rustomjee Testing"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-05-27T14:08:13.936Z",
+      "createdAt": "2026-05-27T14:08:13.936Z",
+      "id": "2dGiSdbAmTSvpw1f",
+      "name": "Testing Through Dummy Data",
+      "parentFolderId": "Y9zGEIC6huRvstXD"
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "2eb075d058c0a67fd58c299c41bfa98813cff466fc30b278329e4185e846d1c3"
+  }
+}

@@ -1,0 +1,1590 @@
+{
+  "data": {
+    "updatedAt": "2026-06-02T11:53:28.471Z",
+    "createdAt": "2026-05-27T14:03:25.630Z",
+    "id": "DcKpWhb6wh7KNVEp",
+    "name": "Rustomjee BigQuery - Collections- 2 - Incentive Credit copy",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {},
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "id": "7d9d67e0-4197-497c-90d6-e2b91d1d234e",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.collections_demand_groupby LIMIT 50\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          208,
+          -368
+        ],
+        "id": "cf09e615-ad21-408f-8485-ca83a10d97e6",
+        "name": "Execute a SQL query",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT\n  KUNNR,\n  FKDAT,\n  PAY_DATE,\n  paid_status,\n  today_delta_additions,\n  DATE_DIFF(DATE(PAY_DATE), DATE(FKDAT), DAY) AS diff_days,\n  CASE\n    WHEN DATE_DIFF(DATE(PAY_DATE), DATE(FKDAT), DAY) BETWEEN 0 AND 5 THEN '0_5'\n    WHEN DATE_DIFF(DATE(PAY_DATE), DATE(FKDAT), DAY) BETWEEN 6 AND 10 THEN '6_10'\n  END AS payment_bucket\nFROM\n  `powerbi-implementation.dataWarehouse_prod.collections_demand_groupby`\nWHERE\n  paid_status IN ('Fully Paid')\n  AND FKDAT IS NOT NULL\n  AND PAY_DATE IS NOT NULL\n  AND DATE_DIFF(DATE(PAY_DATE), DATE(FKDAT), DAY) BETWEEN 0 AND 10",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          256,
+          80
+        ],
+        "id": "2fdee1c8-b092-4a46-9e88-5351a3567699",
+        "name": "Fetching Details of the Fully and Partially Paid Customers",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        },
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_leads \n  WHERE LeadSource = \"Loyalty\"",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          496,
+          -336
+        ],
+        "id": "5519dfe3-6b74-4625-9668-5e2d35f55383",
+        "name": "Execute a SQL query1",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "content": "Sample Payload -\nUnique Identifier -\ncustomer_id = KUNNR\ntoday_delta_additions\n\n{\n  \"customer_code\": \"471882\",\n  \"demand_date\": \"2024-06-25\",\n  \"payment_date\": \"2024-06-25\",\n  \"today_delta_additions\": null,\n  \"diff_days\": 0,\n  \"amount\": 6000,\n  \"remarks\": \"Paid within 5 days\",\n  \"transaction_note\": \"Credit points for payment done within 5 days of demand\",\n  \"payment_mode\": \"cash\",\n  \"topup_by\": \"automation\"\n}",
+          "height": 288,
+          "width": 384
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          624,
+          -336
+        ],
+        "id": "6839ae36-0bb8-4a8e-a90b-225d155c1aee",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "content": "Sample Payload - \nUnique Identifier -\ncustomer_id = KUNNR\ntoday_delta_additions\n\n\n{\n  \"customer_code\": \"471885\",\n  \"demand_date\": \"2024-07-16\",\n  \"payment_date\": \"2024-07-23\",\n  \"today_delta_additions\": null,\n  \"diff_days\": 7,\n  \"amount\": 3000,\n  \"remarks\": \"Paid within 10 days\",\n  \"transaction_note\": \"Credit points for payment done withing 10 days of demand\",\n  \"payment_mode\": \"cash\",\n  \"topup_by\": \"automation\"\n}"
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          576,
+          144
+        ],
+        "id": "fef367e7-447f-4f49-b4a0-72fa7c864c9e",
+        "name": "Sticky Note1"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{ $json.customer_id }}\",\n  \"amount\": {{ $json.points }},\n  \"remarks\": \"{{ $json.rule }}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1072,
+          -480
+        ],
+        "id": "e9e945a0-b939-426e-af24-fb921e7c1207",
+        "name": "HTTP Request to credit points",
+        "alwaysOutputData": true,
+        "retryOnFail": false,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{$json.customer_code}}\",\n  \"amount\": {{$json.amount || 0}},\n  \"remarks\": \"{{$json.remarks || 'NA'}}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          896,
+          416
+        ],
+        "id": "28576d0d-ea75-4699-b47f-96c3abd71959",
+        "name": "HTTP Request to credit points1",
+        "alwaysOutputData": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 1500,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wallet_transaction_logs (\n    customer_code,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    {{$json.customer_code}},\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1472,
+          0
+        ],
+        "id": "791ab979-11e3-4790-81c6-3273989c057e",
+        "name": "Add entry to logs",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT\n  KUNNR,\n  FKDAT,\n  PAY_DATE,\n  paid_status,\n  today_delta_additions\nFROM\n  `powerbi-implementation.dataWarehouse_prod.collections_demand_groupby`\nWHERE\n  paid_status IN ('Fully Paid', 'Partially Paid')\n  AND FKDAT IS NOT NULL\n  AND PAY_DATE IS NOT NULL\nLIMIT 100000",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          288
+        ],
+        "id": "71a249c9-d8c0-44b9-8676-ab11fbe50955",
+        "name": "Fetching Details of the Fully and Partially Paid Customers1",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8b311af8-f014-4910-b04d-608e1847c9a0",
+                "name": "customer_code",
+                "value": "={{$node[\"Adding 3000 Incentive for the payment within 10 days\"].json.customer_code}}",
+                "type": "string"
+              },
+              {
+                "id": "751ef75e-fe0a-4f82-ac88-6434d2a0629b",
+                "name": "amount",
+                "value": "={{$node[\"Adding 3000 Incentive for the payment within 10 days\"].json.amount}}",
+                "type": "number"
+              },
+              {
+                "id": "b1145a55-a695-4cfa-81d1-79f7f51abc14",
+                "name": "remarks",
+                "value": "={{$node[\"Adding 3000 Incentive for the payment within 10 days\"].json.remarks}}",
+                "type": "string"
+              },
+              {
+                "id": "38f3dae0-4ba1-4391-a7f6-5af5b6f2fcbe",
+                "name": "=reference_id",
+                "value": "={{$node[\"Adding 3000 Incentive for the payment within 10 days\"].json.reference_id}}",
+                "type": "string"
+              },
+              {
+                "id": "dcf52459-b151-4db8-b465-7a890da209c6",
+                "name": "transaction_note",
+                "value": "={{$node[\"Adding 3000 Incentive for the payment within 10 days\"].json.transaction_note}}",
+                "type": "string"
+              },
+              {
+                "id": "9045fe70-369a-4af3-bc3a-3780061fbae0",
+                "name": "status",
+                "value": "={{$json.error ? \"FAILED\" : ($json.statusCode >= 200 && $json.statusCode < 300 ? \"SUCCESS\" : \"FAILED\")}}",
+                "type": "string"
+              },
+              {
+                "id": "fc9a41e4-3d87-47ef-bec1-ec7679e81d0a",
+                "name": "status_code",
+                "value": "={{$json.statusCode || $json.error?.status || 500}}",
+                "type": "number"
+              },
+              {
+                "id": "2a2f8faa-b24f-46c3-ae66-201da970f5db",
+                "name": "transaction_id",
+                "value": "={{$json.body?.transaction_id || null}}",
+                "type": "string"
+              },
+              {
+                "id": "a6029dde-70bd-44d7-a004-ff1e9d317785",
+                "name": "message",
+                "value": "={{$json.body?.error || $json.error?.message?.split(\"\\n\")[0]}}",
+                "type": "string"
+              },
+              {
+                "id": "ab7c1a10-7953-4d1e-bbe1-ae422f4bc70e",
+                "name": "request_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "44f2b0f0-8e91-439f-aec5-a355e2705ff9",
+                "name": "response_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "96ed068c-7dc1-4cbf-9384-4abcdde9eb86",
+                "name": "execution_id",
+                "value": "{{$json.execution_id}}",
+                "type": "string"
+              },
+              {
+                "id": "d4fdcaae-ae9c-4296-96fb-eb4ac2c8c591",
+                "name": "created_at",
+                "value": "={{new Date().toISOString()}}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1232,
+          432
+        ],
+        "id": "cd8e60cf-5b14-474f-aa7e-be39424e8a76",
+        "name": "Edit Fields1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wallet_transaction_logs (\n    customer_code,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    {{$json.customer_code}},\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1536,
+          464
+        ],
+        "id": "892adedf-cb17-4d1c-9d0a-b481193622f8",
+        "name": "Add entry to logs2",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{$json.customer_code}}\",\n  \"amount\": {{$json.amount || 0}},\n  \"remarks\": \"{{$json.remarks || 'NA'}}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          832,
+          -16
+        ],
+        "id": "2f5979bc-2acb-485f-87d7-1b5c1e41543c",
+        "name": "HTTP Request to credit points2",
+        "alwaysOutputData": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 1500,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "// return items\n//   .map(item => {\n//     const demandDate = new Date(item.json.FKDAT);\n//     const paymentDate = new Date(item.json.PAY_DATE);\n\n//     const diffDays = (paymentDate - demandDate) / (1000 * 60 * 60 * 24);\n\n//     if (diffDays >= 0 && diffDays <= 5) {\n//       return {\n//         json: {\n//           customer_id: item.json.KUNNR,\n//           demand_date: item.json.FKDAT,\n//           payment_date: item.json.PAY_DATE,\n//           diff_days: diffDays,\n//           points: 6000,\n//           rule: \"Paid within 5 days\"\n//         }\n//       };\n//     }\n\n//     return null;\n//   })\n//   .filter(Boolean);\n\nreturn items\n  .map(item => {\n    const demandDate = new Date(item.json.FKDAT);\n    const paymentDate = new Date(item.json.PAY_DATE);\n\n    const diffDays = (paymentDate - demandDate) / (1000 * 60 * 60 * 24);\n\n    if (diffDays >= 0 && diffDays <= 5) {\n\n      const customerId = item.json.KUNNR;\n      const rule = \"Paid within 5 days\";\n      const paymentDateStr = item.json.PAY_DATE;\n      const today_delta_additions = item.json.today_delta_additions;\n\n      const reference_id = `${customerId}_6000_${paymentDateStr}`;\n\n      return {\n        json: {\n          customer_id: customerId,\n          mobile_number: item.json.MOBILE || null,\n\n          demand_date: item.json.FKDAT,\n          payment_date: paymentDateStr,\n          diff_days: diffDays,\n\n          points: 6000,\n          rule: rule,\n          today_delta_additions:today_delta_additions,\n\n          transaction_type: \"CREDIT\",\n\n          reference_id: reference_id,\n\n          workflow_name: \"wallet_incentive_workflow\",\n          execution_id: $execution.id,\n\n          request_payload: {\n            customer_code: customerId,\n            demand_date: item.json.FKDAT,\n            payment_date: paymentDateStr,\n            diff_days: diffDays,\n            amount: 6000,\n            remarks: rule,\n            transaction_note: \"Credit points for payment done within 5 days of the demand\",\n            payment_mode: \"cash\",\n            topup_by: \"automation\",\n            today_delta_additions: today_delta_additions,\n          }\n        }\n      };\n    }\n\n    return null;\n  })\n  .filter(Boolean);"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -32,
+          -320
+        ],
+        "id": "32480537-d417-45d5-999d-f7d26d91b797",
+        "name": "Adding 6000 Incentive for the payment within 5 days1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8b311af8-f014-4910-b04d-608e1847c9a0",
+                "name": "customer_code",
+                "value": "={{$node[\"Adding 6000 Incentive for the payment within 5 days4\"].json.customer_code}}",
+                "type": "string"
+              },
+              {
+                "id": "751ef75e-fe0a-4f82-ac88-6434d2a0629b",
+                "name": "amount",
+                "value": "={{$node[\"Adding 6000 Incentive for the payment within 5 days4\"].json.amount}}",
+                "type": "number"
+              },
+              {
+                "id": "b1145a55-a695-4cfa-81d1-79f7f51abc14",
+                "name": "remarks",
+                "value": "={{$node[\"Adding 6000 Incentive for the payment within 5 days4\"].json.remarks}}",
+                "type": "string"
+              },
+              {
+                "id": "38f3dae0-4ba1-4391-a7f6-5af5b6f2fcbe",
+                "name": "=reference_id",
+                "value": "={{$node[\"Adding 6000 Incentive for the payment within 5 days4\"].json.reference_id}}",
+                "type": "string"
+              },
+              {
+                "id": "dcf52459-b151-4db8-b465-7a890da209c6",
+                "name": "transaction_note",
+                "value": "={{$node[\"Adding 6000 Incentive for the payment within 5 days4\"].json.transaction_note}}",
+                "type": "string"
+              },
+              {
+                "id": "9045fe70-369a-4af3-bc3a-3780061fbae0",
+                "name": "status",
+                "value": "={{$json.error ? \"FAILED\" : ($json.statusCode >= 200 && $json.statusCode < 300 ? \"SUCCESS\" : \"FAILED\")}}",
+                "type": "string"
+              },
+              {
+                "id": "fc9a41e4-3d87-47ef-bec1-ec7679e81d0a",
+                "name": "status_code",
+                "value": "={{$json.statusCode || $json.error?.status || 500}}",
+                "type": "number"
+              },
+              {
+                "id": "2a2f8faa-b24f-46c3-ae66-201da970f5db",
+                "name": "transaction_id",
+                "value": "={{$json.body?.transaction_id || null}}",
+                "type": "string"
+              },
+              {
+                "id": "a6029dde-70bd-44d7-a004-ff1e9d317785",
+                "name": "message",
+                "value": "={{$json.body?.error || $json.error?.message?.split(\"\\n\")[0]}}",
+                "type": "string"
+              },
+              {
+                "id": "ab7c1a10-7953-4d1e-bbe1-ae422f4bc70e",
+                "name": "request_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "44f2b0f0-8e91-439f-aec5-a355e2705ff9",
+                "name": "response_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "96ed068c-7dc1-4cbf-9384-4abcdde9eb86",
+                "name": "execution_id",
+                "value": "{{$json.execution_id}}",
+                "type": "string"
+              },
+              {
+                "id": "d4fdcaae-ae9c-4296-96fb-eb4ac2c8c591",
+                "name": "created_at",
+                "value": "={{new Date().toISOString()}}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1072,
+          0
+        ],
+        "id": "7cbc2287-3265-42b3-8cbf-9c0526d051fc",
+        "name": "Edit Fields2",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT EXISTS (\n  SELECT 1\n  FROM wallet_transaction_logs\n  WHERE customer_code = '{{$json.customer_code}}'\n  AND remarks = '{{$json.remarks}}'\n  AND status = 'SUCCESS'\n);\n\n/* SELECT status\nFROM wallet_transaction_logs\nWHERE customer_code = '{{$json.customer_code}}'\nAND remarks = '{{$json.remarks}}'\nAND status = 'SUCCESS'\nLIMIT 1; */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          736,
+          -320
+        ],
+        "id": "4d90e6cd-4685-4e4e-9156-f5bd96a0e0b1",
+        "name": "Check Duplicates",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "0a538946-c5b1-47ce-aada-9f10cca56fc2",
+                "leftValue": "={{$json.exists}}",
+                "rightValue": "false",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1152,
+          -112
+        ],
+        "id": "edb9f309-1807-41e9-b91a-462a5ff66726",
+        "name": "If",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          928,
+          -192
+        ],
+        "id": "b8d80ff8-958c-4558-9191-2ff4b6c18179",
+        "name": "Merge",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://hi-society.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "f4725ada33bd6cd9724db65f352308f913b3d5bea2eea2c6"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{$json.customer_code}}\",\n  \"amount\": {{$json.amount || 0}},\n  \"remarks\": \"{{$json.remarks || 'NA'}}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1504,
+          -240
+        ],
+        "id": "ac560025-7bff-4aa8-aa73-5226dea7a6d2",
+        "name": "HTTP Request to credit points3",
+        "alwaysOutputData": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 1500,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8b311af8-f014-4910-b04d-608e1847c9a0",
+                "name": "customer_code",
+                "value": "={{$node[\"Adding 6000 Incentive for the payment within 5 days2\"].json.customer_code}}",
+                "type": "string"
+              },
+              {
+                "id": "751ef75e-fe0a-4f82-ac88-6434d2a0629b",
+                "name": "amount",
+                "value": "={{$node[\"Adding 6000 Incentive for the payment within 5 days2\"].json.amount}}",
+                "type": "number"
+              },
+              {
+                "id": "b1145a55-a695-4cfa-81d1-79f7f51abc14",
+                "name": "remarks",
+                "value": "={{$node[\"Adding 6000 Incentive for the payment within 5 days2\"].json.remarks}}",
+                "type": "string"
+              },
+              {
+                "id": "38f3dae0-4ba1-4391-a7f6-5af5b6f2fcbe",
+                "name": "=reference_id",
+                "value": "={{$node[\"Adding 6000 Incentive for the payment within 5 days2\"].json.reference_id}}",
+                "type": "string"
+              },
+              {
+                "id": "dcf52459-b151-4db8-b465-7a890da209c6",
+                "name": "transaction_note",
+                "value": "={{$node[\"Adding 6000 Incentive for the payment within 5 days2\"].json.transaction_note}}",
+                "type": "string"
+              },
+              {
+                "id": "9045fe70-369a-4af3-bc3a-3780061fbae0",
+                "name": "status",
+                "value": "={{$json.error ? \"FAILED\" : ($json.statusCode >= 200 && $json.statusCode < 300 ? \"SUCCESS\" : \"FAILED\")}}",
+                "type": "string"
+              },
+              {
+                "id": "fc9a41e4-3d87-47ef-bec1-ec7679e81d0a",
+                "name": "status_code",
+                "value": "={{$json.statusCode || $json.error?.status || 500}}",
+                "type": "number"
+              },
+              {
+                "id": "2a2f8faa-b24f-46c3-ae66-201da970f5db",
+                "name": "transaction_id",
+                "value": "={{$json.body?.transaction_id || null}}",
+                "type": "string"
+              },
+              {
+                "id": "a6029dde-70bd-44d7-a004-ff1e9d317785",
+                "name": "message",
+                "value": "={{$json.body?.error || $json.error?.message?.split(\"\\n\")[0]}}",
+                "type": "string"
+              },
+              {
+                "id": "ab7c1a10-7953-4d1e-bbe1-ae422f4bc70e",
+                "name": "request_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "44f2b0f0-8e91-439f-aec5-a355e2705ff9",
+                "name": "response_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "96ed068c-7dc1-4cbf-9384-4abcdde9eb86",
+                "name": "execution_id",
+                "value": "{{$json.execution_id}}",
+                "type": "string"
+              },
+              {
+                "id": "d4fdcaae-ae9c-4296-96fb-eb4ac2c8c591",
+                "name": "created_at",
+                "value": "={{new Date().toISOString()}}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1728,
+          -144
+        ],
+        "id": "f6ae6334-989b-469a-814f-fd2c86bdc1a1",
+        "name": "Edit Fields3",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wallet_transaction_logs (\n    customer_code,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    {{$json.customer_code}},\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1984,
+          -16
+        ],
+        "id": "211dbb15-a94d-48f2-9f8f-eeecdbd21588",
+        "name": "Add entry to logs4",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT EXISTS (\n  SELECT 1\n  FROM wallet_transaction_logs\n  WHERE customer_code = '{{$json.customer_code}}'\n  AND remarks = '{{$json.remarks}}'\n  AND status = 'SUCCESS'\n);\n\n/* SELECT status\nFROM wallet_transaction_logs\nWHERE customer_code = '{{$json.customer_code}}'\nAND remarks = '{{$json.remarks}}'\nAND status = 'SUCCESS'\nLIMIT 1; */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          752,
+          192
+        ],
+        "id": "6cc5c4fb-92a8-4342-93e4-b76f868782c0",
+        "name": "Check Duplicates1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1040,
+          208
+        ],
+        "id": "c0a92169-d8ab-48ef-b2aa-b22a37fd55d2",
+        "name": "Merge1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "0a538946-c5b1-47ce-aada-9f10cca56fc2",
+                "leftValue": "={{$json.exists}}",
+                "rightValue": "false",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1232,
+          272
+        ],
+        "id": "bd804ef0-00af-4848-866c-28dd67adfb65",
+        "name": "If1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8b311af8-f014-4910-b04d-608e1847c9a0",
+                "name": "customer_code",
+                "value": "={{$node[\"Adding 3000 Incentive for the payment within 10 days1\"].json.customer_code}}",
+                "type": "string"
+              },
+              {
+                "id": "751ef75e-fe0a-4f82-ac88-6434d2a0629b",
+                "name": "amount",
+                "value": "={{$node[\"Adding 3000 Incentive for the payment within 10 days1\"].json.amount}}",
+                "type": "number"
+              },
+              {
+                "id": "b1145a55-a695-4cfa-81d1-79f7f51abc14",
+                "name": "remarks",
+                "value": "={{$node[\"Adding 3000 Incentive for the payment within 10 days1\"].json.remarks}}",
+                "type": "string"
+              },
+              {
+                "id": "38f3dae0-4ba1-4391-a7f6-5af5b6f2fcbe",
+                "name": "=reference_id",
+                "value": "={{$node[\"Adding 3000 Incentive for the payment within 10 days1\"].json.reference_id}}",
+                "type": "string"
+              },
+              {
+                "id": "dcf52459-b151-4db8-b465-7a890da209c6",
+                "name": "transaction_note",
+                "value": "={{$node[\"Adding 3000 Incentive for the payment within 10 days1\"].json.transaction_note}}",
+                "type": "string"
+              },
+              {
+                "id": "9045fe70-369a-4af3-bc3a-3780061fbae0",
+                "name": "status",
+                "value": "={{$json.error ? \"FAILED\" : ($json.statusCode >= 200 && $json.statusCode < 300 ? \"SUCCESS\" : \"FAILED\")}}",
+                "type": "string"
+              },
+              {
+                "id": "fc9a41e4-3d87-47ef-bec1-ec7679e81d0a",
+                "name": "status_code",
+                "value": "={{$json.statusCode || $json.error?.status || 500}}",
+                "type": "number"
+              },
+              {
+                "id": "2a2f8faa-b24f-46c3-ae66-201da970f5db",
+                "name": "transaction_id",
+                "value": "={{$json.body?.transaction_id || null}}",
+                "type": "string"
+              },
+              {
+                "id": "a6029dde-70bd-44d7-a004-ff1e9d317785",
+                "name": "message",
+                "value": "={{$json.body?.error || $json.error?.message?.split(\"\\n\")[0]}}",
+                "type": "string"
+              },
+              {
+                "id": "ab7c1a10-7953-4d1e-bbe1-ae422f4bc70e",
+                "name": "request_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "44f2b0f0-8e91-439f-aec5-a355e2705ff9",
+                "name": "response_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "96ed068c-7dc1-4cbf-9384-4abcdde9eb86",
+                "name": "execution_id",
+                "value": "{{$json.execution_id}}",
+                "type": "string"
+              },
+              {
+                "id": "d4fdcaae-ae9c-4296-96fb-eb4ac2c8c591",
+                "name": "created_at",
+                "value": "={{new Date().toISOString()}}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1728,
+          256
+        ],
+        "id": "6af13063-0456-410e-b2db-1ac005c52b6c",
+        "name": "Edit Fields4",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://hi-society.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "f4725ada33bd6cd9724db65f352308f913b3d5bea2eea2c6"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{$json.customer_code}}\",\n  \"amount\": {{$json.amount || 0}},\n  \"remarks\": \"{{$json.remarks || 'NA'}}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1504,
+          208
+        ],
+        "id": "e3ee50ce-48dd-451c-8359-3347885d9c14",
+        "name": "HTTP Request to credit points4",
+        "alwaysOutputData": true,
+        "retryOnFail": true,
+        "waitBetweenTries": 1500,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wallet_transaction_logs (\n    customer_code,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    {{$json.customer_code}},\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          2000,
+          272
+        ],
+        "id": "005d44db-29e2-45d2-9529-39fb4167518f",
+        "name": "Add entry to logs5",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "DELETE FROM wallet_transaction_logs\nWHERE remarks = 'Paid within 10 days';",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1456,
+          624
+        ],
+        "id": "65153153-7dba-4773-b593-92a63fc685ec",
+        "name": "Add entry to logs6",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "CREATE TABLE wallet_transaction_logs (\n    customer_code TEXT,\n    points NUMERIC,\n    remarks TEXT,\n    reference_id TEXT,\n    transaction_note TEXT,\n\n    status TEXT,\n    status_code INTEGER,\n    message TEXT,\n\n    request_payload JSONB,\n    response_payload JSONB,\n\n    execution_id TEXT,\n    created_at TIMESTAMP DEFAULT NOW()\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          224,
+          384
+        ],
+        "id": "8278bd25-b800-493e-9d49-d606038b1d12",
+        "name": "Create table for logs query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * \nFROM wallet_transaction_logs WHERE remarks = 'Paid within 5 days'\nORDER BY created_at DESC;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1152,
+          592
+        ],
+        "id": "d8f98886-d6e2-41df-b3bd-83555b91918e",
+        "name": "Check entries for logs",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "xlsx",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1.1,
+        "position": [
+          1344,
+          -480
+        ],
+        "id": "d31fdc0d-b12b-46dd-967b-60e4e46835ba",
+        "name": "Extract from File",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "documentId": {
+            "__rl": true,
+            "value": "1n0Jszalajr8FyKG4X5L4zVD5eT_L8YgardL2LXNAPdo",
+            "mode": "list",
+            "cachedResultName": "Rustomjee Rule Engine Report",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1n0Jszalajr8FyKG4X5L4zVD5eT_L8YgardL2LXNAPdo/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 926668517,
+            "mode": "list",
+            "cachedResultName": "Incentive Testing Sheet",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1n0Jszalajr8FyKG4X5L4zVD5eT_L8YgardL2LXNAPdo/edit#gid=926668517"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          288,
+          -48
+        ],
+        "id": "4ed308da-26ba-474f-9e9a-52b1b501decb",
+        "name": "Get row(s) in sheet",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "h8W4AxPAHtomi8R3",
+            "name": "Rustomjee Dummy Data Testing"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return items\n  .map(item => {\n    const demandDate = new Date(item.json.FKDAT);\n    const paymentDate = new Date(item.json.PAY_DATE);\n\n    const diffDays = (paymentDate - demandDate) / (1000 * 60 * 60 * 24);\n\n    if (diffDays > 5 && diffDays <= 10) {\n      return {\n        json: {\n          customer_code: item.json.KUNNR,\n          demand_date: item.json.FKDAT,\n          payment_date: item.json.PAY_DATE,\n          today_delta_additions: item.json.today_delta_additions,\n          diff_days: diffDays,\n          amount: 3000, // 👈 example, change as needed\n          remarks: \"Paid within 10 days\",\n          transaction_note: \"Credit points for payment done withing 10 days of demand\",\n          payment_mode: \"cash\",\n          topup_by: \"automation\"\n        }\n      };\n    }\n\n    return null;\n  })\n  .filter(Boolean);"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          544,
+          336
+        ],
+        "id": "581bcad0-d10e-42c0-9a9b-22232f0b2c01",
+        "name": "Adding 3000 Incentive for the payment within 10 days",
+        "alwaysOutputData": true,
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "jsCode": "return items\n  .map(item => {\n\n    // Process only Fully Paid records\n    if (item.json.paid_status !== \"Fully Paid\") {\n      return null;\n    }\n\n    const demandDate =\n      new Date(item.json.FKDAT);\n\n    const paymentDate =\n      new Date(item.json.PAY_DATE);\n\n    // Invalid date check\n    if (\n      isNaN(demandDate.getTime()) ||\n      isNaN(paymentDate.getTime())\n    ) {\n      return null;\n    }\n\n    const diffDays = Math.floor(\n      (paymentDate - demandDate) /\n      (1000 * 60 * 60 * 24)\n    );\n\n    // Rule: payment within 6–10 days\n    if (diffDays > 5 && diffDays <= 10) {\n\n      return {\n        json: {\n\n          customer_code:\n            item.json.KUNNR,\n\n          demand_date:\n            item.json.FKDAT,\n\n          payment_date:\n            item.json.PAY_DATE,\n\n          today_delta_additions:\n            item.json.today_delta_additions,\n\n          diff_days:\n            diffDays,\n\n          amount: 3000,\n\n          remarks:\n            \"Paid within 10 days\",\n\n          transaction_note:\n            \"Credit points for payment done within 10 days of demand\",\n\n          payment_mode:\n            \"cash\",\n\n          topup_by:\n            \"automation\"\n        }\n      };\n    }\n\n    return null;\n\n  })\n\n  .filter(Boolean);"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          560,
+          160
+        ],
+        "id": "ce77c265-790a-43ff-8bf9-6792989b5b1f",
+        "name": "Adding 3000 Incentive for the payment within 10 days1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "// return items\n//   .map(item => {\n//     const demandDate = new Date(item.json.FKDAT);\n//     const paymentDate = new Date(item.json.PAY_DATE);\n\n//     const diffDays = (paymentDate - demandDate) / (1000 * 60 * 60 * 24);\n\n//     if (diffDays >= 0 && diffDays <= 5) {\n//       return {\n//         json: {\n//           customer_id: item.json.KUNNR,\n//           demand_date: item.json.FKDAT,\n//           payment_date: item.json.PAY_DATE,\n//           diff_days: diffDays,\n//           points: 6000,\n//           rule: \"Paid within 5 days\"\n//         }\n//       };\n//     }\n\n//     return null;\n//   })\n//   .filter(Boolean);\n\nreturn items\n  .map(item => {\n    const demandDate = new Date(item.json.FKDAT);\n    const paymentDate = new Date(item.json.PAY_DATE);\n\n    const diffDays = (paymentDate - demandDate) / (1000 * 60 * 60 * 24);\n\n    if (diffDays >= 0 && diffDays <= 5) {\n      return {\n        json: {\n          customer_code: item.json.KUNNR,\n          demand_date: item.json.FKDAT,\n          payment_date: item.json.PAY_DATE,\n          today_delta_additions: item.json.today_delta_additions,\n          diff_days: diffDays,\n          amount: 6000,\n          remarks: \"Paid within 5 days\",\n          transaction_note: \"Credit points for payment done within 5 days of demand\",\n          payment_mode: \"cash\",\n          topup_by: \"automation\"\n        }\n      };\n    }\n\n    return null;\n  })\n  .filter(Boolean);"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          576,
+          -16
+        ],
+        "id": "ddbc0b3a-0acb-4ff9-bd25-654309cba550",
+        "name": "Adding 6000 Incentive for the payment within 5 days4",
+        "alwaysOutputData": true,
+        "disabled": true
+      },
+      {
+        "parameters": {
+          "jsCode": "return items\n  .map(item => {\n\n    // Process only Fully Paid records\n    if (item.json.paid_status !== \"Fully Paid\") {\n      return null;\n    }\n\n    const demandDate =\n      new Date(item.json.FKDAT);\n\n    const paymentDate =\n      new Date(item.json.PAY_DATE);\n\n    // Invalid date check\n    if (\n      isNaN(demandDate.getTime()) ||\n      isNaN(paymentDate.getTime())\n    ) {\n      return null;\n    }\n\n    const diffDays = Math.floor(\n      (paymentDate - demandDate) /\n      (1000 * 60 * 60 * 24)\n    );\n\n    // Rule: payment within 0–5 days\n    if (diffDays >= 0 && diffDays <= 5) {\n\n      return {\n        json: {\n\n          customer_code:\n            item.json.KUNNR,\n\n          demand_date:\n            item.json.FKDAT,\n\n          payment_date:\n            item.json.PAY_DATE,\n\n          today_delta_additions:\n            item.json.today_delta_additions,\n\n          diff_days:\n            diffDays,\n\n          amount: 50,\n\n          remarks:\n            \"Paid within 5 days\",\n\n          transaction_note:\n            \"Credit points for payment done within 5 days of demand\",\n\n          payment_mode:\n            \"cash\",\n\n          topup_by:\n            \"automation\"\n        }\n      };\n    }\n\n    return null;\n\n  })\n\n  .filter(Boolean);"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          -160
+        ],
+        "id": "36cbfa3c-0341-4b7a-8b06-2f88cb41d1de",
+        "name": "Adding 6000 Incentive for the payment within 5 days2",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "DELETE FROM wallet_transaction_logs\nWHERE customer_code = '476035' AND remarks = 'Paid within 5 days';",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1648,
+          -448
+        ],
+        "id": "6451dc9e-230d-46c9-8538-2108d9f64d58",
+        "name": "Delete Entries From Logs",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "DELETE FROM wallet_transaction_logs\nWHERE customer_code = '476035' AND remarks = 'Paid within 10 days';",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1952,
+          -448
+        ],
+        "id": "e3c501af-5101-46bc-ae95-d9aba2845d54",
+        "name": "Delete Entries From Logs1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Get row(s) in sheet",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          []
+        ]
+      },
+      "Fetching Details of the Fully and Partially Paid Customers": {
+        "main": [
+          [
+            {
+              "node": "Adding 3000 Incentive for the payment within 10 days",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request to credit points": {
+        "main": [
+          []
+        ]
+      },
+      "HTTP Request to credit points1": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "Add entry to logs2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request to credit points2": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields2": {
+        "main": [
+          [
+            {
+              "node": "Add entry to logs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Duplicates": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request to credit points3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request to credit points3": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields3": {
+        "main": [
+          [
+            {
+              "node": "Add entry to logs4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Duplicates1": {
+        "main": [
+          [
+            {
+              "node": "Merge1",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge1": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request to credit points4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request to credit points4": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields4": {
+        "main": [
+          [
+            {
+              "node": "Add entry to logs5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s) in sheet": {
+        "main": [
+          [
+            {
+              "node": "Adding 3000 Incentive for the payment within 10 days",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Adding 6000 Incentive for the payment within 5 days2",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Adding 3000 Incentive for the payment within 10 days1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Adding 3000 Incentive for the payment within 10 days": {
+        "main": [
+          []
+        ]
+      },
+      "Adding 3000 Incentive for the payment within 10 days1": {
+        "main": [
+          [
+            {
+              "node": "Check Duplicates1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Merge1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Adding 6000 Incentive for the payment within 5 days4": {
+        "main": [
+          []
+        ]
+      },
+      "Adding 6000 Incentive for the payment within 5 days2": {
+        "main": [
+          [
+            {
+              "node": "Check Duplicates",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "925445a4-c5b5-40c7-b2c6-43d31294c126",
+    "activeVersionId": null,
+    "versionCounter": 78,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-05-27T14:03:25.642Z",
+        "createdAt": "2026-05-27T14:03:25.642Z",
+        "role": "workflow:owner",
+        "workflowId": "DcKpWhb6wh7KNVEp",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-06-09T10:04:21.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-06-08",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [
+      {
+        "updatedAt": "2026-05-27T14:03:19.258Z",
+        "createdAt": "2026-05-27T14:03:19.258Z",
+        "id": "JAzcttXOsL9MnA8J",
+        "name": "Rustomjee Testing"
+      }
+    ],
+    "parentFolder": {
+      "updatedAt": "2026-05-27T14:08:13.936Z",
+      "createdAt": "2026-05-27T14:08:13.936Z",
+      "id": "2dGiSdbAmTSvpw1f",
+      "name": "Testing Through Dummy Data",
+      "parentFolderId": "Y9zGEIC6huRvstXD"
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "f171b1f05bef4cb684d8d02d91c10e9e4fb134b43190894032a35e56d349304b"
+  }
+}
