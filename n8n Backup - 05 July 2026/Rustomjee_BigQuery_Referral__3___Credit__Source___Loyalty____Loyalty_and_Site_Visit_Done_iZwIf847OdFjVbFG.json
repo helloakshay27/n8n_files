@@ -1,0 +1,1491 @@
+{
+  "data": {
+    "updatedAt": "2026-07-03T08:46:56.793Z",
+    "createdAt": "2026-03-02T14:42:13.329Z",
+    "id": "iZwIf847OdFjVbFG",
+    "name": "Rustomjee BigQuery Referral- 3 - Credit (Source - Loyalty), (Loyalty and Site Visit Done",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {},
+              {}
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -208,
+          48
+        ],
+        "id": "f1720061-5d9d-4d4a-bf3f-4495b853dbb8",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM `powerbi-implementation.dataWarehouse_prod.sales_sv_oppr` LIMIT 50;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          256,
+          -160
+        ],
+        "id": "952b8e9e-3675-4c57-96da-5d36a95cbd20",
+        "name": "Execute a SQL query",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "return items\n  .map(item => {\n    const demandDate = new Date(item.json.FKDAT);\n    const paymentDate = new Date(item.json.PAY_DATE);\n\n    const diffDays = (paymentDate - demandDate) / (1000 * 60 * 60 * 24);\n\n    if (diffDays >= 0 && diffDays <= 5) {\n      return {\n        json: {\n          customer_id: item.json.KUNNR,\n          demand_date: item.json.FKDAT,\n          payment_date: item.json.PAY_DATE,\n          diff_days: diffDays,\n          points: 6000,\n          rule: \"Paid within 5 days\"\n        }\n      };\n    }\n\n    return null;\n  })\n  .filter(Boolean);"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          -176
+        ],
+        "id": "22d4977a-f5f0-4e4a-b60f-f1302172144f",
+        "name": "Adding 6000 Incentive for the payment within 5 days",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM \n  powerbi-implementation.dataWarehouse_prod.sales_leads \n  LIMIT 50;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          448,
+          -144
+        ],
+        "id": "0f7ee8b7-9cf2-4030-a3a4-3a620f2e2efa",
+        "name": "Execute a SQL query1",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "ae0722f2-acec-408a-9a46-3939a8f76048",
+                "leftValue": "={{$json[\"CreatedById\"]}}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "e60adbb6-7dab-4dc1-8cda-b4d4a95fc820",
+                "leftValue": "={{$json[\"LeadSource\"]}}",
+                "rightValue": "Loyalty",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          288,
+          96
+        ],
+        "id": "81434914-6daa-4d1e-afdc-56c0924043f2",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM `powerbi-implementation.dataWarehouse_prod.sales_lead_app`\nWHERE LeadSource = \"Loyalty\" AND Lead_Sub_Source__c = \"Loyalty\"\n  AND Status__c = \"Booked\"\n  AND SAL_ORD IS NOT NULL;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          32,
+          -48
+        ],
+        "id": "87d80891-043d-47d5-bdcc-e38a4fc3ed29",
+        "name": "Query to fetch details of Source - Loyalty",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM `powerbi-implementation.dataWarehouse_prod.sales_sv_oppr`\nWHERE LeadSource = 'Loyalty'\n  AND Lead_Sub_Source__c = \"Loyalty\"\n  AND StageName IN ('Site Visit Done', 'Revisit Done')\n  AND Booking__c_Status__c IN ('Booked', 'Processed')\n  AND SAL_ORD IS NOT NULL;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          96,
+          144
+        ],
+        "id": "ebc05166-5c46-463f-a505-ba6e143b8f79",
+        "name": "Query to fetch details of Source - Loyalty and Site Visit Done or Revisit Done",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM `powerbi-implementation.dataWarehouse_prod.sales_sv_oppr`\nWHERE LeadSource = 'Loyalty'\nAND Lead_Sub_Source__c = \"Loyalty\"\nAND StageName = 'Booking confirmed' AND Booking__c IS NOT NULL AND Booking__c_Status__c IN ('Booked', 'Processed') AND Referral_Booking__c_Status__c IN ('Booked', 'Processed') AND SAL_ORD IS NOT NULL;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          80,
+          368
+        ],
+        "id": "bf58bc49-306d-49d3-82db-61d563640c0b",
+        "name": "Query to fetch details of Source - Loyalty and Booking Done",
+        "alwaysOutputData": true,
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://runwal-api.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "QsUjajggGCYJJGKndHkRidBxJN2cIUC06lr42Vru1EQ"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{ $json.customer_id }}\",\n  \"amount\": {{ $json.points }},\n  \"remarks\": \"{{ $json.reason }}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1424,
+          -288
+        ],
+        "id": "eb6d6037-68db-479a-88fa-6f6c44638579",
+        "name": "HTTP Request",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "content": "Sample Payload - \n\n{\n  \"customer_code\": \"5OW000001sHCzYAM\",\n  \"mobile_number\": \"9822789963\",\n  \"amount\": 1000,\n  \"transaction_type\": \"CREDIT\",\n  \"remarks\": \"LOYALTY_POINTS\",\n  \"transaction_note\": \"Referral reward\",\n  \"payment_mode\": \"cash\",\n  \"topup_by\": \"automation\",\n  \"lead_id\": \"856853\",\n  \"created_at\": \"2026-04-28T04:57:50.714Z\"\n}",
+          "height": 368
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          864,
+          -192
+        ],
+        "id": "ded14e68-5af3-4e99-82f3-1a07ba31c2f9",
+        "name": "Sticky Note"
+      },
+      {
+        "parameters": {
+          "content": "Sample Payload - \n\n{\n  \"customer_code\": \"a0EC5000002Lz1lMAC\",\n  \"lead_id\": \"811871\",\n  \"customer_mobile\": \"8977599666\",\n  \"reference_id\": \"8977599666\",\n  \"amount\": 1000,\n  \"transaction_type\": \"CREDIT\",\n  \"remarks\": \"Loyalty Site Visit Reward\",\n  \"transaction_note\": \"site_visit_loyalty_reward\",\n  \"payment_mode\": \"cash\",\n  \"topup_by\": \"automation\",\n  \"stage\": \"Site Visit Done\",\n  \"lead_source\": \"Loyalty\",\n  \"project\": \"Garden 6\",\n  \"credited_on\": \"2023-07-06\",\n  \"created_at\": \"2026-04-28T04:58:57.863Z\"\n}",
+          "height": 400
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          800,
+          192
+        ],
+        "id": "445241ea-56cb-4b0c-8723-264b60c53f8f",
+        "name": "Sticky Note1"
+      },
+      {
+        "parameters": {
+          "content": "Sample Payload - \n\n{\n  \"customer_code\": \"a0EOW000004b4vB2AQ\",\n  \"leadId\": \"946372\",\n  \"opportunityId\": \"155456\",\n  \"customerMobile\": \"9820212399\",\n  \"email\": \"ramesh.malliya@gmail.com\",\n  \"customerName\": \"Ramesh Vishwanath Mallya\",\n  \"amount\": 1000,\n  \"remarks\": \"LOYALTY_BOOKING_REWARD\",\n  \"transaction_note\": \"Points credited for referral Booking Confirmation\",\n  \"payment_mode\": \"cash\",\n  \"topup_by\": \"automation\",\n  \"leadSource\": \"Loyalty\",\n  \"stage\": \"Booking confirmed\",\n  \"createdAt\": \"2026-04-28T05:00:22.537Z\"\n}",
+          "height": 528
+        },
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          480,
+          336
+        ],
+        "id": "97a90db2-a026-4446-ba15-ce0deb4e928a",
+        "name": "Sticky Note2"
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT EXISTS (\n  SELECT 1\n  FROM wallet_transaction_logs\n  WHERE customer_code = '{{$json.customer_code}}'\n    AND lead_id = '{{$json.lead_id}}'\n    AND remarks = '{{$json.remarks}}'\n    AND status = 'SUCCESS'\n);\n\n/* SELECT EXISTS (\n  SELECT 1\n  FROM wallet_transaction_logs\n  WHERE customer_code = '{{$json.customer_code}}'\n  AND remarks = '{{$json.remarks}}'\n  AND status = 'SUCCESS'\n); */\n\n/* SELECT status\nFROM wallet_transaction_logs\nWHERE customer_code = '{{$json.customer_code}}'\nAND remarks = '{{$json.remarks}}'\nAND status = 'SUCCESS'\nLIMIT 1; */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          928,
+          -80
+        ],
+        "id": "cf5c8482-fdb0-41c3-aff6-08de05cd3dff",
+        "name": "Check Duplicates",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1152,
+          64
+        ],
+        "id": "ad372b33-2401-4249-8669-3ebd342669f1",
+        "name": "Merge",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://hi-society.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "f4725ada33bd6cd9724db65f352308f913b3d5bea2eea2c6"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{$json.customer_code}}\",\n  \"amount\": {{$json.amount || 0}},\n  \"remarks\": \"{{$json.remarks || 'NA'}}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1712,
+          64
+        ],
+        "id": "7b10c0ad-f9d6-4c74-b7dd-6dd3ad2bc51a",
+        "name": "HTTP Request to credit points3",
+        "alwaysOutputData": true,
+        "retryOnFail": false,
+        "waitBetweenTries": 1500,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8b311af8-f014-4910-b04d-608e1847c9a0",
+                "name": "customer_code",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty\"].json.customer_code}}",
+                "type": "string"
+              },
+              {
+                "id": "751ef75e-fe0a-4f82-ac88-6434d2a0629b",
+                "name": "amount",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty\"].json.amount}}",
+                "type": "number"
+              },
+              {
+                "id": "b1145a55-a695-4cfa-81d1-79f7f51abc14",
+                "name": "remarks",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty\"].json.remarks}}",
+                "type": "string"
+              },
+              {
+                "id": "6c46fb77-71a2-46a0-8498-012cfbe7fe3f",
+                "name": "lead_id",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty\"].json.lead_id}}",
+                "type": "string"
+              },
+              {
+                "id": "38f3dae0-4ba1-4391-a7f6-5af5b6f2fcbe",
+                "name": "=reference_id",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty\"].json.reference_id}}",
+                "type": "string"
+              },
+              {
+                "id": "dcf52459-b151-4db8-b465-7a890da209c6",
+                "name": "transaction_note",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty\"].json.transaction_note}}",
+                "type": "string"
+              },
+              {
+                "id": "9045fe70-369a-4af3-bc3a-3780061fbae0",
+                "name": "status",
+                "value": "={{$json.error ? \"FAILED\" : ($json.statusCode >= 200 && $json.statusCode < 300 ? \"SUCCESS\" : \"FAILED\")}}",
+                "type": "string"
+              },
+              {
+                "id": "fc9a41e4-3d87-47ef-bec1-ec7679e81d0a",
+                "name": "status_code",
+                "value": "={{$json.statusCode || $json.error?.status || 500}}",
+                "type": "number"
+              },
+              {
+                "id": "2a2f8faa-b24f-46c3-ae66-201da970f5db",
+                "name": "transaction_id",
+                "value": "={{$json.body?.transaction_id || null}}",
+                "type": "string"
+              },
+              {
+                "id": "a6029dde-70bd-44d7-a004-ff1e9d317785",
+                "name": "message",
+                "value": "={{$json.body?.error || $json.error?.message?.split(\"\\n\")[0]}}",
+                "type": "string"
+              },
+              {
+                "id": "ab7c1a10-7953-4d1e-bbe1-ae422f4bc70e",
+                "name": "request_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "44f2b0f0-8e91-439f-aec5-a355e2705ff9",
+                "name": "response_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "96ed068c-7dc1-4cbf-9384-4abcdde9eb86",
+                "name": "execution_id",
+                "value": "{{$json.execution_id}}",
+                "type": "string"
+              },
+              {
+                "id": "d4fdcaae-ae9c-4296-96fb-eb4ac2c8c591",
+                "name": "created_at",
+                "value": "={{new Date().toISOString()}}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1904,
+          240
+        ],
+        "id": "0b7de6bb-f173-4914-88b6-e5efa2bafc42",
+        "name": "Edit Fields3",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wallet_transaction_logs (\n    customer_code,\n    lead_id,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    {{$json.customer_code}},\n    '{{$json.lead_id}}',\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n);\n\n/* INSERT INTO wallet_transaction_logs (\n    customer_code,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    {{$json.customer_code}},\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n); */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          2128,
+          336
+        ],
+        "id": "3b317425-2361-4b3f-ba20-00d3177f62a5",
+        "name": "Add entry to logs4",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "0a538946-c5b1-47ce-aada-9f10cca56fc2",
+                "leftValue": "={{$json.exists}}",
+                "rightValue": "false",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1440,
+          112
+        ],
+        "id": "2322f739-f654-44eb-ad89-71bdcc0d743a",
+        "name": "If1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n  const agreementValue = Number(item.json.Agreement_Value__c || 0);\n\n  return {\n    json: {\n      customer_code: item.json.Customer_No__c,\n      CreditedById: item.json.CreatedById,\n      mobile_number: item.json.MobilePhone,\n      amount: agreementValue * 0.0000001, // 0.00001%\n      transaction_type: \"CREDIT\",\n      remarks: \"Referral Points\",\n      transaction_note: \"Referral reward\",\n      payment_mode: \"cash\",\n      topup_by: \"automation\",\n      lead_id: item.json.Lead_Id__c,\n      created_at: new Date().toISOString()\n    }\n  };\n});\n\n// return items.map(item => {\n\n//   return {\n//     json: {\n//       customer_code: item.json.Customer_No__c,\n//       CreditedById: item.json.CreatedById,\n//       mobile_number: item.json.MobilePhone,\n//       amount: 1000,\n//       transaction_type: \"CREDIT\",\n//       remarks: \"Referral Points\",\n//       transaction_note: \"Referral reward\",\n//       payment_mode: \"cash\",\n//       topup_by: \"automation\",\n//       lead_id: item.json.Lead_Id__c,\n//       created_at: new Date().toISOString()\n//     }\n//   };\n\n// });"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          656,
+          32
+        ],
+        "id": "aeb53080-3a6d-404c-9d1a-0c722e60ee8d",
+        "name": "Streamline data for LeadSource = Loyalty"
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n\n  const accountMobile =\n    item.json.Account_Mobile_Number__c ||\n    item.json.Account_Mobile_1__c ||\n    null;\n\n  // Agreement value\n  const agreementValue = Number(item.json.Booking__c_Agreement_Value__c || 0);\n\n  // 0.0005% of agreement value\n  const points = Math.round(agreementValue * 0.000005);\n\n  return {\n    json: {\n      customer_code: item.json.Customer_No__c,\n      id: item.json.ID,\n      lead_id: item.json.Lead_Id__c,\n\n      customer_mobile: accountMobile,\n      reference_id: accountMobile,\n\n      amount: points,\n      transaction_type: \"CREDIT\",\n      remarks: \"Referral Points Site Visit Done\",\n      transaction_note: \"site_visit_loyalty_reward\",\n      payment_mode: \"cash\",\n      topup_by: \"automation\",\n\n      stage: item.json.StageName,\n      lead_source: item.json.LeadSource,\n      project: item.json.Project_Name,\n\n      credited_on: item.json.SV_Date__c,\n\n      created_at: new Date().toISOString()\n    }\n  };\n\n});\n\n// return items.map(item => {\n\n//   const accountMobile =\n//     item.json.Account_Mobile_Number__c ||\n//     item.json.Account_Mobile_1__c ||\n//     null;\n\n//   return {\n//     json: {\n//       customer_code: item.json.Customer_No__c,\n//       id: item.json.ID,\n//       lead_id: item.json.Lead_Id__c,\n\n//       customer_mobile: accountMobile,\n//       reference_id: accountMobile,\n\n//       amount: 1000,\n//       transaction_type: \"CREDIT\",\n//       remarks: \"Referral Points Site Visit Done\",\n//       transaction_note: \"site_visit_loyalty_reward\",\n//       payment_mode: \"cash\",\n//       topup_by: \"automation\",\n\n//       stage: item.json.StageName,\n//       lead_source: item.json.LeadSource,\n//       project: item.json.Project_Name,\n\n//       credited_on: item.json.SV_Date__c,\n\n//       created_at: new Date().toISOString()\n//     }\n//   };\n\n// });"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          416,
+          192
+        ],
+        "id": "967104a2-2fcf-468e-950c-518c146a2443",
+        "name": "Streamline data for LeadSource = Loyalty and Site Visit Done or Revisit Done",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "return items.map(item => {\n\n  const mobile =\n    item.json.Account_Mobile_Number__c ||\n    item.json.Account_Mobile_1__c ||\n    item.json.Mobile_Number__c ||\n    null;\n\n  // Referral booking agreement value\n  const agreementValue = Number(item.json.Referral_Booking__c_Agreement_Value__c || 0);\n\n  // Calculate 2% points\n  const points = Math.round(agreementValue * 0.02);\n\n  return {\n    json: {\n      customer_code: item.json.ID,\n      lead_id: item.json.Lead_Id__c,\n      opportunityId: item.json.Opportunity_ID__c,\n\n      // unified mobile (future unique constraint)\n      customerMobile: mobile,\n\n      email: item.json.Email_Address__c,\n      customerName: item.json.Name,\n\n      amount: points,\n      remarks: \"Referral Points\",\n      transaction_note: \"Points credited for referral Booking Confirmation\",\n      payment_mode: \"cash\",\n      topup_by: \"automation\",\n\n      leadSource: item.json.LeadSource,\n      stage: item.json.StageName,\n\n      createdAt: new Date().toISOString()\n    }\n  };\n});\n\n// return items.map(item => {\n\n//   const mobile =\n//     item.json.Account_Mobile_Number__c ||\n//     item.json.Account_Mobile_1__c ||\n//     item.json.Mobile_Number__c ||\n//     null;\n\n//   return {\n//     json: {\n//       customer_code: item.json.ID,\n//       leadId: item.json.Lead_Id__c,\n//       opportunityId: item.json.Opportunity_ID__c,\n\n//       // unified mobile (future unique constraint)\n//       customerMobile: mobile,\n\n//       email: item.json.Email_Address__c,\n//       customerName: item.json.Name,\n\n//       amount: 1000,\n//       remarks: \"Referral Points\",\n//       transaction_note: \"Points credited for referral Booking Confirmation\",\n//       payment_mode: \"cash\",\n//       topup_by: \"automation\",\n\n//       leadSource: item.json.LeadSource,\n//       stage: item.json.StageName,\n\n//       createdAt: new Date().toISOString()\n//     }\n//   };\n// });"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          368,
+          448
+        ],
+        "id": "f2662f03-9a36-4bfd-a1db-c5dc94d30427",
+        "name": "Streamline data for LeadSource = Loyalty and Booking Confirmed",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT EXISTS (\n  SELECT 1\n  FROM wallet_transaction_logs\n  WHERE customer_code = '{{$json.customer_code}}'\n  AND lead_id = '{{$json.lead_id}}'\n  AND remarks = '{{$json.remarks}}'\n  AND status = 'SUCCESS'\n);\n\n/* SELECT status\nFROM wallet_transaction_logs\nWHERE customer_code = '{{$json.customer_code}}'\nAND remarks = '{{$json.remarks}}'\nAND status = 'SUCCESS'\nLIMIT 1; */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          912,
+          208
+        ],
+        "id": "286fea7d-b0bd-4111-b3cb-25f76af68398",
+        "name": "Check Duplicates1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1120,
+          352
+        ],
+        "id": "56f9d238-c733-4c4b-a986-5a3aa1aa384e",
+        "name": "Merge1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://hi-society.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "f4725ada33bd6cd9724db65f352308f913b3d5bea2eea2c6"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{$json.customer_code}}\",\n  \"amount\": {{$json.amount || 0}},\n  \"remarks\": \"{{$json.remarks || 'NA'}}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1680,
+          336
+        ],
+        "id": "312d3a6c-86f8-4033-abef-ef034900bcb1",
+        "name": "HTTP Request to credit points",
+        "alwaysOutputData": true,
+        "retryOnFail": false,
+        "waitBetweenTries": 1500,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8b311af8-f014-4910-b04d-608e1847c9a0",
+                "name": "customer_code",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty and Site Visit Done or Revisit Done\"].json.customer_code}}",
+                "type": "string"
+              },
+              {
+                "id": "751ef75e-fe0a-4f82-ac88-6434d2a0629b",
+                "name": "amount",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty and Site Visit Done or Revisit Done\"].json.amount}}",
+                "type": "number"
+              },
+              {
+                "id": "b1145a55-a695-4cfa-81d1-79f7f51abc14",
+                "name": "remarks",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty and Site Visit Done or Revisit Done\"].json.remarks}}",
+                "type": "string"
+              },
+              {
+                "id": "0f1a725c-5459-41fa-8e45-5bee5f877e1f",
+                "name": "lead_id",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty and Site Visit Done or Revisit Done\"].json.lead_id}}",
+                "type": "string"
+              },
+              {
+                "id": "38f3dae0-4ba1-4391-a7f6-5af5b6f2fcbe",
+                "name": "=reference_id",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty and Site Visit Done or Revisit Done\"].json.reference_id}}",
+                "type": "string"
+              },
+              {
+                "id": "dcf52459-b151-4db8-b465-7a890da209c6",
+                "name": "transaction_note",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty and Site Visit Done or Revisit Done\"].json.transaction_note}}",
+                "type": "string"
+              },
+              {
+                "id": "9045fe70-369a-4af3-bc3a-3780061fbae0",
+                "name": "status",
+                "value": "={{$json.error ? \"FAILED\" : ($json.statusCode >= 200 && $json.statusCode < 300 ? \"SUCCESS\" : \"FAILED\")}}",
+                "type": "string"
+              },
+              {
+                "id": "fc9a41e4-3d87-47ef-bec1-ec7679e81d0a",
+                "name": "status_code",
+                "value": "={{$json.statusCode || $json.error?.status || 500}}",
+                "type": "number"
+              },
+              {
+                "id": "2a2f8faa-b24f-46c3-ae66-201da970f5db",
+                "name": "transaction_id",
+                "value": "={{$json.body?.transaction_id || null}}",
+                "type": "string"
+              },
+              {
+                "id": "a6029dde-70bd-44d7-a004-ff1e9d317785",
+                "name": "message",
+                "value": "={{$json.body?.error || $json.error?.message?.split(\"\\n\")[0]}}",
+                "type": "string"
+              },
+              {
+                "id": "ab7c1a10-7953-4d1e-bbe1-ae422f4bc70e",
+                "name": "request_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "44f2b0f0-8e91-439f-aec5-a355e2705ff9",
+                "name": "response_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "96ed068c-7dc1-4cbf-9384-4abcdde9eb86",
+                "name": "execution_id",
+                "value": "{{$json.execution_id}}",
+                "type": "string"
+              },
+              {
+                "id": "d4fdcaae-ae9c-4296-96fb-eb4ac2c8c591",
+                "name": "created_at",
+                "value": "={{new Date().toISOString()}}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1872,
+          512
+        ],
+        "id": "192218e0-3ce4-4fe8-aaad-abdd8de07d02",
+        "name": "Edit Fields",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wallet_transaction_logs (\n    customer_code,\n    lead_id,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    {{$json.customer_code}},\n    '{{$json.lead_id}}',\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n);\n\n/* INSERT INTO wallet_transaction_logs (\n    customer_code,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    {{$json.customer_code}},\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n); */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          2096,
+          608
+        ],
+        "id": "539c44f9-f968-44f5-98b8-c5a04cb917a8",
+        "name": "Add entry to logs",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "0a538946-c5b1-47ce-aada-9f10cca56fc2",
+                "leftValue": "={{$json.exists}}",
+                "rightValue": "false",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1408,
+          384
+        ],
+        "id": "0ea6d814-324a-41f5-a332-e9186ea4ddc2",
+        "name": "If2",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT EXISTS (\n  SELECT 1\n  FROM wallet_transaction_logs\n  WHERE customer_code = '{{$json.customer_code}}'\n  AND lead_id = '{{$json.lead_id}}'\n  AND remarks = '{{$json.remarks}}'\n  AND status = 'SUCCESS'\n);\n\n/* SELECT status\nFROM wallet_transaction_logs\nWHERE customer_code = '{{$json.customer_code}}'\nAND remarks = '{{$json.remarks}}'\nAND status = 'SUCCESS'\nLIMIT 1; */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          736,
+          496
+        ],
+        "id": "a23c8354-9600-4d6d-8237-ad9512cacc1f",
+        "name": "Check Duplicates2",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          944,
+          656
+        ],
+        "id": "11a773b3-e274-4302-811c-9f2aea8346e6",
+        "name": "Merge2",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://hi-society.lockated.com/loyalty/members/credit_wallet.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "f4725ada33bd6cd9724db65f352308f913b3d5bea2eea2c6"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"customer_code\": \"{{$json.customer_code}}\",\n  \"amount\": {{$json.amount || 0}},\n  \"remarks\": \"{{$json.remarks || 'NA'}}\",\n  \"transaction_note\": \"Demand payment reward\",\n  \"payment_mode\": \"system\",\n  \"topup_by\": \"automation\"\n}",
+          "options": {
+            "response": {
+              "response": {
+                "fullResponse": true,
+                "responseFormat": "json"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1504,
+          656
+        ],
+        "id": "53038af9-b197-4f94-92e4-d7c3fff6d91b",
+        "name": "HTTP Request to credit points4",
+        "alwaysOutputData": true,
+        "retryOnFail": false,
+        "waitBetweenTries": 1500,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8b311af8-f014-4910-b04d-608e1847c9a0",
+                "name": "customer_code",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty and Booking Confirmed\"].json.customer_code}}",
+                "type": "string"
+              },
+              {
+                "id": "751ef75e-fe0a-4f82-ac88-6434d2a0629b",
+                "name": "amount",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty and Booking Confirmed\"].json.amount}}",
+                "type": "number"
+              },
+              {
+                "id": "b1145a55-a695-4cfa-81d1-79f7f51abc14",
+                "name": "remarks",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty and Booking Confirmed\"].json.remarks}}",
+                "type": "string"
+              },
+              {
+                "id": "0181574c-a418-424c-aff3-1ee0efd0271b",
+                "name": "lead_id",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty and Booking Confirmed\"].json.lead_id}}",
+                "type": "string"
+              },
+              {
+                "id": "38f3dae0-4ba1-4391-a7f6-5af5b6f2fcbe",
+                "name": "=reference_id",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty and Booking Confirmed\"].json.reference_id}}",
+                "type": "string"
+              },
+              {
+                "id": "dcf52459-b151-4db8-b465-7a890da209c6",
+                "name": "transaction_note",
+                "value": "={{$node[\"Streamline data for LeadSource = Loyalty and Booking Confirmed\"].json.transaction_note}}",
+                "type": "string"
+              },
+              {
+                "id": "9045fe70-369a-4af3-bc3a-3780061fbae0",
+                "name": "status",
+                "value": "={{$json.error ? \"FAILED\" : ($json.statusCode >= 200 && $json.statusCode < 300 ? \"SUCCESS\" : \"FAILED\")}}",
+                "type": "string"
+              },
+              {
+                "id": "fc9a41e4-3d87-47ef-bec1-ec7679e81d0a",
+                "name": "status_code",
+                "value": "={{$json.statusCode || $json.error?.status || 500}}",
+                "type": "number"
+              },
+              {
+                "id": "2a2f8faa-b24f-46c3-ae66-201da970f5db",
+                "name": "transaction_id",
+                "value": "={{$json.body?.transaction_id || null}}",
+                "type": "string"
+              },
+              {
+                "id": "a6029dde-70bd-44d7-a004-ff1e9d317785",
+                "name": "message",
+                "value": "={{$json.body?.error || $json.error?.message?.split(\"\\n\")[0]}}",
+                "type": "string"
+              },
+              {
+                "id": "ab7c1a10-7953-4d1e-bbe1-ae422f4bc70e",
+                "name": "request_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "44f2b0f0-8e91-439f-aec5-a355e2705ff9",
+                "name": "response_payload",
+                "value": "={{$json}}",
+                "type": "object"
+              },
+              {
+                "id": "96ed068c-7dc1-4cbf-9384-4abcdde9eb86",
+                "name": "execution_id",
+                "value": "{{$json.execution_id}}",
+                "type": "string"
+              },
+              {
+                "id": "d4fdcaae-ae9c-4296-96fb-eb4ac2c8c591",
+                "name": "created_at",
+                "value": "={{new Date().toISOString()}}",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1696,
+          832
+        ],
+        "id": "e3392c23-1366-4047-8bae-2c82f3c72b12",
+        "name": "Edit Fields4",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO wallet_transaction_logs (\n    customer_code,\n    lead_id,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    {{$json.customer_code}},\n    '{{$json.lead_id}}',\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n);\n\n/* INSERT INTO wallet_transaction_logs (\n    customer_code,\n    amount,\n    remarks,\n    reference_id,\n    transaction_note,\n    status,\n    status_code,\n    message,\n    request_payload,\n    response_payload,\n    execution_id,\n    created_at\n)\nVALUES (\n    {{$json.customer_code}},\n    {{$json.amount || 0}},\n    '{{($json.remarks || \"\").replace(/'/g, \"''\")}}',\n    {{$json.reference_id ? `'${$json.reference_id}'` : 'NULL'}},\n    '{{($json.transaction_note || \"\").replace(/'/g, \"''\")}}',\n    '{{($json.status || \"\").replace(/'/g, \"''\")}}',\n    {{$json.status_code || 500}},\n    '{{($json.message || \"\").replace(/'/g, \"''\")}}',\n    '{{JSON.stringify($json.request_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    '{{JSON.stringify($json.response_payload || {}).replace(/'/g, \"''\")}}'::jsonb,\n    {{$json.execution_id ? `'${$json.execution_id}'` : 'NULL'}},\n    NOW()\n); */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1920,
+          928
+        ],
+        "id": "8eee18e6-ca7e-494f-82aa-83ac122d4647",
+        "name": "Add entry to logs5",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "0a538946-c5b1-47ce-aada-9f10cca56fc2",
+                "leftValue": "={{$json.exists}}",
+                "rightValue": "false",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1232,
+          704
+        ],
+        "id": "fb43cae7-58fc-4411-bd79-6629b4d3d7d5",
+        "name": "If3",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "authentication": "serviceAccount",
+          "projectId": {
+            "__rl": true,
+            "value": "powerbi-implementation",
+            "mode": "list",
+            "cachedResultName": "PowerBI Implementation",
+            "cachedResultUrl": "https://console.cloud.google.com/bigquery?project=powerbi-implementation"
+          },
+          "sqlQuery": "SELECT *\nFROM powerbi-implementation.dataWarehouse_prod.sales_leads \nWHERE LeadSource = \"Loyalty\"",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleBigQuery",
+        "typeVersion": 2.1,
+        "position": [
+          -208,
+          -272
+        ],
+        "id": "0f284c77-dc15-4dbe-ab76-72ee3b5d5a44",
+        "name": "Query to fetch details of Source - Loyalty1",
+        "credentials": {
+          "googleApi": {
+            "id": "nmAIqj1Sf2UOZ6ZZ",
+            "name": "Rustomjee - BigQuery Google Service Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT column_name, data_type\nFROM information_schema.columns\nWHERE table_name = 'wallet_transaction_logs'\nORDER BY ordinal_position;\n/* SELECT status\nFROM wallet_transaction_logs\nWHERE customer_code = '{{$json.customer_code}}'\nAND remarks = '{{$json.remarks}}'\nAND status = 'SUCCESS'\nLIMIT 1; */",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1776,
+          -288
+        ],
+        "id": "982c2003-1aa6-4529-b036-64be052aa6ec",
+        "name": "Alter table",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Query to fetch details of Source - Loyalty",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Query to fetch details of Source - Loyalty and Site Visit Done or Revisit Done",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Query to fetch details of Source - Loyalty and Booking Done",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          []
+        ]
+      },
+      "If": {
+        "main": [
+          []
+        ]
+      },
+      "Query to fetch details of Source - Loyalty": {
+        "main": [
+          [
+            {
+              "node": "Streamline data for LeadSource = Loyalty",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Query to fetch details of Source - Loyalty and Site Visit Done or Revisit Done": {
+        "main": [
+          [
+            {
+              "node": "Streamline data for LeadSource = Loyalty and Site Visit Done or Revisit Done",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Query to fetch details of Source - Loyalty and Booking Done": {
+        "main": [
+          [
+            {
+              "node": "Streamline data for LeadSource = Loyalty and Booking Confirmed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Duplicates": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request to credit points3": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields3": {
+        "main": [
+          [
+            {
+              "node": "Add entry to logs4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request to credit points3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Streamline data for LeadSource = Loyalty": {
+        "main": [
+          [
+            {
+              "node": "Check Duplicates",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Duplicates1": {
+        "main": [
+          [
+            {
+              "node": "Merge1",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge1": {
+        "main": [
+          [
+            {
+              "node": "If2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request to credit points": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Add entry to logs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If2": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request to credit points",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Streamline data for LeadSource = Loyalty and Site Visit Done or Revisit Done": {
+        "main": [
+          [
+            {
+              "node": "Check Duplicates1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Merge1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Duplicates2": {
+        "main": [
+          [
+            {
+              "node": "Merge2",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge2": {
+        "main": [
+          [
+            {
+              "node": "If3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request to credit points4": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields4": {
+        "main": [
+          [
+            {
+              "node": "Add entry to logs5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If3": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request to credit points4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Streamline data for LeadSource = Loyalty and Booking Confirmed": {
+        "main": [
+          [
+            {
+              "node": "Check Duplicates2",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Merge2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "3aefce1f-ab90-4f79-81bb-554e8ea8ad9c",
+    "activeVersionId": null,
+    "versionCounter": 72,
+    "triggerCount": 0,
+    "shared": [
+      {
+        "updatedAt": "2026-03-02T14:42:13.334Z",
+        "createdAt": "2026-03-02T14:42:13.334Z",
+        "role": "workflow:owner",
+        "workflowId": "iZwIf847OdFjVbFG",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-07-05T17:39:09.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1770088091114
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-07-04",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": {
+      "updatedAt": "2026-03-02T14:34:11.511Z",
+      "createdAt": "2026-03-02T14:34:11.511Z",
+      "id": "Y9zGEIC6huRvstXD",
+      "name": "Rustomjee Bigquery",
+      "parentFolderId": null
+    },
+    "activeVersion": null,
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "f9c78d5c0a4395ed974ee7aaac3e949819747f16254c96923d91f8d55d37167b"
+  }
+}
