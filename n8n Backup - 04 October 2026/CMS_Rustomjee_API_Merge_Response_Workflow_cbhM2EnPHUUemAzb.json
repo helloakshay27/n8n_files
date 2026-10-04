@@ -1,0 +1,982 @@
+{
+  "data": {
+    "updatedAt": "2026-09-14T12:41:19.870Z",
+    "createdAt": "2026-08-03T08:11:06.706Z",
+    "id": "cbhM2EnPHUUemAzb",
+    "name": "CMS Rustomjee API Merge Response Workflow",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "path": "MergeAPIResponse",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          -640,
+          -624
+        ],
+        "id": "d3350e67-f02a-4c9b-b163-dbd4feb0d32b",
+        "name": "Webhook",
+        "webhookId": "4d6a7c1f-6788-4aef-88a7-c3b35d281e4f",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "https://cms.rustomjee.com/api/properties-colls?populate[property_type][fields][0]=name&populate[property_type][fields][1]=slug&populate[property_status][fields][0]=name&populate[property_status][fields][1]=slug&populate[residence][fields][0]=title&populate[residence][fields][1]=slug&populate[content][on][properties.banner-details][populate][desktopbanner][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopbanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][mobilebanner][fields][0]=url&populate[content][on][properties.banner-details][populate][mobilebanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][desktopvideo][fields][0]=url&populate[content][on][properties.banner-details][populate][mobileVideo][fields][0]=url&populate[content][on][properties.banner-details][populate][button][populate][buttonIcon][fields][0]=url&populate[content][on][properties.banner-details][populate][button][populate][media][fields][0]=url&populate[overview][populate]=*&populate[map_360][populate][media][fields][0]=url&populate[rera_numbers][populate][image][fields][0]=url&populate[rera_numbers][populate][image][fields][1]=alternativeText&populate[amenity][fields][0]=title&populate[amenity][fields][1]=slug&populate[brochure][populate][buttonIcon][fields][0]=url&populate[brochure][populate][media][fields][0]=url",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "pagination[page]",
+                "value": "1"
+              },
+              {
+                "name": "pagination[pageSize]",
+                "value": "1000"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer d49364cf07d9b992cc3c90979e1ecbfbf4530365db077602c2cedd937f2e0bd48160826bac8ad8fc4c7ac64463ca8ea2d1afc0da0cb185d4e6bb0daecf27baad03ad2aba3a391ebe1029a42724d6693b1320446929f8a6b21d6a33270e6564424d3c174b7d052250fa0d223317c8b4cfc497ab7e11d7f1e1fa1fbe1a9e44c5ea"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -272,
+          -400
+        ],
+        "id": "a01da18a-74cd-4fed-a9da-940c608cfed5",
+        "name": "API 1 - Properties API",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "https://cms.rustomjee.com/api/residences-colls?populate[image][fields][0]=url&populate[image][fields][1]=alternativeText&populate[property][fields][0]=title&populate[property][fields][1]=slug&populate[button][populate][buttonIcon][fields][0]=url&populate[button][populate][media][fields][0]=url&populate[seo][populate][metaImage][fields][0]=url&populate[seo][populate][metaImage][fields][1]=alternativeText&populate[seo][populate][openGraph][populate][ogImage][fields][0]=url&populate[seo][populate][openGraph][populate][ogImage][fields][1]=alternativeText&populate[content][on][properties.project-plan][populate][button][populate][buttonIcon][fields][0]=url&populate[content][on][properties.project-plan][populate][button][populate][media][fields][0]=url&populate[content][on][properties.project-plan][populate][unitPlan][populate][unitPlanCard][populate][pdf][fields][0]=url&populate[content][on][properties.project-plan][populate][unitPlan][populate][unitPlanCard][populate][image][fields][0]=url&populate[content][on][properties.project-plan][populate][unitPlan][populate][unitPlanCard][populate][image][fields][1]=alternativeText&populate[content][on][properties.project-plan][populate][floorPlan][populate][pdf][fields][0]=url&populate[content][on][properties.project-plan][populate][floorPlan][populate][image][fields][0]=url&populate[content][on][properties.project-plan][populate][floorPlan][populate][image][fields][1]=alternativeText&populate[content][on][properties.project-plan][populate][masterPlan][populate][mapViewPdf][fields][0]=url&populate[content][on][properties.project-plan][populate][masterPlan][populate][mapViewPdf][fields][1]=alternativeText",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "pagination[page]",
+                "value": "1"
+              },
+              {
+                "name": "pagination[pageSize]",
+                "value": "1000"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer d49364cf07d9b992cc3c90979e1ecbfbf4530365db077602c2cedd937f2e0bd48160826bac8ad8fc4c7ac64463ca8ea2d1afc0da0cb185d4e6bb0daecf27baad03ad2aba3a391ebe1029a42724d6693b1320446929f8a6b21d6a33270e6564424d3c174b7d052250fa0d223317c8b4cfc497ab7e11d7f1e1fa1fbe1a9e44c5ea"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -272,
+          -256
+        ],
+        "id": "04852321-3f50-4074-af3c-ffeeec8b8093",
+        "name": "API 2 - Residences API",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "https://cms.rustomjee.com/api/amenities-colls?populate[property][fields][0]=title&populate[property][fields][1]=slug&populate[seo][populate][metaImage][fields][0]=url&populate[seo][populate][openGraph][populate][ogImage][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopbanner][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopbanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][mobilebanner][fields][0]=url&populate[content][on][properties.banner-details][populate][mobilebanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][desktopvideo][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopvideo][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][mobileVideo][fields][0]=url&populate[content][on][properties.banner-details][populate][mobileVideo][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][button][populate][buttonIcon][fields][0]=url&populate[content][on][home.about-properties][populate][desktopbanner][fields][0]=url&populate[content][on][home.about-properties][populate][desktopbanner][fields][1]=alternativeText&populate[content][on][home.about-properties][populate][mobilebanner][fields][0]=url&populate[content][on][home.about-properties][populate][mobilebanner][fields][1]=alternativeText&populate[content][on][home.about-properties][populate][desktopvideo][fields][0]=url&populate[content][on][home.about-properties][populate][desktopvideo][fields][1]=alternativeText&populate[content][on][home.about-properties][populate][mobileVideo][fields][0]=url&populate[content][on][home.about-properties][populate][mobileVideo][fields][1]=alternativeText&populate[content][on][properties.properties-amenities][populate][propertiesEmenitiesDetails][populate][desktopmage][fields][0]=url&populate[content][on][properties.properties-amenities][populate][propertiesEmenitiesDetails][populate][mobileImage][fields][1]=alternativeText&populate[content][on][properties.other-amenties][populate][imageTitle][populate][image][fields][0]=url&populate[content][on][properties.other-amenties][populate][imageTitle][populate][image][fields][1]=alternativeText",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "pagination[page]",
+                "value": "1"
+              },
+              {
+                "name": "pagination[pageSize]",
+                "value": "1000"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer d49364cf07d9b992cc3c90979e1ecbfbf4530365db077602c2cedd937f2e0bd48160826bac8ad8fc4c7ac64463ca8ea2d1afc0da0cb185d4e6bb0daecf27baad03ad2aba3a391ebe1029a42724d6693b1320446929f8a6b21d6a33270e6564424d3c174b7d052250fa0d223317c8b4cfc497ab7e11d7f1e1fa1fbe1a9e44c5ea"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -256,
+          -96
+        ],
+        "id": "0db600d7-2f32-423e-bbb5-a80df7ff5a5a",
+        "name": "API 3 - Amenities API",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const properties = $('API 1 - Properties API').first().json;\nconst residences = $('API 2 - Residences API').first().json;\nconst amenities = $('API 3 - Amenities API').first().json;\n\nreturn [\n  {\n    json: {\n      properties,\n      residences,\n      amenities\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          432,
+          -688
+        ],
+        "id": "3527c1df-4b7c-4e0a-912f-fe23446c2d38",
+        "name": "Merge Responses",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          720,
+          -720
+        ],
+        "id": "fbb0c1b1-b2a7-464e-af91-f25b986154d4",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "months"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -544,
+          -240
+        ],
+        "id": "43d4ea01-1768-451c-bb96-9e312c4fae0e",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "numberInputs": 3
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          32,
+          -320
+        ],
+        "id": "6df67c96-60c2-4aae-b260-e67bcc0eed1f",
+        "name": "Merge",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\n// -----------------------------------\n// 1. Get the 3 API responses\n// -----------------------------------\n\nconst propertiesResponse = items[0].json;\nconst residencesResponse = items[1].json;\nconst amenitiesResponse = items[2].json;\n\n// Extract data arrays\nconst properties = propertiesResponse.data || [];\nconst residences = residencesResponse.data || [];\nconst amenities = amenitiesResponse.data || [];\n\n\n// -----------------------------------\n// 2. Create lookup maps\n// -----------------------------------\n\n// Residence → property\nconst residencesByPropertyId = {};\n\nfor (const residence of residences) {\n  const propertyId = residence.property?.id;\n\n  if (!propertyId) continue;\n\n  if (!residencesByPropertyId[propertyId]) {\n    residencesByPropertyId[propertyId] = [];\n  }\n\n  residencesByPropertyId[propertyId].push(residence);\n}\n\n\n// Amenity → property\nconst amenitiesByPropertyId = {};\n\nfor (const amenity of amenities) {\n  const propertyId = amenity.property?.id;\n\n  if (!propertyId) continue;\n\n  if (!amenitiesByPropertyId[propertyId]) {\n    amenitiesByPropertyId[propertyId] = [];\n  }\n\n  amenitiesByPropertyId[propertyId].push(amenity);\n}\n\n\n// -----------------------------------\n// 3. Build one combined object\n//    for every property\n// -----------------------------------\n\nconst result = [];\n\nfor (const property of properties) {\n\n  const propertyId = property.id;\n\n  const matchedResidences =\n    residencesByPropertyId[propertyId] || [];\n\n  const matchedAmenities =\n    amenitiesByPropertyId[propertyId] || [];\n\n  result.push({\n    json: {\n      property: property,\n\n      residences: matchedResidences,\n\n      amenities: matchedAmenities,\n\n      matching: {\n        propertyId: propertyId,\n        residenceCount: matchedResidences.length,\n        amenityCount: matchedAmenities.length\n      }\n    }\n  });\n}\n\n\n// -----------------------------------\n// 4. Return one n8n item per property\n// -----------------------------------\n\nreturn result;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          320,
+          -304
+        ],
+        "id": "8d8035b1-bf8d-4164-a1e4-ae76d006b55f",
+        "name": "Match Property Data",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const property = item.json.property || {};\n  const residences = item.json.residences || [];\n  const amenities = item.json.amenities || [];\n\n  const overview = property.overview || {};\n  const propertyType = property.property_type || {};\n\n  // -----------------------------------------\n  // RERA\n  // -----------------------------------------\n\n  const reraNumbers = (property.rera_numbers || []).map(rera => ({\n    tower_name: rera.wing || null,\n    rera_number: rera.rera_number || null,\n    rera_url: null,\n    image_url: rera.image?.url || null\n  }));\n\n\n  // -----------------------------------------\n  // RESIDENCE / PLAN DATA\n  // -----------------------------------------\n\n  const plans = [];\n\n  for (const residence of residences) {\n\n    for (const content of (residence.content || [])) {\n\n      if (content.__component !== 'properties.project-plan') {\n        continue;\n      }\n\n      for (const unitPlan of (content.unitPlan || [])) {\n\n        const plan = {\n          name: unitPlan.typeOfBhk || null,\n          images: [],\n          images_1_by_1: [],\n          images_16_by_9: []\n        };\n\n        for (const card of (unitPlan.unitPlanCard || [])) {\n\n          if (card.image?.url) {\n            plan.images.push({\n              url: card.image.url,\n              tower: card.tower || null,\n              area: card.area || null\n            });\n          }\n\n          if (card.pdf?.url) {\n            plan.images.push({\n              url: card.pdf.url,\n              tower: card.tower || null,\n              area: card.area || null\n            });\n          }\n        }\n\n        plans.push(plan);\n      }\n    }\n  }\n\n\n  // -----------------------------------------\n  // FLOOR PLANS\n  // -----------------------------------------\n\n  const floorPlans = [];\n\n  for (const residence of residences) {\n\n    for (const content of (residence.content || [])) {\n\n      if (content.__component !== 'properties.project-plan') {\n        continue;\n      }\n\n      for (const floorPlan of (content.floorPlan || [])) {\n\n        floorPlans.push({\n          name: floorPlan.level || null,\n          image: floorPlan.image?.url || null,\n          pdf: floorPlan.pdf?.url || null\n        });\n      }\n    }\n  }\n\n\n  // -----------------------------------------\n  // MASTER PLANS\n  // -----------------------------------------\n\n  const masterPlans = [];\n\n  for (const residence of residences) {\n\n    for (const content of (residence.content || [])) {\n\n      if (content.__component !== 'properties.project-plan') {\n        continue;\n      }\n\n      if (content.masterPlan?.mapViewPdf?.url) {\n\n        masterPlans.push({\n          image: content.masterPlan.mapViewPdf.url\n        });\n\n      }\n    }\n  }\n\n\n  // -----------------------------------------\n  // AMENITIES\n  // -----------------------------------------\n\n  const amenityList = [];\n\n  for (const amenity of amenities) {\n\n    for (const content of (amenity.content || [])) {\n\n      // Other Amenities component\n      if (content.__component === 'properties.other-amenties') {\n\n        for (const item of (content.imageTitle || [])) {\n\n          amenityList.push({\n            name: item.description || item.title || null,\n            image: item.image?.url || null\n          });\n\n        }\n      }\n\n      // About Properties component\n      if (content.__component === 'home.about-properties') {\n\n        amenityList.push({\n          name: content.title || null,\n          description: content.description || null,\n          image: content.desktopbanner?.url || null,\n          mobile_image: content.mobilebanner?.url || null\n        });\n\n      }\n    }\n  }\n\n\n  // -----------------------------------------\n  // PROPERTY BANNER IMAGES\n  // -----------------------------------------\n\n  const bannerImages = [];\n\n  for (const content of (property.content || [])) {\n\n    if (content.desktopbanner?.url) {\n      bannerImages.push({\n        type: 'desktop',\n        url: content.desktopbanner.url\n      });\n    }\n\n    if (content.mobilebanner?.url) {\n      bannerImages.push({\n        type: 'mobile',\n        url: content.mobilebanner.url\n      });\n    }\n  }\n\n\n  // -----------------------------------------\n  // FINAL NORMALIZED OBJECT\n  // -----------------------------------------\n\n  return {\n    json: {\n\n      // Keep ORIGINAL source data\n      source: {\n        property: property,\n        residences: residences,\n        amenities: amenities\n      },\n\n      // Normalized data\n      project: {\n\n        id: property.id || null,\n        documentId: property.documentId || null,\n        slug: property.slug || null,\n\n        name: property.title || null,\n\n        property_type: propertyType.name || null,\n\n        construction_status: overview.status || null,\n\n        configuration:\n          overview.configuration ||\n          overview.unit_type ||\n          null,\n\n        city: property.city || null,\n\n        latitude: property.latitude || null,\n        longitude: property.longitude || null,\n\n        location: overview.location || null,\n\n        rera_numbers: reraNumbers,\n\n        plans: plans,\n\n        floor_plans: floorPlans,\n\n        master_plans: masterPlans,\n\n        amenities: amenityList,\n\n        banner_images: bannerImages\n      }\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          592,
+          -304
+        ],
+        "id": "efebfd25-8a12-4efe-95c7-b3d123b9bb3b",
+        "name": "Transform Project Data",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "// ==========================================================\n// UNICODE-SAFE SHA-256\n// No external modules required\n// Works with n8n Code node\n// ==========================================================\n\nfunction sha256(str) {\n\n  // Convert JavaScript UTF-16 string to UTF-8 bytes\n  const utf8 = unescape(encodeURIComponent(str));\n\n  function rightRotate(value, amount) {\n    return (value >>> amount) | (value << (32 - amount));\n  }\n\n  const mathPow = Math.pow;\n  const maxWord = mathPow(2, 32);\n\n  let result = '';\n\n  const words = [];\n\n  const asciiBitLength = utf8.length * 8;\n\n  let hash = [];\n  const k = [];\n\n  let primeCounter = 0;\n\n  const isPrime = [];\n\n  for (let candidate = 2; primeCounter < 64; candidate++) {\n\n    if (!isPrime[candidate]) {\n\n      for (\n        let i = 0;\n        i < 313;\n        i += candidate\n      ) {\n        isPrime[i] = candidate;\n      }\n\n      hash[primeCounter] =\n        (\n          Math.pow(candidate, 1 / 2) *\n          maxWord\n        ) | 0;\n\n      k[primeCounter++] =\n        (\n          Math.pow(candidate, 1 / 3) *\n          maxWord\n        ) | 0;\n    }\n  }\n\n  // Add the UTF-8 bytes\n  for (let i = 0; i < utf8.length; i++) {\n\n    const charCode =\n      utf8.charCodeAt(i);\n\n    words[i >> 2] |=\n      charCode <<\n      ((3 - i) % 4 * 8);\n  }\n\n  // Padding\n  words[utf8.length >> 2] |=\n    0x80 <<\n    ((3 - utf8.length) % 4 * 8);\n\n  words[((utf8.length + 8) >> 6 << 4) + 15] =\n    asciiBitLength;\n\n  for (\n    let j = 0;\n    j < words.length;\n  ) {\n\n    const w = words.slice(\n      j,\n      j += 16\n    );\n\n    const oldHash =\n      hash.slice(0);\n\n    for (\n      let i = 0;\n      i < 64;\n      i++\n    ) {\n\n      const w15 = w[i - 15];\n      const w2 = w[i - 2];\n\n      const a = hash[0];\n      const e = hash[4];\n\n      const temp1 =\n        hash[7] +\n        (\n          rightRotate(e, 6) ^\n          rightRotate(e, 11) ^\n          rightRotate(e, 25)\n        ) +\n        (\n          (e & hash[5]) ^\n          (~e & hash[6])\n        ) +\n        k[i] +\n        (\n          w[i] =\n            i < 16\n              ? w[i] || 0\n              : (\n                  (\n                    rightRotate(w15, 7) ^\n                    rightRotate(w15, 18) ^\n                    (w15 >>> 3)\n                  ) +\n                  w[i - 16] +\n                  (\n                    rightRotate(w2, 17) ^\n                    rightRotate(w2, 19) ^\n                    (w2 >>> 10)\n                  )\n                )\n        );\n\n      const temp2 =\n        (\n          rightRotate(a, 2) ^\n          rightRotate(a, 13) ^\n          rightRotate(a, 22)\n        ) +\n        (\n          (a & hash[1]) ^\n          (a & hash[2]) ^\n          (hash[1] & hash[2])\n        );\n\n      hash = [\n        (temp1 + temp2) | 0,\n        hash[0],\n        hash[1],\n        hash[2],\n        (hash[3] + temp1) | 0,\n        hash[4],\n        hash[5],\n        hash[6]\n      ];\n    }\n\n    for (\n      let i = 0;\n      i < 8;\n      i++\n    ) {\n\n      hash[i] =\n        (hash[i] + oldHash[i]) | 0;\n    }\n  }\n\n  for (\n    let i = 0;\n    i < 8;\n    i++\n  ) {\n\n    for (\n      let j = 3;\n      j >= 0;\n      j--\n    ) {\n\n      const byte =\n        (hash[i] >> (j * 8)) & 255;\n\n      result +=\n        ('0' + byte.toString(16))\n        .slice(-2);\n    }\n  }\n\n  return result;\n}\n\n\n// ==========================================================\n// MAIN CODE\n// ==========================================================\n\nconst items = $input.all();\n\nreturn items.map(item => {\n\n  // ========================================================\n  // SOURCE DATA\n  // ========================================================\n\n  const source =\n    item.json.source || {};\n\n  const property =\n    source.property || {};\n\n  const overview =\n    property.overview || {};\n\n  const propertyType =\n    property.property_type || {};\n\n\n  // ========================================================\n  // BANNERS\n  // ========================================================\n\n  let mobileBanner = null;\n\n  let desktopBanner = null;\n\n  for (\n    const content of\n    (property.content || [])\n  ) {\n\n    if (\n      !mobileBanner &&\n      content.mobilebanner?.url\n    ) {\n\n      mobileBanner =\n        content.mobilebanner.url;\n    }\n\n    if (\n      !desktopBanner &&\n      content.desktopbanner?.url\n    ) {\n\n      desktopBanner =\n        content.desktopbanner.url;\n    }\n\n  }\n\n\n  // ========================================================\n  // BROCHURE\n  // ========================================================\n\n  const brochureUrl =\n    property.brochure?.media?.url ||\n    null;\n\n\n  // ========================================================\n  // RERA\n  // ========================================================\n\n  const reraNumbers =\n    (property.rera_numbers || []).map(\n      rera => ({\n\n        tower_name:\n          rera.wing || null,\n\n        rera_number:\n          rera.rera_number || null,\n\n        rera_url:\n          rera.image?.url || null\n\n      })\n    );\n\n\n  const reraMultiple =\n    Object.fromEntries(\n\n      reraNumbers.map(\n        (rera, index) => [\n\n          String(index),\n\n          rera\n\n        ]\n      )\n\n    );\n\n\n  // ========================================================\n  // AMENITIES\n  // ========================================================\n\n  const amenitiesArray = [];\n\n\n  for (\n    const amenity of\n    (source.amenities || [])\n  ) {\n\n    for (\n      const content of\n      (amenity.content || [])\n    ) {\n\n\n      // ----------------------------------------------------\n      // HOME.ABOUT-PROPERTIES\n      // ----------------------------------------------------\n\n      if (\n        content.__component ===\n        'home.about-properties'\n      ) {\n\n        if (\n          content.title ||\n          content.desktopbanner?.url\n        ) {\n\n          amenitiesArray.push({\n\n            name:\n              content.title || null,\n\n            icon_url:\n              content.desktopbanner?.url ||\n              null\n\n          });\n\n        }\n\n      }\n\n\n      // ----------------------------------------------------\n      // PROPERTIES.OTHER-AMENIES\n      // ----------------------------------------------------\n\n      if (\n        content.__component ===\n        'properties.other-amenties'\n      ) {\n\n        for (\n          const amenityItem of\n          (content.imageTitle || [])\n        ) {\n\n          amenitiesArray.push({\n\n            name:\n              amenityItem.description ||\n              amenityItem.title ||\n              null,\n\n            icon_url:\n              amenityItem.image?.url ||\n              null\n\n          });\n\n        }\n\n      }\n\n    }\n\n  }\n\n\n  // ========================================================\n  // AMENITIES INDEXED OBJECT\n  // ========================================================\n\n  const amenitiesMultiple =\n    Object.fromEntries(\n\n      amenitiesArray.map(\n        (amenity, index) => [\n\n          String(index),\n\n          amenity\n\n        ]\n      )\n\n    );\n\n\n  // ========================================================\n  // PROJECT\n  // ========================================================\n\n  const project = {\n\n    SFDC_Project_Id:\n      property.id || null,\n\n    Project_Name:\n      property.title || null,\n\n    Project_Description:\n      property.description || null,\n\n    Property_Type:\n      propertyType.name || null,\n\n\n    // Images\n\n    image_1_by_1:\n      mobileBanner,\n\n    image_16_by_9:\n      desktopBanner,\n\n    image_9_by_16:\n      mobileBanner,\n\n    image_3_by_2:\n      desktopBanner,\n\n\n    // Cover images\n\n    cover_images_1_by_1:\n      mobileBanner\n        ? [mobileBanner]\n        : [],\n\n    cover_images_16_by_9:\n      desktopBanner\n        ? [desktopBanner]\n        : [],\n\n    cover_images_9_by_16:\n      mobileBanner\n        ? [mobileBanner]\n        : [],\n\n    cover_images_3_by_2:\n      desktopBanner\n        ? [desktopBanner]\n        : [],\n\n\n    // Status\n\n    Project_Construction_Status:\n      overview.status || null,\n\n\n    // Flags\n\n    published:\n      true,\n\n    active:\n      false,\n\n    show_on_home:\n      false,\n\n\n    // Brochure\n\n    brochure:\n      brochureUrl,\n\n\n    // Configuration\n\n    Configuration_Type:\n      overview.configuration || null,\n\n\n    // RERA\n\n    Rera_Number_multiple:\n      reraMultiple,\n\n\n    // Amenities\n\n    Amenities:\n      amenitiesMultiple\n\n  };\n\n\n  // ========================================================\n  // SYNC DATA\n  //\n  // Only fields that are actually sent to Lockated\n  // are included in the hash.\n  // ========================================================\n\n  const syncData = {\n\n    SFDC_Project_Id:\n      project.SFDC_Project_Id,\n\n    Project_Name:\n      project.Project_Name,\n\n    Project_Description:\n      project.Project_Description,\n\n    Property_Type:\n      project.Property_Type,\n\n    image_1_by_1:\n      project.image_1_by_1,\n\n    image_16_by_9:\n      project.image_16_by_9,\n\n    image_9_by_16:\n      project.image_9_by_16,\n\n    image_3_by_2:\n      project.image_3_by_2,\n\n    cover_images_1_by_1:\n      project.cover_images_1_by_1,\n\n    cover_images_16_by_9:\n      project.cover_images_16_by_9,\n\n    cover_images_9_by_16:\n      project.cover_images_9_by_16,\n\n    cover_images_3_by_2:\n      project.cover_images_3_by_2,\n\n    Project_Construction_Status:\n      project.Project_Construction_Status,\n\n    published:\n      project.published,\n\n    active:\n      project.active,\n\n    show_on_home:\n      project.show_on_home,\n\n    brochure:\n      project.brochure,\n\n    Configuration_Type:\n      project.Configuration_Type,\n\n    Rera_Number_multiple:\n      project.Rera_Number_multiple,\n\n    Amenities:\n      project.Amenities\n\n  };\n\n\n  // ========================================================\n  // CREATE STRING\n  // ========================================================\n\n  const syncDataString =\n    JSON.stringify(syncData);\n\n\n  // ========================================================\n  // CREATE HASH\n  // ========================================================\n\n  const sourceHash =\n    sha256(syncDataString);\n\n\n  // ========================================================\n  // FINAL OUTPUT\n  // ========================================================\n\n  return {\n\n    json: {\n\n      project,\n\n      sync_data:\n        syncData,\n\n      sync_data_string:\n        syncDataString,\n\n      source_hash:\n        sourceHash\n\n    }\n\n  };\n\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          784,
+          -352
+        ],
+        "id": "111ed74c-b8ec-463f-80c0-f8825e64d3a6",
+        "name": "Prepare Project POST Payload",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://rustomjee-live.lockated.com//projects.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.project) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1904,
+          -400
+        ],
+        "id": "2fa0066d-51f5-48e7-8d64-12a3b2cdaaf0",
+        "name": "HTTP Request",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.limit",
+        "typeVersion": 1,
+        "position": [
+          1056,
+          -384
+        ],
+        "id": "338eda42-8a70-46bf-9071-5ff8780c2f95",
+        "name": "Limit",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "CREATE TABLE IF NOT EXISTS project_sync (\n    id SERIAL PRIMARY KEY,\n    sfdc_project_id VARCHAR(100) UNIQUE NOT NULL,\n    lockated_project_id INTEGER,\n    project_name TEXT,\n    source_hash TEXT NOT NULL,\n    sync_status VARCHAR(50),\n    last_synced_at TIMESTAMP,\n    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1600,
+          -672
+        ],
+        "id": "172b14fa-5196-4849-8cd8-394524ab71dc",
+        "name": "Check Existing Data",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// const items = $input.all();\n\n// return items.map(item => {\n\n//   const source = item.json.source || {};\n//   const property = source.property || {};\n\n//   const overview = property.overview || {};\n//   const propertyType = property.property_type || {};\n\n//   // -----------------------------------------\n//   // PROPERTY CONTENT / BANNERS\n//   // -----------------------------------------\n\n//   const propertyContent = property.content || [];\n\n//   const mobileBanner =\n//     propertyContent.find(c => c.mobilebanner?.url)?.mobilebanner?.url || null;\n\n//   const desktopBanner =\n//     propertyContent.find(c => c.desktopbanner?.url)?.desktopbanner?.url || null;\n\n\n//   // -----------------------------------------\n//   // RERA\n//   // -----------------------------------------\n\n//   const reraNumbers = (property.rera_numbers || []).map(rera => ({\n//     tower_name: rera.wing || null,\n//     rera_number: rera.rera_number || null,\n//     rera_url: null\n//   }));\n\n\n//   // -----------------------------------------\n//   // BROCHURE\n//   // -----------------------------------------\n\n//   const brochureUrl =\n//     property.brochure?.media?.url || null;\n\n\n//   // -----------------------------------------\n//   // AMENITIES\n//   // -----------------------------------------\n\n//   const amenities = [];\n\n//   for (const amenity of (source.amenities || [])) {\n\n//     for (const content of (amenity.content || [])) {\n\n//       // ---------------------------------------\n//       // HOME.ABOUT-PROPERTIES\n//       // ---------------------------------------\n\n//       if (content.__component === 'home.about-properties') {\n\n//         if (content.title || content.desktopbanner?.url) {\n\n//           amenities.push({\n//             name: content.title || null,\n//             icon_url: content.desktopbanner?.url || null\n//           });\n\n//         }\n//       }\n\n\n//       // ---------------------------------------\n//       // PROPERTIES.OTHER-AMENITIES\n//       // ---------------------------------------\n\n//       if (content.__component === 'properties.other-amenties') {\n\n//         for (const item of (content.imageTitle || [])) {\n\n//           amenities.push({\n//             name: item.description || item.title || null,\n//             icon_url: item.image?.url || null\n//           });\n\n//         }\n//       }\n\n//     }\n//   }\n\n\n//   // -----------------------------------------\n//   // FINAL POST PAYLOAD\n//   // -----------------------------------------\n\n//   return {\n//     json: {\n\n//       project: {\n\n//         SFDC_Project_Id: property.id || null,\n\n//         Project_Name: property.title || null,\n\n//         Project_Description: property.description || null,\n\n//         Property_Type: propertyType.name || null,\n\n//         image_1_by_1: mobileBanner,\n\n//         image_16_by_9: desktopBanner,\n\n//         image_9_by_16: mobileBanner,\n\n//         image_3_by_2: desktopBanner,\n\n//         Project_Construction_Status: overview.status || null,\n\n//         published: false,\n\n//         active: false,\n\n//         show_on_home: false,\n\n//         ProjectBrochure: brochureUrl,\n\n//         Configuration_Type: overview.configuration || null,\n\n//         Rera_Number_multiple: reraNumbers,\n\n//         Amenities: amenities\n\n//       }\n\n//     }\n//   };\n// });\n\nconst items = $input.all();\n\nreturn items.map(item => {\n\n  // ==================================================\n  // SOURCE DATA\n  // ==================================================\n\n  const source = item.json.source || {};\n\n  const property = source.property || {};\n\n  const overview = property.overview || {};\n\n  const propertyType = property.property_type || {};\n\n\n  // ==================================================\n  // PROPERTY BANNER / HERO IMAGES\n  // ==================================================\n\n  let mobileBanner = null;\n  let desktopBanner = null;\n\n  for (const content of (property.content || [])) {\n\n    // Mobile banner\n    if (!mobileBanner && content.mobilebanner?.url) {\n      mobileBanner = content.mobilebanner.url;\n    }\n\n    // Desktop banner\n    if (!desktopBanner && content.desktopbanner?.url) {\n      desktopBanner = content.desktopbanner.url;\n    }\n\n  }\n\n\n  // ==================================================\n  // BROCHURE\n  // ==================================================\n\n  const brochureUrl =\n    property.brochure?.media?.url || null;\n\n\n  // ==================================================\n  // RERA\n  // ==================================================\n\n  const reraNumbers = (property.rera_numbers || []).map(rera => ({\n\n    tower_name:\n      rera.wing || null,\n\n    rera_number:\n      rera.rera_number || null,\n\n    // RERA image URL\n    rera_url:\n      rera.image?.url || null\n\n  }));\n\n\n  // Convert RERA array into indexed object\n\n  const reraMultiple = Object.fromEntries(\n\n    reraNumbers.map((rera, index) => [\n\n      String(index),\n\n      rera\n\n    ])\n\n  );\n\n\n  // ==================================================\n  // AMENITIES\n  // ==================================================\n\n  const amenitiesArray = [];\n\n\n  // --------------------------------------------------\n  // Loop through all amenity source records\n  // --------------------------------------------------\n\n  for (const amenity of (source.amenities || [])) {\n\n    for (const content of (amenity.content || [])) {\n\n\n      // ==============================================\n      // HOME.ABOUT-PROPERTIES\n      // ==============================================\n\n      if (\n        content.__component === 'home.about-properties'\n      ) {\n\n        if (\n          content.title ||\n          content.desktopbanner?.url\n        ) {\n\n          amenitiesArray.push({\n\n            name:\n              content.title || null,\n\n            icon_url:\n              content.desktopbanner?.url || null\n\n          });\n\n        }\n\n      }\n\n\n      // ==============================================\n      // PROPERTIES.OTHER-AMENIES\n      // ==============================================\n\n      if (\n        content.__component === 'properties.other-amenties'\n      ) {\n\n        for (\n          const amenityItem of (content.imageTitle || [])\n        ) {\n\n          amenitiesArray.push({\n\n            name:\n              amenityItem.description ||\n              amenityItem.title ||\n              null,\n\n            icon_url:\n              amenityItem.image?.url ||\n              null\n\n          });\n\n        }\n\n      }\n\n    }\n\n  }\n\n\n  // ==================================================\n  // CONVERT AMENITIES INTO INDEXED OBJECT\n  // ==================================================\n\n  const amenitiesMultiple = Object.fromEntries(\n\n    amenitiesArray.map((amenity, index) => [\n\n      String(index),\n\n      amenity\n\n    ])\n\n  );\n\n\n  // ==================================================\n  // FINAL POST PAYLOAD\n  // ==================================================\n\n  return {\n\n    json: {\n\n      project: {\n\n\n        // ============================================\n        // BASIC INFORMATION\n        // ============================================\n\n        SFDC_Project_Id:\n          property.id || null,\n\n        Project_Name:\n          property.title || null,\n\n        Project_Description:\n          property.description || null,\n\n        Property_Type:\n          propertyType.name || null,\n\n\n        // ============================================\n        // PROJECT IMAGES\n        // ============================================\n\n        image_1_by_1:\n          mobileBanner,\n\n        image_16_by_9:\n          desktopBanner,\n\n        image_9_by_16:\n          mobileBanner,\n\n        image_3_by_2:\n          desktopBanner,\n\n\n        // ============================================\n        // COVER IMAGES\n        // Same URLs as image_* fields\n        // Sent as arrays\n        // ============================================\n\n        cover_images_1_by_1:\n          mobileBanner\n            ? [mobileBanner]\n            : [],\n\n        cover_images_16_by_9:\n          desktopBanner\n            ? [desktopBanner]\n            : [],\n\n        cover_images_9_by_16:\n          mobileBanner\n            ? [mobileBanner]\n            : [],\n\n        cover_images_3_by_2:\n          desktopBanner\n            ? [desktopBanner]\n            : [],\n\n\n        // ============================================\n        // PROJECT STATUS\n        // ============================================\n\n        Project_Construction_Status:\n          overview.status || null,\n\n\n        // ============================================\n        // FLAGS\n        // ============================================\n\n        published:\n          true,\n\n        active:\n          false,\n\n        show_on_home:\n          false,\n\n\n        // ============================================\n        // BROCHURE\n        // ============================================\n\n        brochure:\n          brochureUrl,\n\n\n        // ============================================\n        // CONFIGURATION\n        // ============================================\n\n        Configuration_Type:\n          overview.configuration || null,\n\n\n        // ============================================\n        // RERA\n        // ============================================\n\n        Rera_Number_multiple:\n          reraMultiple,\n\n\n        // ============================================\n        // AMENITIES\n        // ============================================\n\n        Amenities:\n          amenitiesMultiple\n\n      }\n\n    }\n\n  };\n\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          976,
+          -656
+        ],
+        "id": "9b1d31eb-15b7-4d11-b71b-ea68f22db425",
+        "name": "Before Intelligence - Prepare Project POST Payload1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "// ==========================================================\n// GET ALL PROJECTS FROM PREVIOUS NODE\n// ==========================================================\n\nconst projects =\n  $('Prepare Project POST Payload').all();\n\n\n// ==========================================================\n// GET ALL DATABASE RECORDS\n// ==========================================================\n\nconst dbRows =\n  $input.all();\n\n\n// ==========================================================\n// CREATE DATABASE LOOKUP MAP\n// ==========================================================\n\nconst dbMap = new Map();\n\nfor (const row of dbRows) {\n\n  const db = row.json;\n\n  if (\n    db.sfdc_project_id !== null &&\n    db.sfdc_project_id !== undefined\n  ) {\n\n    dbMap.set(\n      String(db.sfdc_project_id),\n      db\n    );\n\n  }\n\n}\n\n\n// ==========================================================\n// COMPARE EVERY PROJECT\n// ==========================================================\n\nreturn projects.map(item => {\n\n  const project =\n    item.json.project;\n\n  const projectId =\n    String(project.SFDC_Project_Id);\n\n  const currentHash =\n    item.json.source_hash;\n\n\n  // Find existing DB record\n\n  const existingRecord =\n    dbMap.get(projectId);\n\n\n  // ========================================================\n  // NEW PROJECT\n  // ========================================================\n\n  if (!existingRecord) {\n\n    return {\n\n      json: {\n\n        ...item.json,\n\n        sync_action: 'NEW',\n\n        db_record: null\n\n      }\n\n    };\n\n  }\n\n\n  // ========================================================\n  // PROJECT EXISTS BUT DATA CHANGED\n  // ========================================================\n\n  if (\n    String(existingRecord.source_hash) !==\n    String(currentHash)\n  ) {\n\n    return {\n\n      json: {\n\n        ...item.json,\n\n        sync_action: 'UPDATED',\n\n        db_record: existingRecord\n\n      }\n\n    };\n\n  }\n\n\n  // ========================================================\n  // PROJECT EXISTS AND DATA IS IDENTICAL\n  // ========================================================\n\n  return {\n\n    json: {\n\n      ...item.json,\n\n      sync_action: 'SAME',\n\n      db_record: existingRecord\n\n    }\n\n  };\n\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1360,
+          -304
+        ],
+        "id": "a6f1a9f4-c031-444b-96d7-0dc465044197",
+        "name": "Compare Project Changes",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n    id,\n    sfdc_project_id,\n    lockated_project_id,\n    project_name,\n    source_hash,\n    sync_status,\n    last_synced_at\nFROM project_sync;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1216,
+          -224
+        ],
+        "id": "df5a3c0f-12e3-4f6e-941a-e5ebcb915b79",
+        "name": "Get Existing Project Sync",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.sync_action }}",
+                      "rightValue": "NEW",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "efed3d37-055c-460e-8a6f-dda05da6b75a"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "NEW"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "8632fbb0-97e6-4924-976b-beaa8933e968",
+                      "leftValue": "={{ $json.sync_action }}",
+                      "rightValue": "UPDATED",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "UPDATED"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "fd1548a4-4cd1-4b02-9bbc-024829bdd43b",
+                      "leftValue": "={{ $json.sync_action }}",
+                      "rightValue": "SAME",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "SAME"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          1536,
+          -416
+        ],
+        "id": "572b09c5-4ea9-4031-879c-a3f824a7948f",
+        "name": "Project Sync Decision",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://rustomjee-live.lockated.com//projects.json",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json) }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1840,
+          -752
+        ],
+        "id": "2ddfd4bf-3718-44b4-8621-8cc8a7cbb6bc",
+        "name": "HTTP Request1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const response = $json;\n\n// Get the original project data from Compare Project Changes\nconst sourceItems = $('Compare Project Changes').all();\n\n// Find the project that matches the Lockated response\nconst project = sourceItems.find(item =>\n  String(item.json.project?.SFDC_Project_Id) ===\n  String(response.SFDC_Project_Id)\n);\n\nif (!project) {\n  throw new Error(\n    `Could not find original project for SFDC_Project_Id: ${response.SFDC_Project_Id}`\n  );\n}\n\nreturn [\n  {\n    json: {\n      sfdc_project_id: project.json.project.SFDC_Project_Id,\n      lockated_project_id: response.id,\n      project_name: project.json.project.Project_Name,\n      source_hash: project.json.source_hash,\n      sync_status: 'synced'\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2048,
+          -208
+        ],
+        "id": "ecfa6f2a-5859-4c4f-8045-5163519103a2",
+        "name": "Prepare Project Sync Record",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO project_sync (\n    sfdc_project_id,\n    lockated_project_id,\n    project_name,\n    source_hash,\n    sync_status,\n    last_synced_at,\n    updated_at\n)\nVALUES (\n    {{ $json.sfdc_project_id }},\n    {{ $json.lockated_project_id }},\n    '{{ $json.project_name.replace(/'/g, \"''\") }}',\n    '{{ $json.source_hash }}',\n    '{{ $json.sync_status }}',\n    CURRENT_TIMESTAMP,\n    CURRENT_TIMESTAMP\n)\nON CONFLICT (sfdc_project_id)\nDO UPDATE SET\n    lockated_project_id = EXCLUDED.lockated_project_id,\n    project_name = EXCLUDED.project_name,\n    source_hash = EXCLUDED.source_hash,\n    sync_status = EXCLUDED.sync_status,\n    last_synced_at = CURRENT_TIMESTAMP,\n    updated_at = CURRENT_TIMESTAMP;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          2384,
+          -112
+        ],
+        "id": "68ccedc8-86ce-48aa-bdea-c3f060648066",
+        "name": "Save Project Sync",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          []
+        ]
+      },
+      "API 1 - Properties API": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "API 2 - Residences API": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "API 3 - Amenities API": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 2
+            }
+          ]
+        ]
+      },
+      "Merge Responses": {
+        "main": [
+          []
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "API 1 - Properties API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "API 2 - Residences API",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "API 3 - Amenities API",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Match Property Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Match Property Data": {
+        "main": [
+          [
+            {
+              "node": "Transform Project Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Transform Project Data": {
+        "main": [
+          [
+            {
+              "node": "Prepare Project POST Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Project POST Payload": {
+        "main": [
+          [
+            {
+              "node": "Limit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limit": {
+        "main": [
+          [
+            {
+              "node": "Get Existing Project Sync",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Prepare Project Sync Record",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Existing Project Sync": {
+        "main": [
+          [
+            {
+              "node": "Compare Project Changes",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Compare Project Changes": {
+        "main": [
+          [
+            {
+              "node": "Project Sync Decision",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Project Sync Decision": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Project Sync Record": {
+        "main": [
+          [
+            {
+              "node": "Save Project Sync",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "607aa5b7-e924-4c19-ab00-354c755d1f3f",
+    "activeVersionId": "6ae2c932-e663-446c-99ec-2798ff6b39db",
+    "versionCounter": 49,
+    "triggerCount": 1,
+    "shared": [
+      {
+        "updatedAt": "2026-08-03T08:11:06.711Z",
+        "createdAt": "2026-08-03T08:11:06.711Z",
+        "role": "workflow:owner",
+        "workflowId": "cbhM2EnPHUUemAzb",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-10-04T16:22:12.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1786355513406
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-10-03",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": null,
+    "activeVersion": {
+      "updatedAt": "2026-08-03T08:35:03.000Z",
+      "createdAt": "2026-08-03T08:34:44.386Z",
+      "versionId": "6ae2c932-e663-446c-99ec-2798ff6b39db",
+      "workflowId": "cbhM2EnPHUUemAzb",
+      "nodes": [
+        {
+          "parameters": {
+            "path": "MergeAPIResponse",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            -544,
+            -80
+          ],
+          "id": "d3350e67-f02a-4c9b-b163-dbd4feb0d32b",
+          "name": "Webhook",
+          "webhookId": "4d6a7c1f-6788-4aef-88a7-c3b35d281e4f",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "https://cms.rustomjee.com/api/properties-colls?populate[property_type][fields][0]=name&populate[property_type][fields][1]=slug&populate[property_status][fields][0]=name&populate[property_status][fields][1]=slug&populate[residence][fields][0]=title&populate[residence][fields][1]=slug&populate[content][on][properties.banner-details][populate][desktopbanner][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopbanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][mobilebanner][fields][0]=url&populate[content][on][properties.banner-details][populate][mobilebanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][desktopvideo][fields][0]=url&populate[content][on][properties.banner-details][populate][mobileVideo][fields][0]=url&populate[content][on][properties.banner-details][populate][button][populate][buttonIcon][fields][0]=url&populate[content][on][properties.banner-details][populate][button][populate][media][fields][0]=url&populate[overview][populate]=*&populate[map_360][populate][media][fields][0]=url&populate[rera_numbers][populate][image][fields][0]=url&populate[rera_numbers][populate][image][fields][1]=alternativeText&populate[amenity][fields][0]=title&populate[amenity][fields][1]=slug&populate[brochure][populate][buttonIcon][fields][0]=url&populate[brochure][populate][media][fields][0]=url",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "Bearer d49364cf07d9b992cc3c90979e1ecbfbf4530365db077602c2cedd937f2e0bd48160826bac8ad8fc4c7ac64463ca8ea2d1afc0da0cb185d4e6bb0daecf27baad03ad2aba3a391ebe1029a42724d6693b1320446929f8a6b21d6a33270e6564424d3c174b7d052250fa0d223317c8b4cfc497ab7e11d7f1e1fa1fbe1a9e44c5ea"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            -304,
+            -160
+          ],
+          "id": "a01da18a-74cd-4fed-a9da-940c608cfed5",
+          "name": "API 1 - Properties API",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "https://cms.rustomjee.com/api/residences-colls?populate[image][fields][0]=url&populate[image][fields][1]=alternativeText&populate[property][fields][0]=title&populate[property][fields][1]=slug&populate[button][populate][buttonIcon][fields][0]=url&populate[button][populate][media][fields][0]=url&populate[seo][populate][metaImage][fields][0]=url&populate[seo][populate][metaImage][fields][1]=alternativeText&populate[seo][populate][openGraph][populate][ogImage][fields][0]=url&populate[seo][populate][openGraph][populate][ogImage][fields][1]=alternativeText&populate[content][on][properties.project-plan][populate][button][populate][buttonIcon][fields][0]=url&populate[content][on][properties.project-plan][populate][button][populate][media][fields][0]=url&populate[content][on][properties.project-plan][populate][unitPlan][populate][unitPlanCard][populate][pdf][fields][0]=url&populate[content][on][properties.project-plan][populate][unitPlan][populate][unitPlanCard][populate][image][fields][0]=url&populate[content][on][properties.project-plan][populate][unitPlan][populate][unitPlanCard][populate][image][fields][1]=alternativeText&populate[content][on][properties.project-plan][populate][floorPlan][populate][pdf][fields][0]=url&populate[content][on][properties.project-plan][populate][floorPlan][populate][image][fields][0]=url&populate[content][on][properties.project-plan][populate][floorPlan][populate][image][fields][1]=alternativeText&populate[content][on][properties.project-plan][populate][masterPlan][populate][mapViewPdf][fields][0]=url&populate[content][on][properties.project-plan][populate][masterPlan][populate][mapViewPdf][fields][1]=alternativeText",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "Bearer d49364cf07d9b992cc3c90979e1ecbfbf4530365db077602c2cedd937f2e0bd48160826bac8ad8fc4c7ac64463ca8ea2d1afc0da0cb185d4e6bb0daecf27baad03ad2aba3a391ebe1029a42724d6693b1320446929f8a6b21d6a33270e6564424d3c174b7d052250fa0d223317c8b4cfc497ab7e11d7f1e1fa1fbe1a9e44c5ea"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            -48,
+            -160
+          ],
+          "id": "04852321-3f50-4074-af3c-ffeeec8b8093",
+          "name": "API 2 - Residences API",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "https://cms.rustomjee.com/api/amenities-colls?populate[property][fields][0]=title&populate[property][fields][1]=slug&populate[seo][populate][metaImage][fields][0]=url&populate[seo][populate][openGraph][populate][ogImage][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopbanner][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopbanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][mobilebanner][fields][0]=url&populate[content][on][properties.banner-details][populate][mobilebanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][desktopvideo][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopvideo][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][mobileVideo][fields][0]=url&populate[content][on][properties.banner-details][populate][mobileVideo][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][button][populate][buttonIcon][fields][0]=url&populate[content][on][home.about-properties][populate][desktopbanner][fields][0]=url&populate[content][on][home.about-properties][populate][desktopbanner][fields][1]=alternativeText&populate[content][on][home.about-properties][populate][mobilebanner][fields][0]=url&populate[content][on][home.about-properties][populate][mobilebanner][fields][1]=alternativeText&populate[content][on][home.about-properties][populate][desktopvideo][fields][0]=url&populate[content][on][home.about-properties][populate][desktopvideo][fields][1]=alternativeText&populate[content][on][home.about-properties][populate][mobileVideo][fields][0]=url&populate[content][on][home.about-properties][populate][mobileVideo][fields][1]=alternativeText&populate[content][on][properties.properties-amenities][populate][propertiesEmenitiesDetails][populate][desktopmage][fields][0]=url&populate[content][on][properties.properties-amenities][populate][propertiesEmenitiesDetails][populate][mobileImage][fields][1]=alternativeText&populate[content][on][properties.other-amenties][populate][imageTitle][populate][image][fields][0]=url&populate[content][on][properties.other-amenties][populate][imageTitle][populate][image][fields][1]=alternativeText",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "Bearer d49364cf07d9b992cc3c90979e1ecbfbf4530365db077602c2cedd937f2e0bd48160826bac8ad8fc4c7ac64463ca8ea2d1afc0da0cb185d4e6bb0daecf27baad03ad2aba3a391ebe1029a42724d6693b1320446929f8a6b21d6a33270e6564424d3c174b7d052250fa0d223317c8b4cfc497ab7e11d7f1e1fa1fbe1a9e44c5ea"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            240,
+            -160
+          ],
+          "id": "0db600d7-2f32-423e-bbb5-a80df7ff5a5a",
+          "name": "API 3 - Amenities API",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "const properties = $('API 1 - Properties API').first().json;\nconst residences = $('API 2 - Residences API').first().json;\nconst amenities = $('API 3 - Amenities API').first().json;\n\nreturn [\n  {\n    json: {\n      properties,\n      residences,\n      amenities\n    }\n  }\n];"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            496,
+            -192
+          ],
+          "id": "3527c1df-4b7c-4e0a-912f-fe23446c2d38",
+          "name": "Merge Responses",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            656,
+            -240
+          ],
+          "id": "fbb0c1b1-b2a7-464e-af91-f25b986154d4",
+          "name": "Respond to Webhook",
+          "alwaysOutputData": true
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "API 1 - Properties API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "API 1 - Properties API": {
+          "main": [
+            [
+              {
+                "node": "API 2 - Residences API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "API 2 - Residences API": {
+          "main": [
+            [
+              {
+                "node": "API 3 - Amenities API",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "API 3 - Amenities API": {
+          "main": [
+            [
+              {
+                "node": "Merge Responses",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Merge Responses": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version 6ae2c932",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-08-03T08:35:03.557Z",
+          "id": 246,
+          "workflowId": "cbhM2EnPHUUemAzb",
+          "versionId": "6ae2c932-e663-446c-99ec-2798ff6b39db",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "58a1b1f8ca880d78cef685710c6f89ef7983a22c4b8462c4da0096c0887ab30b"
+  }
+}

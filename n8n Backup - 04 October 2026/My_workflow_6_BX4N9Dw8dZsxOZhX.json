@@ -1,0 +1,470 @@
+{
+  "data": {
+    "updatedAt": "2026-08-03T09:20:46.186Z",
+    "createdAt": "2026-08-03T08:58:15.340Z",
+    "id": "BX4N9Dw8dZsxOZhX",
+    "name": "My workflow 6",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "path": "merge_all_data",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "ac355be3-b679-467a-9725-233f5707b07b",
+        "name": "Webhook",
+        "webhookId": "ec22c2dd-a1e1-4f0f-9c5a-8818b1510a65",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const properties = $('api 1').first().json;\nconst residences = $('api 2').first().json;\nconst amenities = $('api 3').first().json;\n\nreturn [\n  {\n    json: {\n      properties,\n      residences,\n      amenities\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          608,
+          48
+        ],
+        "id": "8ae4cc1e-71bd-40f8-8694-cea2224535a3",
+        "name": "Code in JavaScript",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "=https://cms.rustomjee.com/api/properties-colls?populate[property_type][fields][0]=name&populate[property_type][fields][1]=slug&populate[property_status][fields][0]=name&populate[property_status][fields][1]=slug&populate[residence][fields][0]=title&populate[residence][fields][1]=slug&populate[content][on][properties.banner-details][populate][desktopbanner][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopbanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][mobilebanner][fields][0]=url&populate[content][on][properties.banner-details][populate][mobilebanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][desktopvideo][fields][0]=url&populate[content][on][properties.banner-details][populate][mobileVideo][fields][0]=url&populate[content][on][properties.banner-details][populate][button][populate][buttonIcon][fields][0]=url&populate[content][on][properties.banner-details][populate][button][populate][media][fields][0]=url&populate[overview][populate]=*&populate[map_360][populate][media][fields][0]=url&populate[rera_numbers][populate][image][fields][0]=url&populate[rera_numbers][populate][image][fields][1]=alternativeText&populate[amenity][fields][0]=title&populate[amenity][fields][1]=slug&populate[brochure][populate][buttonIcon][fields][0]=url&populate[brochure][populate][media][fields][0]=url",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer d49364cf07d9b992cc3c90979e1ecbfbf4530365db077602c2cedd937f2e0bd48160826bac8ad8fc4c7ac64463ca8ea2d1afc0da0cb185d4e6bb0daecf27baad03ad2aba3a391ebe1029a42724d6693b1320446929f8a6b21d6a33270e6564424d3c174b7d052250fa0d223317c8b4cfc497ab7e11d7f1e1fa1fbe1a9e44c5ea"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          176,
+          -96
+        ],
+        "id": "2f7c0fa0-cd62-4bc3-bb60-9a2b3f002b01",
+        "name": "api 1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "=https://cms.rustomjee.com/api/residences-colls?populate[image][fields][0]=url&populate[image][fields][1]=alternativeText&populate[property][fields][0]=title&populate[property][fields][1]=slug&populate[button][populate][buttonIcon][fields][0]=url&populate[button][populate][media][fields][0]=url&populate[seo][populate][metaImage][fields][0]=url&populate[seo][populate][metaImage][fields][1]=alternativeText&populate[seo][populate][openGraph][populate][ogImage][fields][0]=url&populate[seo][populate][openGraph][populate][ogImage][fields][1]=alternativeText&populate[content][on][properties.project-plan][populate][button][populate][buttonIcon][fields][0]=url&populate[content][on][properties.project-plan][populate][button][populate][media][fields][0]=url&populate[content][on][properties.project-plan][populate][unitPlan][populate][unitPlanCard][populate][pdf][fields][0]=url&populate[content][on][properties.project-plan][populate][unitPlan][populate][unitPlanCard][populate][image][fields][0]=url&populate[content][on][properties.project-plan][populate][unitPlan][populate][unitPlanCard][populate][image][fields][1]=alternativeText&populate[content][on][properties.project-plan][populate][floorPlan][populate][pdf][fields][0]=url&populate[content][on][properties.project-plan][populate][floorPlan][populate][image][fields][0]=url&populate[content][on][properties.project-plan][populate][floorPlan][populate][image][fields][1]=alternativeText&populate[content][on][properties.project-plan][populate][masterPlan][populate][mapViewPdf][fields][0]=url&populate[content][on][properties.project-plan][populate][masterPlan][populate][mapViewPdf][fields][1]=alternativeText",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer d49364cf07d9b992cc3c90979e1ecbfbf4530365db077602c2cedd937f2e0bd48160826bac8ad8fc4c7ac64463ca8ea2d1afc0da0cb185d4e6bb0daecf27baad03ad2aba3a391ebe1029a42724d6693b1320446929f8a6b21d6a33270e6564424d3c174b7d052250fa0d223317c8b4cfc497ab7e11d7f1e1fa1fbe1a9e44c5ea"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          320,
+          -48
+        ],
+        "id": "439bd1dd-7bf4-407a-8eef-e6cd3122e21d",
+        "name": "api 2",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "=https://cms.rustomjee.com/api/amenities-colls?populate[property][fields][0]=title&populate[property][fields][1]=slug&populate[seo][populate][metaImage][fields][0]=url&populate[seo][populate][openGraph][populate][ogImage][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopbanner][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopbanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][mobilebanner][fields][0]=url&populate[content][on][properties.banner-details][populate][mobilebanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][desktopvideo][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopvideo][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][mobileVideo][fields][0]=url&populate[content][on][properties.banner-details][populate][mobileVideo][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][button][populate][buttonIcon][fields][0]=url&populate[content][on][home.about-properties][populate][desktopbanner][fields][0]=url&populate[content][on][home.about-properties][populate][desktopbanner][fields][1]=alternativeText&populate[content][on][home.about-properties][populate][mobilebanner][fields][0]=url&populate[content][on][home.about-properties][populate][mobilebanner][fields][1]=alternativeText&populate[content][on][home.about-properties][populate][desktopvideo][fields][0]=url&populate[content][on][home.about-properties][populate][desktopvideo][fields][1]=alternativeText&populate[content][on][home.about-properties][populate][mobileVideo][fields][0]=url&populate[content][on][home.about-properties][populate][mobileVideo][fields][1]=alternativeText&populate[content][on][properties.properties-amenities][populate][propertiesEmenitiesDetails][populate][desktopmage][fields][0]=url&populate[content][on][properties.properties-amenities][populate][propertiesEmenitiesDetails][populate][mobileImage][fields][1]=alternativeText&populate[content][on][properties.other-amenties][populate][imageTitle][populate][image][fields][0]=url&populate[content][on][properties.other-amenties][populate][imageTitle][populate][image][fields][1]=alternativeText",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "Bearer d49364cf07d9b992cc3c90979e1ecbfbf4530365db077602c2cedd937f2e0bd48160826bac8ad8fc4c7ac64463ca8ea2d1afc0da0cb185d4e6bb0daecf27baad03ad2aba3a391ebe1029a42724d6693b1320446929f8a6b21d6a33270e6564424d3c174b7d052250fa0d223317c8b4cfc497ab7e11d7f1e1fa1fbe1a9e44c5ea"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          464,
+          0
+        ],
+        "id": "ce88c724-fc28-4762-98a8-5dd0fd3da6dc",
+        "name": "api 3"
+      },
+      {
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          752,
+          96
+        ],
+        "id": "2287124b-718f-4799-baed-750eb54a9949",
+        "name": "Respond to Webhook",
+        "alwaysOutputData": true
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "api 1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "api 1": {
+        "main": [
+          [
+            {
+              "node": "api 2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "api 2": {
+        "main": [
+          [
+            {
+              "node": "api 3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "api 3": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": null,
+    "pinData": {},
+    "versionId": "b155a2fd-76f1-48c4-973f-0984371064cd",
+    "activeVersionId": "b155a2fd-76f1-48c4-973f-0984371064cd",
+    "versionCounter": 10,
+    "triggerCount": 1,
+    "shared": [
+      {
+        "updatedAt": "2026-08-03T08:58:15.343Z",
+        "createdAt": "2026-08-03T08:58:15.343Z",
+        "role": "workflow:owner",
+        "workflowId": "BX4N9Dw8dZsxOZhX",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-10-04T16:22:12.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1786355513406
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-10-03",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": null,
+    "activeVersion": {
+      "updatedAt": "2026-08-03T09:20:50.000Z",
+      "createdAt": "2026-08-03T09:20:46.187Z",
+      "versionId": "b155a2fd-76f1-48c4-973f-0984371064cd",
+      "workflowId": "BX4N9Dw8dZsxOZhX",
+      "nodes": [
+        {
+          "parameters": {
+            "path": "merge_all_data",
+            "responseMode": "responseNode",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.webhook",
+          "typeVersion": 2.1,
+          "position": [
+            0,
+            0
+          ],
+          "id": "ac355be3-b679-467a-9725-233f5707b07b",
+          "name": "Webhook",
+          "webhookId": "ec22c2dd-a1e1-4f0f-9c5a-8818b1510a65",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "const properties = $('api 1').first().json;\nconst residences = $('api 2').first().json;\nconst amenities = $('api 3').first().json;\n\nreturn [\n  {\n    json: {\n      properties,\n      residences,\n      amenities\n    }\n  }\n];"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            608,
+            48
+          ],
+          "id": "8ae4cc1e-71bd-40f8-8694-cea2224535a3",
+          "name": "Code in JavaScript",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "=https://cms.rustomjee.com/api/properties-colls?populate[property_type][fields][0]=name&populate[property_type][fields][1]=slug&populate[property_status][fields][0]=name&populate[property_status][fields][1]=slug&populate[residence][fields][0]=title&populate[residence][fields][1]=slug&populate[content][on][properties.banner-details][populate][desktopbanner][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopbanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][mobilebanner][fields][0]=url&populate[content][on][properties.banner-details][populate][mobilebanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][desktopvideo][fields][0]=url&populate[content][on][properties.banner-details][populate][mobileVideo][fields][0]=url&populate[content][on][properties.banner-details][populate][button][populate][buttonIcon][fields][0]=url&populate[content][on][properties.banner-details][populate][button][populate][media][fields][0]=url&populate[overview][populate]=*&populate[map_360][populate][media][fields][0]=url&populate[rera_numbers][populate][image][fields][0]=url&populate[rera_numbers][populate][image][fields][1]=alternativeText&populate[amenity][fields][0]=title&populate[amenity][fields][1]=slug&populate[brochure][populate][buttonIcon][fields][0]=url&populate[brochure][populate][media][fields][0]=url",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "Bearer d49364cf07d9b992cc3c90979e1ecbfbf4530365db077602c2cedd937f2e0bd48160826bac8ad8fc4c7ac64463ca8ea2d1afc0da0cb185d4e6bb0daecf27baad03ad2aba3a391ebe1029a42724d6693b1320446929f8a6b21d6a33270e6564424d3c174b7d052250fa0d223317c8b4cfc497ab7e11d7f1e1fa1fbe1a9e44c5ea"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            176,
+            -96
+          ],
+          "id": "2f7c0fa0-cd62-4bc3-bb60-9a2b3f002b01",
+          "name": "api 1",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "=https://cms.rustomjee.com/api/residences-colls?populate[image][fields][0]=url&populate[image][fields][1]=alternativeText&populate[property][fields][0]=title&populate[property][fields][1]=slug&populate[button][populate][buttonIcon][fields][0]=url&populate[button][populate][media][fields][0]=url&populate[seo][populate][metaImage][fields][0]=url&populate[seo][populate][metaImage][fields][1]=alternativeText&populate[seo][populate][openGraph][populate][ogImage][fields][0]=url&populate[seo][populate][openGraph][populate][ogImage][fields][1]=alternativeText&populate[content][on][properties.project-plan][populate][button][populate][buttonIcon][fields][0]=url&populate[content][on][properties.project-plan][populate][button][populate][media][fields][0]=url&populate[content][on][properties.project-plan][populate][unitPlan][populate][unitPlanCard][populate][pdf][fields][0]=url&populate[content][on][properties.project-plan][populate][unitPlan][populate][unitPlanCard][populate][image][fields][0]=url&populate[content][on][properties.project-plan][populate][unitPlan][populate][unitPlanCard][populate][image][fields][1]=alternativeText&populate[content][on][properties.project-plan][populate][floorPlan][populate][pdf][fields][0]=url&populate[content][on][properties.project-plan][populate][floorPlan][populate][image][fields][0]=url&populate[content][on][properties.project-plan][populate][floorPlan][populate][image][fields][1]=alternativeText&populate[content][on][properties.project-plan][populate][masterPlan][populate][mapViewPdf][fields][0]=url&populate[content][on][properties.project-plan][populate][masterPlan][populate][mapViewPdf][fields][1]=alternativeText",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "Bearer d49364cf07d9b992cc3c90979e1ecbfbf4530365db077602c2cedd937f2e0bd48160826bac8ad8fc4c7ac64463ca8ea2d1afc0da0cb185d4e6bb0daecf27baad03ad2aba3a391ebe1029a42724d6693b1320446929f8a6b21d6a33270e6564424d3c174b7d052250fa0d223317c8b4cfc497ab7e11d7f1e1fa1fbe1a9e44c5ea"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            320,
+            -48
+          ],
+          "id": "439bd1dd-7bf4-407a-8eef-e6cd3122e21d",
+          "name": "api 2",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "=https://cms.rustomjee.com/api/amenities-colls?populate[property][fields][0]=title&populate[property][fields][1]=slug&populate[seo][populate][metaImage][fields][0]=url&populate[seo][populate][openGraph][populate][ogImage][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopbanner][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopbanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][mobilebanner][fields][0]=url&populate[content][on][properties.banner-details][populate][mobilebanner][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][desktopvideo][fields][0]=url&populate[content][on][properties.banner-details][populate][desktopvideo][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][mobileVideo][fields][0]=url&populate[content][on][properties.banner-details][populate][mobileVideo][fields][1]=alternativeText&populate[content][on][properties.banner-details][populate][button][populate][buttonIcon][fields][0]=url&populate[content][on][home.about-properties][populate][desktopbanner][fields][0]=url&populate[content][on][home.about-properties][populate][desktopbanner][fields][1]=alternativeText&populate[content][on][home.about-properties][populate][mobilebanner][fields][0]=url&populate[content][on][home.about-properties][populate][mobilebanner][fields][1]=alternativeText&populate[content][on][home.about-properties][populate][desktopvideo][fields][0]=url&populate[content][on][home.about-properties][populate][desktopvideo][fields][1]=alternativeText&populate[content][on][home.about-properties][populate][mobileVideo][fields][0]=url&populate[content][on][home.about-properties][populate][mobileVideo][fields][1]=alternativeText&populate[content][on][properties.properties-amenities][populate][propertiesEmenitiesDetails][populate][desktopmage][fields][0]=url&populate[content][on][properties.properties-amenities][populate][propertiesEmenitiesDetails][populate][mobileImage][fields][1]=alternativeText&populate[content][on][properties.other-amenties][populate][imageTitle][populate][image][fields][0]=url&populate[content][on][properties.other-amenties][populate][imageTitle][populate][image][fields][1]=alternativeText",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "Bearer d49364cf07d9b992cc3c90979e1ecbfbf4530365db077602c2cedd937f2e0bd48160826bac8ad8fc4c7ac64463ca8ea2d1afc0da0cb185d4e6bb0daecf27baad03ad2aba3a391ebe1029a42724d6693b1320446929f8a6b21d6a33270e6564424d3c174b7d052250fa0d223317c8b4cfc497ab7e11d7f1e1fa1fbe1a9e44c5ea"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            464,
+            0
+          ],
+          "id": "ce88c724-fc28-4762-98a8-5dd0fd3da6dc",
+          "name": "api 3"
+        },
+        {
+          "parameters": {
+            "respondWith": "allIncomingItems",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.respondToWebhook",
+          "typeVersion": 1.5,
+          "position": [
+            752,
+            96
+          ],
+          "id": "2287124b-718f-4799-baed-750eb54a9949",
+          "name": "Respond to Webhook",
+          "alwaysOutputData": true
+        }
+      ],
+      "connections": {
+        "Webhook": {
+          "main": [
+            [
+              {
+                "node": "api 1",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "api 1": {
+          "main": [
+            [
+              {
+                "node": "api 2",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "api 2": {
+          "main": [
+            [
+              {
+                "node": "api 3",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "api 3": {
+          "main": [
+            [
+              {
+                "node": "Code in JavaScript",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Code in JavaScript": {
+          "main": [
+            [
+              {
+                "node": "Respond to Webhook",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version b155a2fd",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-08-03T09:20:50.683Z",
+          "id": 248,
+          "workflowId": "BX4N9Dw8dZsxOZhX",
+          "versionId": "b155a2fd-76f1-48c4-973f-0984371064cd",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "a8131c3b76a5a4a094cfccceb7e50761baa0d673ff6a40b45c1df6d3ef89953a"
+  }
+}
