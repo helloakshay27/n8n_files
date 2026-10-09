@@ -1,0 +1,1912 @@
+{
+  "data": {
+    "updatedAt": "2026-10-07T18:01:36.015Z",
+    "createdAt": "2026-09-15T07:14:08.367Z",
+    "id": "5Fsie29pVqXY2vNH",
+    "name": "ZS Bangalore - Access Card Integration",
+    "description": null,
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "minutes"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -560,
+          -32
+        ],
+        "id": "9ad6dd37-a7df-405b-8ad9-78edc3d36ef0",
+        "name": "Schedule Trigger",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetEmployeeLogByDate",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "apiKey",
+                "value": "8B444B21-7A57-4572-8C98-66BE86FBCC8A"
+              },
+              {
+                "name": "StartDate",
+                "value": "2026-09-15"
+              },
+              {
+                "name": "EndDate",
+                "value": "2026-09-16"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{$json.access_token}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -256,
+          -560
+        ],
+        "id": "bd17d98a-09f5-4eeb-aeeb-2d6154bddf4d",
+        "name": "Access360 - Employee Logs",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetToken",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "clientId",
+                "value": "dfa9bc8b-6c77-484a-8b39-86aae4f3b2ac"
+              },
+              {
+                "name": "clientSecret",
+                "value": "sI_8Q~Rnj~KKqQB5uxSYP3U.o2shrElY0RF1pcmu"
+              },
+              {
+                "name": "serviceUserID",
+                "value": "abdul.g@gophygital.work"
+              },
+              {
+                "name": "apiKey",
+                "value": "8B444B21-7A57-4572-8C98-66BE86FBCC8A"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -544,
+          -528
+        ],
+        "id": "8461d374-15d8-4c6b-871f-297ac5acf1c3",
+        "name": "Access360 - Get Token",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetBranchAndCompanyID",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "apiKey",
+                "value": "944C8CD3-ADA0-4E67-8CC8-35B05FA46045"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{$node[\"Access360 - Get Token1\"].json[\"access_token\"]}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -32,
+          -464
+        ],
+        "id": "e191fd1f-bc7d-449e-a776-4ca34a93d472",
+        "name": "Access360 - Get Branch And Company ID",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetAttendanceData",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "apiKey",
+                "value": "944C8CD3-ADA0-4E67-8CC8-35B05FA46045"
+              },
+              {
+                "name": "companyId",
+                "value": "121"
+              },
+              {
+                "name": "BranchID",
+                "value": "1002"
+              },
+              {
+                "name": "EmployeeID"
+              },
+              {
+                "name": "EmpType"
+              },
+              {
+                "name": "lastUniqueId",
+                "value": "={{ $node[\"Get Last Processed ID\"].json[\"last_unique_id\"] }}"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{$node[\"Access360 - Get Token1\"].json[\"access_token\"]}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          304,
+          -144
+        ],
+        "id": "a5932a5b-1f7c-4a68-8757-99fb5a9fff16",
+        "name": "Access360 - Get Attendance Data",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetEmployeeSearch",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "apiKey",
+                "value": "8B444B21-7A57-4572-8C98-66BE86FBCC8A"
+              },
+              {
+                "name": "companyId",
+                "value": "54"
+              },
+              {
+                "name": "empAutoId"
+              },
+              {
+                "name": "employeeId"
+              },
+              {
+                "name": "branchId"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{$node[\"Access360 - Get Token\"].json[\"access_token\"]}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          224,
+          -576
+        ],
+        "id": "40f3df94-ae84-43b7-b1a2-c7208f9f8694",
+        "name": "Access360 - Get Employees",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "// Get employee API response\nconst employeeResponse = $('Access360 - Get Employees').first().json.response;\n\n// Get attendance API response\nconst attendanceResponse = $('Access360 - Get Attendance Data').first().json.response;\n\n\n// --------------------------------------------------\n// 1. Build Employee ID → Employee Name mapping\n// --------------------------------------------------\n\nconst employeeMap = {};\n\nfor (const emp of employeeResponse) {\n\n  if (emp.empID) {\n    employeeMap[String(emp.empID).trim()] = emp.empName || null;\n  }\n\n}\n\n\n// --------------------------------------------------\n// 2. Process attendance records\n// --------------------------------------------------\n\nconst result = [];\n\nfor (const attendance of attendanceResponse) {\n\n  const employeeId = String(\n    attendance.employeeId || ''\n  ).trim();\n\n  result.push({\n    json: {\n      employeeId: employeeId,\n\n      employeeName: employeeMap[employeeId] || null,\n\n      eventType: attendance.eventType || null,\n\n      eventTime: attendance.eventTime || null,\n\n      branchName: attendance.branchName || null,\n\n      sourceId: attendance.id || null\n    }\n  });\n\n}\n\n\nreturn result;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          688,
+          -624
+        ],
+        "id": "0ba062e4-36a7-4645-986a-64697bcd327d",
+        "name": "Combine Employee + Attendance",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const records = $input.all();\n\nconst testEmployeeIds = [\n  '0718104UAE',\n  '01059678'\n];\n\nreturn records.filter(item => {\n  const employeeId = String(item.json.employeeId || '').trim();\n\n  return testEmployeeIds.includes(employeeId);\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1008,
+          -688
+        ],
+        "id": "afd21bef-7651-4a86-9dba-db09a3fdbaa1",
+        "name": "Filter Test Attendance",
+        "executeOnce": false,
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const records = $input.all();\n\nconst attendances = [];\n\nfor (const item of records) {\n  const data = item.json;\n\n  attendances.push({\n    org_user_id: data.employeeId,\n    punched_in_at:\n      data.eventType?.toLowerCase() === 'login'\n        ? data.eventTime\n        : null,\n    punched_out_at:\n      data.eventType?.toLowerCase() === 'logout'\n        ? data.eventTime\n        : null\n  });\n}\n\nreturn [\n  {\n    json: {\n      attendances\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1280,
+          -736
+        ],
+        "id": "1f3e153a-a87f-453e-8345-1474f3697970",
+        "name": "Prepare Attendance Payload11",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const records = $input.first().json.response || [];\n\nconst today = new Date().toLocaleDateString('en-CA', {\n  timeZone: 'Asia/Kolkata'\n});\n\nconst todayRecords = records.filter(record => {\n  if (!record.eventTime) return false;\n\n  const recordDate = new Date(record.eventTime).toLocaleDateString('en-CA', {\n    timeZone: 'Asia/Kolkata'\n  });\n\n  return recordDate === today;\n});\n\nreturn todayRecords.map(record => ({\n  json: record\n}));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          -352
+        ],
+        "id": "6b003318-f095-4f01-afbe-3c8a8288c9d1",
+        "name": "Filter Today's Attendance",
+        "executeOnce": false,
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "// const records = $input.all();\n\n// const attendances = [];\n\n// for (const item of records) {\n//   const data = item.json;\n\n//   attendances.push({\n//     org_user_id: String(data.employeeId || '').trim(),\n\n//     punched_in_at:\n//       data.eventType?.toLowerCase() === 'login'\n//         ? data.eventTime\n//         : null,\n\n//     punched_out_at:\n//       data.eventType?.toLowerCase() === 'logout'\n//         ? data.eventTime\n//         : null\n//   });\n// }\n\n// return [\n//   {\n//     json: {\n//       attendances\n//     }\n//   }\n// ];\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n// const records = $input.all();\n\n// const attendances = [];\n\n// for (const item of records) {\n//   const data = item.json;\n\n//   attendances.push({\n//     org_user_id: String(data.employee_id || '').trim(),\n\n//     punched_in_at:\n//       data.event_type?.toLowerCase() === 'login'\n//         ? data.event_time\n//         : null,\n\n//     punched_out_at:\n//       data.event_type?.toLowerCase() === 'logout'\n//         ? data.event_time\n//         : null\n//   });\n// }\n\n// return [\n//   {\n//     json: {\n//       attendances\n//     }\n//   }\n// ];\n\n\n\n\n\n\n\n\n\n\n\n  // const records = $input.all();\n  \n  // return records.map(item => {\n  //   const data = item.json;\n  \n  //   const attendance = {\n  //     org_user_id: String(data.employee_id || '').trim(),\n  \n  //     punched_in_at:\n  //       data.event_type?.toLowerCase() === 'login'\n  //         ? data.event_time\n  //         : null,\n  \n  //     punched_out_at:\n  //       data.event_type?.toLowerCase() === 'logout'\n  //         ? data.event_time\n  //         : null\n  //   };\n  \n  //   return {\n  //     json: {\n  //       access360_id: data.access360_id,\n  //       employee_id: data.employee_id,\n  //       event_type: data.event_type,\n  //       event_time: data.event_time,\n  //       attendances: [attendance]\n  //     }\n  //   };\n  // });\n\n\n\n\n\n\n\n\n\n// const records = $input.all();\n\n// function formatIST(timestamp) {\n//   if (!timestamp) return null;\n\n//   // Keep the existing date and time; change only the timezone suffix\n//   return timestamp\n//     .replace(/\\+00:00$/, '+05:30')\n//     .replace(/Z$/, '+05:30');\n// }\n\n// return records.map(item => {\n//   const data = item.json;\n\n//   const eventTime = formatIST(data.event_time);\n\n//   const attendance = {\n//     org_user_id: String(data.employee_id || '').trim(),\n\n//     punched_in_at:\n//       data.event_type?.toLowerCase() === 'login'\n//         ? eventTime\n//         : null,\n\n//     punched_out_at:\n//       data.event_type?.toLowerCase() === 'logout'\n//         ? eventTime\n//         : null\n//   };\n\n//   return {\n//     json: {\n//       access360_id: data.access360_id,\n//       employee_id: data.employee_id,\n//       event_type: data.event_type,\n//       event_time: eventTime,\n//       attendances: [attendance]\n//     }\n//   };\n// });\n\n\n\n\nconst records = $input.all();\n\nfunction formatIST(timestamp) {\n  if (!timestamp) return null;\n\n  // Keep the date/time exactly as received.\n  // Only change the timezone suffix.\n  return timestamp\n    .replace(/\\+00:00$/, '+05:30')\n    .replace(/Z$/, '+05:30');\n}\n\nconst attendances = [];\nconst sourceRecords = [];\n\nfor (const item of records) {\n  const data = item.json;\n\n  const eventTime = formatIST(data.event_time);\n\n  // This is what will be sent to the destination API\n  attendances.push({\n    org_user_id: String(data.employee_id || '').trim(),\n\n    punched_in_at:\n      data.event_type?.toLowerCase() === 'login'\n        ? eventTime\n        : null,\n\n    punched_out_at:\n      data.event_type?.toLowerCase() === 'logout'\n        ? eventTime\n        : null\n  });\n\n  // Keep the original Access360 information inside n8n\n  // so we can use it later for PostgreSQL logging.\n  sourceRecords.push({\n    access360_id: data.access360_id,\n    employee_id: data.employee_id,\n    event_type: data.event_type,\n    event_time: eventTime\n  });\n}\n\n// Return ONE n8n item\nreturn [\n  {\n    json: {\n      attendances: attendances,\n      source_records: sourceRecords\n    }\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1248,
+          144
+        ],
+        "id": "25aff8c6-b405-4eaf-8630-44837cf65830",
+        "name": "Prepare Attendance Payload",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://live-api.gophygital.work/pms/attendances/bulk_punch.json?token=66c48ab8eee862e94416534b7eb5f3abd702aca319acbc3a",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"attendances\": {{ JSON.stringify($json.attendances) }}\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1536,
+          -768
+        ],
+        "id": "326e1fcc-75f9-46f3-900a-2c8e28035bb7",
+        "name": "POST - Store Attendance11",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://live-api.gophygital.work/pms/attendances/bulk_punch.json?token=66c48ab8eee862e94416534b7eb5f3abd702aca319acbc3a",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"attendances\": {{ JSON.stringify($json.attendances) }}\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1648,
+          96
+        ],
+        "id": "0dbb35b1-c96a-4e16-8bd4-5b920fbbf3f8",
+        "name": "POST - Store Attendance",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "CREATE TABLE access360_processed_attendance (\n    id SERIAL PRIMARY KEY,\n    access360_id BIGINT UNIQUE NOT NULL,\n    employee_id VARCHAR(255),\n    event_type VARCHAR(50),\n    event_time TIMESTAMP,\n    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1120,
+          -592
+        ],
+        "id": "763d3a22-a663-4093-b759-7d7b10704acb",
+        "name": "access360_processed_attendance",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n    {{ $json.access360_id }} AS access360_id,\n    '{{ $json.employee_id }}' AS employee_id,\n    '{{ $json.event_type }}' AS event_type,\n    '{{ $json.event_time }}' AS event_time,\n    EXISTS (\n        SELECT 1\n        FROM access360_processed_attendance\n        WHERE access360_id = {{ $json.access360_id }}\n    ) AS already_processed;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1184,
+          -304
+        ],
+        "id": "c04986d9-80fd-4d8a-965a-7872280f3fb9",
+        "name": "Check Processed IDs",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const inputItems = $input.all();\n\nconst records = inputItems.flatMap(item => {\n  const response = item.json.response;\n\n  if (Array.isArray(response)) {\n    return response;\n  }\n\n  if (item.json.id !== undefined) {\n    return [item.json];\n  }\n\n  return [];\n});\n\nreturn records.map(record => ({\n  json: {\n    access360_id: record.id,\n    employee_id: String(record.employeeId),\n    event_type: String(record.eventType).toLowerCase(),\n    event_time: record.eventTime\n  }\n}));\n\n\n\n// const inputItems = $input.all();\n\n// // Get the attendance records from the API response\n// const records = inputItems.flatMap(item => {\n//   const response = item.json.response;\n\n//   // Handle the API's response array\n//   if (Array.isArray(response)) {\n//     return response;\n//   }\n\n//   // Also handle individual attendance items\n//   if (item.json.id !== undefined) {\n//     return [item.json];\n//   }\n\n//   return [];\n// });\n\n// // Prepare records for duplicate checking\n// return records.map(record => ({\n//   json: {\n//     access360_id: record.id,\n//     employee_id: record.employeeId,\n//     event_type: record.eventType,\n//     event_time: record.eventTime\n//   }\n// }));\n\n\n\n\n\n\n\n\n\n\n\n\n\n// const records = $input.all();\n\n// return records.map(item => ({\n//   json: {\n//     access360_id: item.json.id,\n//     employee_id: item.json.employeeId,\n//     event_type: item.json.eventType,\n//     event_time: item.json.eventTime\n//   }\n// }));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          944,
+          -144
+        ],
+        "id": "c69f6e9d-cecd-4775-afa9-e3d0fdc10869",
+        "name": "Prepare IDs for Duplicate Check",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "return $input.all();"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          912,
+          80
+        ],
+        "id": "165779a1-6716-45f2-8cd2-774f852d3b52",
+        "name": "Keep Original Attendance",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const records = $input.all();\n\nreturn records.filter(item => {\n  return item.json.already_processed === false;\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1376,
+          -304
+        ],
+        "id": "74ca660f-9d0d-4b70-9872-1496dded1cea",
+        "name": "Filter New Records",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetToken",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "clientId",
+                "value": "ed58946d-409a-4d02-ab70-a017d90953df"
+              },
+              {
+                "name": "clientSecret",
+                "value": "20p8Q~x2k3IthYY0Du0ePheijc53DcgD_sN2vbyz"
+              },
+              {
+                "name": "serviceUserID",
+                "value": "1DPH1"
+              },
+              {
+                "name": "apiKey",
+                "value": "944C8CD3-ADA0-4E67-8CC8-35B05FA46045"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -272,
+          128
+        ],
+        "id": "1fa8a653-1181-4df7-93ad-c7ce396a0aaa",
+        "name": "Access360 - Get Token1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "// const responses = $input.all();\n\n// // These are the 2 items passed through the Limit node.\n// // If your Limit node has a different name, update it here.\n// // const originalItems = $('Limit').all();\n// const originalItems = $('Prepare Attendance Payload').all();\n\n// const output = [];\n\n// for (let i = 0; i < responses.length; i++) {\n//   const results = responses[i].json.results || [];\n//   const original = originalItems[i]?.json;\n\n//   if (!original) {\n//     throw new Error(`Original attendance not found for response ${i}`);\n//   }\n\n//   for (const result of results) {\n//     if (result.status?.toLowerCase() !== 'success') {\n//       continue;\n//     }\n\n//     output.push({\n//       json: {\n//         access360_id: original.access360_id,\n//         employee_id: original.employee_id,\n//         event_type: original.event_type,\n//         event_time: original.event_time,\n//         destination_attendance_id: result.attendance_id\n//       }\n//     });\n//   }\n// }\n\n// return output;\n\n\n\n\n// Get the batch API response\nconst responseItems = $input.all();\n\nif (responseItems.length === 0) {\n  return [];\n}\n\n// Get the original batch data from Prepare Attendance Payload\nconst payloadItems = $('Prepare Attendance Payload').all();\n\nif (payloadItems.length === 0) {\n  throw new Error('No data found from Prepare Attendance Payload');\n}\n\nconst payload = payloadItems[0].json;\n\nconst sourceRecords = payload.source_records || [];\nconst attendances = payload.attendances || [];\n\n// Get all results returned by the destination API\nconst results = responseItems.flatMap(item => {\n  return Array.isArray(item.json.results)\n    ? item.json.results\n    : [];\n});\n\nconst output = [];\n\n// Match API results back to the original records\nfor (const result of results) {\n\n  // Only process successful records\n  if (String(result.status || '').toLowerCase() !== 'success') {\n    continue;\n  }\n\n  const orgUserId = String(result.org_user_id || '').trim();\n\n  // Find the original record using employee/org_user_id\n  const matchingIndexes = [];\n\n  for (let i = 0; i < attendances.length; i++) {\n    if (\n      String(attendances[i].org_user_id || '').trim() === orgUserId\n    ) {\n      matchingIndexes.push(i);\n    }\n  }\n\n  if (matchingIndexes.length === 0) {\n    continue;\n  }\n\n  // Find an original record that has not already been mapped\n  let matchedIndex = null;\n\n  for (const index of matchingIndexes) {\n    const alreadyUsed = output.some(\n      item =>\n        item.json.access360_id === sourceRecords[index]?.access360_id\n    );\n\n    if (!alreadyUsed) {\n      matchedIndex = index;\n      break;\n    }\n  }\n\n  if (matchedIndex === null) {\n    continue;\n  }\n\n  const original = sourceRecords[matchedIndex];\n\n  output.push({\n    json: {\n      access360_id: original.access360_id,\n      employee_id: original.employee_id,\n      event_type: original.event_type,\n      event_time: original.event_time,\n      destination_attendance_id: result.attendance_id\n    }\n  });\n}\n\nreturn output;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1792,
+          0
+        ],
+        "id": "a4d0341a-b20c-4515-85e7-0252664a4793",
+        "name": "Prepare Successful Records for DB",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "maxItems": 100
+        },
+        "type": "n8n-nodes-base.limit",
+        "typeVersion": 1,
+        "position": [
+          1600,
+          -176
+        ],
+        "id": "97ce1dcb-6143-4e3a-a284-db1c43aefdb7",
+        "name": "Limit",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO access360_processed_attendance (\n    access360_id,\n    employee_id,\n    event_type,\n    event_time,\n    destination_attendance_id\n)\nVALUES (\n    {{ $json.access360_id }},\n    '{{ String($json.employee_id ?? '').replace(/'/g, \"''\") }}',\n    '{{ String($json.event_type ?? '').replace(/'/g, \"''\") }}',\n    '{{ $json.event_time }}'::timestamptz,\n    {{ $json.destination_attendance_id }}\n)\nON CONFLICT (access360_id) DO NOTHING;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1936,
+          176
+        ],
+        "id": "ccb42cce-8a72-4a98-af2b-3ca7f0fb8f87",
+        "name": "access360_processed_attendance1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n    id,\n    access360_id,\n    employee_id,\n    event_type,\n    event_time,\n    processed_at,\n    destination_attendance_id\nFROM access360_processed_attendance WHERE employee_id = '50214'\nORDER BY processed_at DESC;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1792,
+          -432
+        ],
+        "id": "127c5ed4-9265-4adb-b35a-bae20f6c1810",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT COALESCE(MAX(access360_id), 0) AS last_unique_id\nFROM access360_processed_attendance;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          -80,
+          -64
+        ],
+        "id": "7c31bd9b-fb8a-4564-90d2-690be2b9ebab",
+        "name": "Get Last Processed ID",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n    EXISTS (\n        SELECT 1\n        FROM access360_processed_attendance\n        WHERE access360_id = 51290614\n    ) AS already_processed_1,\n    EXISTS (\n        SELECT 1\n        FROM access360_processed_attendance\n        WHERE access360_id = 51290615\n    ) AS already_processed_2;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          -864,
+          80
+        ],
+        "id": "7947a297-1410-4f62-815a-27ca2d37ec3c",
+        "name": "Execute a SQL query1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT\n    id,\n    access360_id,\n    employee_id,\n    event_type,\n    event_time,\n    processed_at,\n    destination_attendance_id\nFROM access360_processed_attendance\nORDER BY processed_at DESC;",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.6,
+        "position": [
+          1888,
+          -320
+        ],
+        "id": "b174ccbd-6b4e-46d8-a5b9-6f8f15a8402b",
+        "name": "Execute a SQL query2",
+        "alwaysOutputData": true,
+        "credentials": {
+          "postgres": {
+            "id": "b50IVtOHRFxnli6C",
+            "name": "Postgres n8n_db"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const records = $input.all();\n\nreturn records.map(item => ({\n  json: {\n    access360_id: item.json.id,\n    employee_id: item.json.employeeId,\n    event_type: item.json.eventType,\n    event_time: item.json.eventTime\n  }\n}));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          896,
+          -352
+        ],
+        "id": "eab0c88b-8d55-4323-ad47-f3d00528bcac",
+        "name": "Prepare IDs for Duplicate Check1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetAttendanceData",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "apiKey",
+                "value": "944C8CD3-ADA0-4E67-8CC8-35B05FA46045"
+              },
+              {
+                "name": "companyId",
+                "value": "54"
+              },
+              {
+                "name": "BranchID"
+              },
+              {
+                "name": "EmployeeID"
+              },
+              {
+                "name": "EmpType"
+              },
+              {
+                "name": "lastUniqueId",
+                "value": "={{ $node[\"Get Last Processed ID\"].json[\"last_unique_id\"] }}"
+              }
+            ]
+          },
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Authorization",
+                "value": "=Bearer {{$node[\"Access360 - Get Token1\"].json[\"access_token\"]}}"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          160,
+          -352
+        ],
+        "id": "04f92d2c-15c6-4a0f-8c44-a6b83efb0b4f",
+        "name": "Access360 - Get Attendance Data1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "// const records = $input.all();\n\n// const attendances = [];\n\n// for (const item of records) {\n//   const data = item.json;\n\n//   attendances.push({\n//     org_user_id: String(data.employeeId || '').trim(),\n\n//     punched_in_at:\n//       data.eventType?.toLowerCase() === 'login'\n//         ? data.eventTime\n//         : null,\n\n//     punched_out_at:\n//       data.eventType?.toLowerCase() === 'logout'\n//         ? data.eventTime\n//         : null\n//   });\n// }\n\n// return [\n//   {\n//     json: {\n//       attendances\n//     }\n//   }\n// ];\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n// const records = $input.all();\n\n// const attendances = [];\n\n// for (const item of records) {\n//   const data = item.json;\n\n//   attendances.push({\n//     org_user_id: String(data.employee_id || '').trim(),\n\n//     punched_in_at:\n//       data.event_type?.toLowerCase() === 'login'\n//         ? data.event_time\n//         : null,\n\n//     punched_out_at:\n//       data.event_type?.toLowerCase() === 'logout'\n//         ? data.event_time\n//         : null\n//   });\n// }\n\n// return [\n//   {\n//     json: {\n//       attendances\n//     }\n//   }\n// ];\n\n\n\n\n\n\n\n\n\n\n\n  // const records = $input.all();\n  \n  // return records.map(item => {\n  //   const data = item.json;\n  \n  //   const attendance = {\n  //     org_user_id: String(data.employee_id || '').trim(),\n  \n  //     punched_in_at:\n  //       data.event_type?.toLowerCase() === 'login'\n  //         ? data.event_time\n  //         : null,\n  \n  //     punched_out_at:\n  //       data.event_type?.toLowerCase() === 'logout'\n  //         ? data.event_time\n  //         : null\n  //   };\n  \n  //   return {\n  //     json: {\n  //       access360_id: data.access360_id,\n  //       employee_id: data.employee_id,\n  //       event_type: data.event_type,\n  //       event_time: data.event_time,\n  //       attendances: [attendance]\n  //     }\n  //   };\n  // });\n\n\n\n\n\n\n\n\n\nconst records = $input.all();\n\nfunction formatIST(timestamp) {\n  if (!timestamp) return null;\n\n  // Keep the existing date and time; change only the timezone suffix\n  return timestamp\n    .replace(/\\+00:00$/, '+05:30')\n    .replace(/Z$/, '+05:30');\n}\n\nreturn records.map(item => {\n  const data = item.json;\n\n  const eventTime = formatIST(data.event_time);\n\n  const attendance = {\n    org_user_id: String(data.employee_id || '').trim(),\n\n    punched_in_at:\n      data.event_type?.toLowerCase() === 'login'\n        ? eventTime\n        : null,\n\n    punched_out_at:\n      data.event_type?.toLowerCase() === 'logout'\n        ? eventTime\n        : null\n  };\n\n  return {\n    json: {\n      access360_id: data.access360_id,\n      employee_id: data.employee_id,\n      event_type: data.event_type,\n      event_time: eventTime,\n      attendances: [attendance]\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1280,
+          -32
+        ],
+        "id": "39557c9a-c7d6-4dc0-8bf1-435cdc0284ab",
+        "name": "Prepare Attendance Payload1",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "jsCode": "const responses = $input.all();\n\n// These are the 2 items passed through the Limit node.\n// If your Limit node has a different name, update it here.\n// const originalItems = $('Limit').all();\nconst originalItems = $('Prepare Attendance Payload').all();\n\nconst output = [];\n\nfor (let i = 0; i < responses.length; i++) {\n  const results = responses[i].json.results || [];\n  const original = originalItems[i]?.json;\n\n  if (!original) {\n    throw new Error(`Original attendance not found for response ${i}`);\n  }\n\n  for (const result of results) {\n    if (result.status?.toLowerCase() !== 'success') {\n      continue;\n    }\n\n    output.push({\n      json: {\n        access360_id: original.access360_id,\n        employee_id: original.employee_id,\n        event_type: original.event_type,\n        event_time: original.event_time,\n        destination_attendance_id: result.attendance_id\n      }\n    });\n  }\n}\n\nreturn output;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1936,
+          -128
+        ],
+        "id": "ce92d409-a6be-4a40-90e8-19aa66fecfcb",
+        "name": "Prepare Successful Records for DB1",
+        "alwaysOutputData": true
+      }
+    ],
+    "connections": {
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Access360 - Get Token1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Access360 - Employee Logs": {
+        "main": [
+          []
+        ]
+      },
+      "Access360 - Get Token": {
+        "main": [
+          []
+        ]
+      },
+      "Access360 - Get Branch And Company ID": {
+        "main": [
+          []
+        ]
+      },
+      "Access360 - Get Attendance Data": {
+        "main": [
+          [
+            {
+              "node": "Prepare IDs for Duplicate Check",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Access360 - Get Employees": {
+        "main": [
+          []
+        ]
+      },
+      "Combine Employee + Attendance": {
+        "main": [
+          [
+            {
+              "node": "Filter Test Attendance",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter Test Attendance": {
+        "main": [
+          [
+            {
+              "node": "Prepare Attendance Payload11",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Attendance Payload11": {
+        "main": [
+          [
+            {
+              "node": "POST - Store Attendance11",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter Today's Attendance": {
+        "main": [
+          []
+        ]
+      },
+      "Prepare Attendance Payload": {
+        "main": [
+          [
+            {
+              "node": "POST - Store Attendance",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "POST - Store Attendance": {
+        "main": [
+          [
+            {
+              "node": "Prepare Successful Records for DB",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Processed IDs": {
+        "main": [
+          [
+            {
+              "node": "Filter New Records",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare IDs for Duplicate Check": {
+        "main": [
+          [
+            {
+              "node": "Check Processed IDs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter New Records": {
+        "main": [
+          [
+            {
+              "node": "Prepare Attendance Payload",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Access360 - Get Token1": {
+        "main": [
+          [
+            {
+              "node": "Get Last Processed ID",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Access360 - Get Branch And Company ID",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limit": {
+        "main": [
+          []
+        ]
+      },
+      "Prepare Successful Records for DB": {
+        "main": [
+          [
+            {
+              "node": "access360_processed_attendance1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "access360_processed_attendance1": {
+        "main": [
+          []
+        ]
+      },
+      "Get Last Processed ID": {
+        "main": [
+          [
+            {
+              "node": "Access360 - Get Attendance Data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": false
+    },
+    "staticData": {
+      "node:Schedule Trigger": {
+        "recurrenceRules": []
+      }
+    },
+    "meta": {
+      "templateCredsSetupCompleted": true
+    },
+    "pinData": {},
+    "versionId": "3503a720-e33e-40b8-a4a1-d8a9b90713fc",
+    "activeVersionId": "3503a720-e33e-40b8-a4a1-d8a9b90713fc",
+    "versionCounter": 108,
+    "triggerCount": 1,
+    "shared": [
+      {
+        "updatedAt": "2026-09-15T07:14:08.373Z",
+        "createdAt": "2026-09-15T07:14:08.373Z",
+        "role": "workflow:owner",
+        "workflowId": "5Fsie29pVqXY2vNH",
+        "projectId": "s9jeiIUr8G6hBG6i",
+        "project": {
+          "updatedAt": "2026-01-28T12:34:21.552Z",
+          "createdAt": "2025-12-24T09:57:24.391Z",
+          "id": "s9jeiIUr8G6hBG6i",
+          "name": "N8N Admin <n8n@lockated.com>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "creatorId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+          "projectRelations": [
+            {
+              "updatedAt": "2025-12-24T09:57:24.391Z",
+              "createdAt": "2025-12-24T09:57:24.391Z",
+              "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+              "projectId": "s9jeiIUr8G6hBG6i",
+              "user": {
+                "updatedAt": "2026-10-09T11:45:20.000Z",
+                "createdAt": "2025-12-24T09:57:23.917Z",
+                "id": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98",
+                "email": "n8n@lockated.com",
+                "firstName": "N8N",
+                "lastName": "Admin",
+                "personalizationAnswers": {
+                  "version": "v4",
+                  "personalization_survey_submitted_at": "2025-12-24T10:09:47.905Z",
+                  "personalization_survey_n8n_version": "2.1.4",
+                  "automationGoalDevops": [
+                    "ci-cd",
+                    "cloud-infrastructure-orchestration",
+                    "monitoring-alerting",
+                    "reporting"
+                  ],
+                  "companyType": "saas",
+                  "role": "it"
+                },
+                "settings": {
+                  "userActivated": true,
+                  "firstSuccessfulWorkflowId": "Xc0BOlt0NinXhZcC",
+                  "userActivatedAt": 1767166205042,
+                  "npsSurvey": {
+                    "responded": true,
+                    "lastShownAt": 1786355513406
+                  },
+                  "easyAIWorkflowOnboarded": true
+                },
+                "disabled": false,
+                "mfaEnabled": false,
+                "lastActiveAt": "2026-10-08",
+                "isPending": false
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "tags": [],
+    "parentFolder": null,
+    "activeVersion": {
+      "updatedAt": "2026-10-07T18:01:38.000Z",
+      "createdAt": "2026-10-07T18:01:36.017Z",
+      "versionId": "3503a720-e33e-40b8-a4a1-d8a9b90713fc",
+      "workflowId": "5Fsie29pVqXY2vNH",
+      "nodes": [
+        {
+          "parameters": {
+            "rule": {
+              "interval": [
+                {
+                  "field": "minutes"
+                }
+              ]
+            }
+          },
+          "type": "n8n-nodes-base.scheduleTrigger",
+          "typeVersion": 1.3,
+          "position": [
+            -560,
+            -32
+          ],
+          "id": "9ad6dd37-a7df-405b-8ad9-78edc3d36ef0",
+          "name": "Schedule Trigger",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetEmployeeLogByDate",
+            "sendQuery": true,
+            "queryParameters": {
+              "parameters": [
+                {
+                  "name": "apiKey",
+                  "value": "8B444B21-7A57-4572-8C98-66BE86FBCC8A"
+                },
+                {
+                  "name": "StartDate",
+                  "value": "2026-09-15"
+                },
+                {
+                  "name": "EndDate",
+                  "value": "2026-09-16"
+                }
+              ]
+            },
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "=Bearer {{$json.access_token}}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            -256,
+            -560
+          ],
+          "id": "bd17d98a-09f5-4eeb-aeeb-2d6154bddf4d",
+          "name": "Access360 - Employee Logs",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetToken",
+            "sendQuery": true,
+            "queryParameters": {
+              "parameters": [
+                {
+                  "name": "clientId",
+                  "value": "dfa9bc8b-6c77-484a-8b39-86aae4f3b2ac"
+                },
+                {
+                  "name": "clientSecret",
+                  "value": "sI_8Q~Rnj~KKqQB5uxSYP3U.o2shrElY0RF1pcmu"
+                },
+                {
+                  "name": "serviceUserID",
+                  "value": "abdul.g@gophygital.work"
+                },
+                {
+                  "name": "apiKey",
+                  "value": "8B444B21-7A57-4572-8C98-66BE86FBCC8A"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            -544,
+            -528
+          ],
+          "id": "8461d374-15d8-4c6b-871f-297ac5acf1c3",
+          "name": "Access360 - Get Token",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetBranchAndCompanyID",
+            "sendQuery": true,
+            "queryParameters": {
+              "parameters": [
+                {
+                  "name": "apiKey",
+                  "value": "944C8CD3-ADA0-4E67-8CC8-35B05FA46045"
+                }
+              ]
+            },
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "=Bearer {{$node[\"Access360 - Get Token1\"].json[\"access_token\"]}}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            -32,
+            -464
+          ],
+          "id": "e191fd1f-bc7d-449e-a776-4ca34a93d472",
+          "name": "Access360 - Get Branch And Company ID",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetAttendanceData",
+            "sendQuery": true,
+            "queryParameters": {
+              "parameters": [
+                {
+                  "name": "apiKey",
+                  "value": "944C8CD3-ADA0-4E67-8CC8-35B05FA46045"
+                },
+                {
+                  "name": "companyId",
+                  "value": "121"
+                },
+                {
+                  "name": "BranchID",
+                  "value": "1002"
+                },
+                {
+                  "name": "EmployeeID"
+                },
+                {
+                  "name": "EmpType"
+                },
+                {
+                  "name": "lastUniqueId",
+                  "value": "={{ $node[\"Get Last Processed ID\"].json[\"last_unique_id\"] }}"
+                }
+              ]
+            },
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "=Bearer {{$node[\"Access360 - Get Token1\"].json[\"access_token\"]}}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            304,
+            -144
+          ],
+          "id": "a5932a5b-1f7c-4a68-8757-99fb5a9fff16",
+          "name": "Access360 - Get Attendance Data",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetEmployeeSearch",
+            "sendQuery": true,
+            "queryParameters": {
+              "parameters": [
+                {
+                  "name": "apiKey",
+                  "value": "8B444B21-7A57-4572-8C98-66BE86FBCC8A"
+                },
+                {
+                  "name": "companyId",
+                  "value": "54"
+                },
+                {
+                  "name": "empAutoId"
+                },
+                {
+                  "name": "employeeId"
+                },
+                {
+                  "name": "branchId"
+                }
+              ]
+            },
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "=Bearer {{$node[\"Access360 - Get Token\"].json[\"access_token\"]}}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            224,
+            -576
+          ],
+          "id": "40f3df94-ae84-43b7-b1a2-c7208f9f8694",
+          "name": "Access360 - Get Employees",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "// Get employee API response\nconst employeeResponse = $('Access360 - Get Employees').first().json.response;\n\n// Get attendance API response\nconst attendanceResponse = $('Access360 - Get Attendance Data').first().json.response;\n\n\n// --------------------------------------------------\n// 1. Build Employee ID → Employee Name mapping\n// --------------------------------------------------\n\nconst employeeMap = {};\n\nfor (const emp of employeeResponse) {\n\n  if (emp.empID) {\n    employeeMap[String(emp.empID).trim()] = emp.empName || null;\n  }\n\n}\n\n\n// --------------------------------------------------\n// 2. Process attendance records\n// --------------------------------------------------\n\nconst result = [];\n\nfor (const attendance of attendanceResponse) {\n\n  const employeeId = String(\n    attendance.employeeId || ''\n  ).trim();\n\n  result.push({\n    json: {\n      employeeId: employeeId,\n\n      employeeName: employeeMap[employeeId] || null,\n\n      eventType: attendance.eventType || null,\n\n      eventTime: attendance.eventTime || null,\n\n      branchName: attendance.branchName || null,\n\n      sourceId: attendance.id || null\n    }\n  });\n\n}\n\n\nreturn result;"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            688,
+            -624
+          ],
+          "id": "0ba062e4-36a7-4645-986a-64697bcd327d",
+          "name": "Combine Employee + Attendance",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "const records = $input.all();\n\nconst testEmployeeIds = [\n  '0718104UAE',\n  '01059678'\n];\n\nreturn records.filter(item => {\n  const employeeId = String(item.json.employeeId || '').trim();\n\n  return testEmployeeIds.includes(employeeId);\n});"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1008,
+            -688
+          ],
+          "id": "afd21bef-7651-4a86-9dba-db09a3fdbaa1",
+          "name": "Filter Test Attendance",
+          "executeOnce": false,
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "const records = $input.all();\n\nconst attendances = [];\n\nfor (const item of records) {\n  const data = item.json;\n\n  attendances.push({\n    org_user_id: data.employeeId,\n    punched_in_at:\n      data.eventType?.toLowerCase() === 'login'\n        ? data.eventTime\n        : null,\n    punched_out_at:\n      data.eventType?.toLowerCase() === 'logout'\n        ? data.eventTime\n        : null\n  });\n}\n\nreturn [\n  {\n    json: {\n      attendances\n    }\n  }\n];"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1280,
+            -736
+          ],
+          "id": "1f3e153a-a87f-453e-8345-1474f3697970",
+          "name": "Prepare Attendance Payload11",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "const records = $input.first().json.response || [];\n\nconst today = new Date().toLocaleDateString('en-CA', {\n  timeZone: 'Asia/Kolkata'\n});\n\nconst todayRecords = records.filter(record => {\n  if (!record.eventTime) return false;\n\n  const recordDate = new Date(record.eventTime).toLocaleDateString('en-CA', {\n    timeZone: 'Asia/Kolkata'\n  });\n\n  return recordDate === today;\n});\n\nreturn todayRecords.map(record => ({\n  json: record\n}));"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            672,
+            -352
+          ],
+          "id": "6b003318-f095-4f01-afbe-3c8a8288c9d1",
+          "name": "Filter Today's Attendance",
+          "executeOnce": false,
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "// const records = $input.all();\n\n// const attendances = [];\n\n// for (const item of records) {\n//   const data = item.json;\n\n//   attendances.push({\n//     org_user_id: String(data.employeeId || '').trim(),\n\n//     punched_in_at:\n//       data.eventType?.toLowerCase() === 'login'\n//         ? data.eventTime\n//         : null,\n\n//     punched_out_at:\n//       data.eventType?.toLowerCase() === 'logout'\n//         ? data.eventTime\n//         : null\n//   });\n// }\n\n// return [\n//   {\n//     json: {\n//       attendances\n//     }\n//   }\n// ];\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n// const records = $input.all();\n\n// const attendances = [];\n\n// for (const item of records) {\n//   const data = item.json;\n\n//   attendances.push({\n//     org_user_id: String(data.employee_id || '').trim(),\n\n//     punched_in_at:\n//       data.event_type?.toLowerCase() === 'login'\n//         ? data.event_time\n//         : null,\n\n//     punched_out_at:\n//       data.event_type?.toLowerCase() === 'logout'\n//         ? data.event_time\n//         : null\n//   });\n// }\n\n// return [\n//   {\n//     json: {\n//       attendances\n//     }\n//   }\n// ];\n\n\n\n\n\n\n\n\n\n\n\n  // const records = $input.all();\n  \n  // return records.map(item => {\n  //   const data = item.json;\n  \n  //   const attendance = {\n  //     org_user_id: String(data.employee_id || '').trim(),\n  \n  //     punched_in_at:\n  //       data.event_type?.toLowerCase() === 'login'\n  //         ? data.event_time\n  //         : null,\n  \n  //     punched_out_at:\n  //       data.event_type?.toLowerCase() === 'logout'\n  //         ? data.event_time\n  //         : null\n  //   };\n  \n  //   return {\n  //     json: {\n  //       access360_id: data.access360_id,\n  //       employee_id: data.employee_id,\n  //       event_type: data.event_type,\n  //       event_time: data.event_time,\n  //       attendances: [attendance]\n  //     }\n  //   };\n  // });\n\n\n\n\n\n\n\n\n\n// const records = $input.all();\n\n// function formatIST(timestamp) {\n//   if (!timestamp) return null;\n\n//   // Keep the existing date and time; change only the timezone suffix\n//   return timestamp\n//     .replace(/\\+00:00$/, '+05:30')\n//     .replace(/Z$/, '+05:30');\n// }\n\n// return records.map(item => {\n//   const data = item.json;\n\n//   const eventTime = formatIST(data.event_time);\n\n//   const attendance = {\n//     org_user_id: String(data.employee_id || '').trim(),\n\n//     punched_in_at:\n//       data.event_type?.toLowerCase() === 'login'\n//         ? eventTime\n//         : null,\n\n//     punched_out_at:\n//       data.event_type?.toLowerCase() === 'logout'\n//         ? eventTime\n//         : null\n//   };\n\n//   return {\n//     json: {\n//       access360_id: data.access360_id,\n//       employee_id: data.employee_id,\n//       event_type: data.event_type,\n//       event_time: eventTime,\n//       attendances: [attendance]\n//     }\n//   };\n// });\n\n\n\n\nconst records = $input.all();\n\nfunction formatIST(timestamp) {\n  if (!timestamp) return null;\n\n  // Keep the date/time exactly as received.\n  // Only change the timezone suffix.\n  return timestamp\n    .replace(/\\+00:00$/, '+05:30')\n    .replace(/Z$/, '+05:30');\n}\n\nconst attendances = [];\nconst sourceRecords = [];\n\nfor (const item of records) {\n  const data = item.json;\n\n  const eventTime = formatIST(data.event_time);\n\n  // This is what will be sent to the destination API\n  attendances.push({\n    org_user_id: String(data.employee_id || '').trim(),\n\n    punched_in_at:\n      data.event_type?.toLowerCase() === 'login'\n        ? eventTime\n        : null,\n\n    punched_out_at:\n      data.event_type?.toLowerCase() === 'logout'\n        ? eventTime\n        : null\n  });\n\n  // Keep the original Access360 information inside n8n\n  // so we can use it later for PostgreSQL logging.\n  sourceRecords.push({\n    access360_id: data.access360_id,\n    employee_id: data.employee_id,\n    event_type: data.event_type,\n    event_time: eventTime\n  });\n}\n\n// Return ONE n8n item\nreturn [\n  {\n    json: {\n      attendances: attendances,\n      source_records: sourceRecords\n    }\n  }\n];"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1248,
+            144
+          ],
+          "id": "25aff8c6-b405-4eaf-8630-44837cf65830",
+          "name": "Prepare Attendance Payload",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "https://live-api.gophygital.work/pms/attendances/bulk_punch.json?token=66c48ab8eee862e94416534b7eb5f3abd702aca319acbc3a",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={\n  \"attendances\": {{ JSON.stringify($json.attendances) }}\n}",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            1536,
+            -768
+          ],
+          "id": "326e1fcc-75f9-46f3-900a-2c8e28035bb7",
+          "name": "POST - Store Attendance11",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "method": "POST",
+            "url": "https://live-api.gophygital.work/pms/attendances/bulk_punch.json?token=66c48ab8eee862e94416534b7eb5f3abd702aca319acbc3a",
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            },
+            "sendBody": true,
+            "specifyBody": "json",
+            "jsonBody": "={\n  \"attendances\": {{ JSON.stringify($json.attendances) }}\n}",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            1648,
+            96
+          ],
+          "id": "0dbb35b1-c96a-4e16-8bd4-5b920fbbf3f8",
+          "name": "POST - Store Attendance",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "CREATE TABLE access360_processed_attendance (\n    id SERIAL PRIMARY KEY,\n    access360_id BIGINT UNIQUE NOT NULL,\n    employee_id VARCHAR(255),\n    event_type VARCHAR(50),\n    event_time TIMESTAMP,\n    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.6,
+          "position": [
+            1120,
+            -592
+          ],
+          "id": "763d3a22-a663-4093-b759-7d7b10704acb",
+          "name": "access360_processed_attendance",
+          "alwaysOutputData": true,
+          "credentials": {
+            "postgres": {
+              "id": "b50IVtOHRFxnli6C",
+              "name": "Postgres n8n_db"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n    {{ $json.access360_id }} AS access360_id,\n    '{{ $json.employee_id }}' AS employee_id,\n    '{{ $json.event_type }}' AS event_type,\n    '{{ $json.event_time }}' AS event_time,\n    EXISTS (\n        SELECT 1\n        FROM access360_processed_attendance\n        WHERE access360_id = {{ $json.access360_id }}\n    ) AS already_processed;",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.6,
+          "position": [
+            1184,
+            -304
+          ],
+          "id": "c04986d9-80fd-4d8a-965a-7872280f3fb9",
+          "name": "Check Processed IDs",
+          "alwaysOutputData": true,
+          "credentials": {
+            "postgres": {
+              "id": "b50IVtOHRFxnli6C",
+              "name": "Postgres n8n_db"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "jsCode": "const inputItems = $input.all();\n\nconst records = inputItems.flatMap(item => {\n  const response = item.json.response;\n\n  if (Array.isArray(response)) {\n    return response;\n  }\n\n  if (item.json.id !== undefined) {\n    return [item.json];\n  }\n\n  return [];\n});\n\nreturn records.map(record => ({\n  json: {\n    access360_id: record.id,\n    employee_id: String(record.employeeId),\n    event_type: String(record.eventType).toLowerCase(),\n    event_time: record.eventTime\n  }\n}));\n\n\n\n// const inputItems = $input.all();\n\n// // Get the attendance records from the API response\n// const records = inputItems.flatMap(item => {\n//   const response = item.json.response;\n\n//   // Handle the API's response array\n//   if (Array.isArray(response)) {\n//     return response;\n//   }\n\n//   // Also handle individual attendance items\n//   if (item.json.id !== undefined) {\n//     return [item.json];\n//   }\n\n//   return [];\n// });\n\n// // Prepare records for duplicate checking\n// return records.map(record => ({\n//   json: {\n//     access360_id: record.id,\n//     employee_id: record.employeeId,\n//     event_type: record.eventType,\n//     event_time: record.eventTime\n//   }\n// }));\n\n\n\n\n\n\n\n\n\n\n\n\n\n// const records = $input.all();\n\n// return records.map(item => ({\n//   json: {\n//     access360_id: item.json.id,\n//     employee_id: item.json.employeeId,\n//     event_type: item.json.eventType,\n//     event_time: item.json.eventTime\n//   }\n// }));"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            944,
+            -144
+          ],
+          "id": "c69f6e9d-cecd-4775-afa9-e3d0fdc10869",
+          "name": "Prepare IDs for Duplicate Check",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "return $input.all();"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            912,
+            80
+          ],
+          "id": "165779a1-6716-45f2-8cd2-774f852d3b52",
+          "name": "Keep Original Attendance",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "const records = $input.all();\n\nreturn records.filter(item => {\n  return item.json.already_processed === false;\n});"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1376,
+            -304
+          ],
+          "id": "74ca660f-9d0d-4b70-9872-1496dded1cea",
+          "name": "Filter New Records",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetToken",
+            "sendQuery": true,
+            "queryParameters": {
+              "parameters": [
+                {
+                  "name": "clientId",
+                  "value": "ed58946d-409a-4d02-ab70-a017d90953df"
+                },
+                {
+                  "name": "clientSecret",
+                  "value": "20p8Q~x2k3IthYY0Du0ePheijc53DcgD_sN2vbyz"
+                },
+                {
+                  "name": "serviceUserID",
+                  "value": "1DPH1"
+                },
+                {
+                  "name": "apiKey",
+                  "value": "944C8CD3-ADA0-4E67-8CC8-35B05FA46045"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            -272,
+            128
+          ],
+          "id": "1fa8a653-1181-4df7-93ad-c7ce396a0aaa",
+          "name": "Access360 - Get Token1",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "// const responses = $input.all();\n\n// // These are the 2 items passed through the Limit node.\n// // If your Limit node has a different name, update it here.\n// // const originalItems = $('Limit').all();\n// const originalItems = $('Prepare Attendance Payload').all();\n\n// const output = [];\n\n// for (let i = 0; i < responses.length; i++) {\n//   const results = responses[i].json.results || [];\n//   const original = originalItems[i]?.json;\n\n//   if (!original) {\n//     throw new Error(`Original attendance not found for response ${i}`);\n//   }\n\n//   for (const result of results) {\n//     if (result.status?.toLowerCase() !== 'success') {\n//       continue;\n//     }\n\n//     output.push({\n//       json: {\n//         access360_id: original.access360_id,\n//         employee_id: original.employee_id,\n//         event_type: original.event_type,\n//         event_time: original.event_time,\n//         destination_attendance_id: result.attendance_id\n//       }\n//     });\n//   }\n// }\n\n// return output;\n\n\n\n\n// Get the batch API response\nconst responseItems = $input.all();\n\nif (responseItems.length === 0) {\n  return [];\n}\n\n// Get the original batch data from Prepare Attendance Payload\nconst payloadItems = $('Prepare Attendance Payload').all();\n\nif (payloadItems.length === 0) {\n  throw new Error('No data found from Prepare Attendance Payload');\n}\n\nconst payload = payloadItems[0].json;\n\nconst sourceRecords = payload.source_records || [];\nconst attendances = payload.attendances || [];\n\n// Get all results returned by the destination API\nconst results = responseItems.flatMap(item => {\n  return Array.isArray(item.json.results)\n    ? item.json.results\n    : [];\n});\n\nconst output = [];\n\n// Match API results back to the original records\nfor (const result of results) {\n\n  // Only process successful records\n  if (String(result.status || '').toLowerCase() !== 'success') {\n    continue;\n  }\n\n  const orgUserId = String(result.org_user_id || '').trim();\n\n  // Find the original record using employee/org_user_id\n  const matchingIndexes = [];\n\n  for (let i = 0; i < attendances.length; i++) {\n    if (\n      String(attendances[i].org_user_id || '').trim() === orgUserId\n    ) {\n      matchingIndexes.push(i);\n    }\n  }\n\n  if (matchingIndexes.length === 0) {\n    continue;\n  }\n\n  // Find an original record that has not already been mapped\n  let matchedIndex = null;\n\n  for (const index of matchingIndexes) {\n    const alreadyUsed = output.some(\n      item =>\n        item.json.access360_id === sourceRecords[index]?.access360_id\n    );\n\n    if (!alreadyUsed) {\n      matchedIndex = index;\n      break;\n    }\n  }\n\n  if (matchedIndex === null) {\n    continue;\n  }\n\n  const original = sourceRecords[matchedIndex];\n\n  output.push({\n    json: {\n      access360_id: original.access360_id,\n      employee_id: original.employee_id,\n      event_type: original.event_type,\n      event_time: original.event_time,\n      destination_attendance_id: result.attendance_id\n    }\n  });\n}\n\nreturn output;"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1792,
+            0
+          ],
+          "id": "a4d0341a-b20c-4515-85e7-0252664a4793",
+          "name": "Prepare Successful Records for DB",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "maxItems": 100
+          },
+          "type": "n8n-nodes-base.limit",
+          "typeVersion": 1,
+          "position": [
+            1600,
+            -176
+          ],
+          "id": "97ce1dcb-6143-4e3a-a284-db1c43aefdb7",
+          "name": "Limit",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "INSERT INTO access360_processed_attendance (\n    access360_id,\n    employee_id,\n    event_type,\n    event_time,\n    destination_attendance_id\n)\nVALUES (\n    {{ $json.access360_id }},\n    '{{ String($json.employee_id ?? '').replace(/'/g, \"''\") }}',\n    '{{ String($json.event_type ?? '').replace(/'/g, \"''\") }}',\n    '{{ $json.event_time }}'::timestamptz,\n    {{ $json.destination_attendance_id }}\n)\nON CONFLICT (access360_id) DO NOTHING;",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.6,
+          "position": [
+            1936,
+            176
+          ],
+          "id": "ccb42cce-8a72-4a98-af2b-3ca7f0fb8f87",
+          "name": "access360_processed_attendance1",
+          "alwaysOutputData": true,
+          "credentials": {
+            "postgres": {
+              "id": "b50IVtOHRFxnli6C",
+              "name": "Postgres n8n_db"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n    id,\n    access360_id,\n    employee_id,\n    event_type,\n    event_time,\n    processed_at,\n    destination_attendance_id\nFROM access360_processed_attendance WHERE employee_id = '50214'\nORDER BY processed_at DESC;",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.6,
+          "position": [
+            1792,
+            -432
+          ],
+          "id": "127c5ed4-9265-4adb-b35a-bae20f6c1810",
+          "name": "Execute a SQL query",
+          "alwaysOutputData": true,
+          "credentials": {
+            "postgres": {
+              "id": "b50IVtOHRFxnli6C",
+              "name": "Postgres n8n_db"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT COALESCE(MAX(access360_id), 0) AS last_unique_id\nFROM access360_processed_attendance;",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.6,
+          "position": [
+            -80,
+            -64
+          ],
+          "id": "7c31bd9b-fb8a-4564-90d2-690be2b9ebab",
+          "name": "Get Last Processed ID",
+          "alwaysOutputData": true,
+          "credentials": {
+            "postgres": {
+              "id": "b50IVtOHRFxnli6C",
+              "name": "Postgres n8n_db"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n    EXISTS (\n        SELECT 1\n        FROM access360_processed_attendance\n        WHERE access360_id = 51290614\n    ) AS already_processed_1,\n    EXISTS (\n        SELECT 1\n        FROM access360_processed_attendance\n        WHERE access360_id = 51290615\n    ) AS already_processed_2;",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.6,
+          "position": [
+            -864,
+            80
+          ],
+          "id": "7947a297-1410-4f62-815a-27ca2d37ec3c",
+          "name": "Execute a SQL query1",
+          "alwaysOutputData": true,
+          "credentials": {
+            "postgres": {
+              "id": "b50IVtOHRFxnli6C",
+              "name": "Postgres n8n_db"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "operation": "executeQuery",
+            "query": "SELECT\n    id,\n    access360_id,\n    employee_id,\n    event_type,\n    event_time,\n    processed_at,\n    destination_attendance_id\nFROM access360_processed_attendance\nORDER BY processed_at DESC;",
+            "options": {}
+          },
+          "type": "n8n-nodes-base.postgres",
+          "typeVersion": 2.6,
+          "position": [
+            1888,
+            -320
+          ],
+          "id": "b174ccbd-6b4e-46d8-a5b9-6f8f15a8402b",
+          "name": "Execute a SQL query2",
+          "alwaysOutputData": true,
+          "credentials": {
+            "postgres": {
+              "id": "b50IVtOHRFxnli6C",
+              "name": "Postgres n8n_db"
+            }
+          }
+        },
+        {
+          "parameters": {
+            "jsCode": "const records = $input.all();\n\nreturn records.map(item => ({\n  json: {\n    access360_id: item.json.id,\n    employee_id: item.json.employeeId,\n    event_type: item.json.eventType,\n    event_time: item.json.eventTime\n  }\n}));"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            896,
+            -352
+          ],
+          "id": "eab0c88b-8d55-4323-ad47-f3d00528bcac",
+          "name": "Prepare IDs for Duplicate Check1",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "url": "https://core.access360.ai/WebServiceAPI/WebServices/GetAttendanceData",
+            "sendQuery": true,
+            "queryParameters": {
+              "parameters": [
+                {
+                  "name": "apiKey",
+                  "value": "944C8CD3-ADA0-4E67-8CC8-35B05FA46045"
+                },
+                {
+                  "name": "companyId",
+                  "value": "54"
+                },
+                {
+                  "name": "BranchID"
+                },
+                {
+                  "name": "EmployeeID"
+                },
+                {
+                  "name": "EmpType"
+                },
+                {
+                  "name": "lastUniqueId",
+                  "value": "={{ $node[\"Get Last Processed ID\"].json[\"last_unique_id\"] }}"
+                }
+              ]
+            },
+            "sendHeaders": true,
+            "headerParameters": {
+              "parameters": [
+                {
+                  "name": "Authorization",
+                  "value": "=Bearer {{$node[\"Access360 - Get Token1\"].json[\"access_token\"]}}"
+                }
+              ]
+            },
+            "options": {}
+          },
+          "type": "n8n-nodes-base.httpRequest",
+          "typeVersion": 4.3,
+          "position": [
+            160,
+            -352
+          ],
+          "id": "04f92d2c-15c6-4a0f-8c44-a6b83efb0b4f",
+          "name": "Access360 - Get Attendance Data1",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "// const records = $input.all();\n\n// const attendances = [];\n\n// for (const item of records) {\n//   const data = item.json;\n\n//   attendances.push({\n//     org_user_id: String(data.employeeId || '').trim(),\n\n//     punched_in_at:\n//       data.eventType?.toLowerCase() === 'login'\n//         ? data.eventTime\n//         : null,\n\n//     punched_out_at:\n//       data.eventType?.toLowerCase() === 'logout'\n//         ? data.eventTime\n//         : null\n//   });\n// }\n\n// return [\n//   {\n//     json: {\n//       attendances\n//     }\n//   }\n// ];\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n// const records = $input.all();\n\n// const attendances = [];\n\n// for (const item of records) {\n//   const data = item.json;\n\n//   attendances.push({\n//     org_user_id: String(data.employee_id || '').trim(),\n\n//     punched_in_at:\n//       data.event_type?.toLowerCase() === 'login'\n//         ? data.event_time\n//         : null,\n\n//     punched_out_at:\n//       data.event_type?.toLowerCase() === 'logout'\n//         ? data.event_time\n//         : null\n//   });\n// }\n\n// return [\n//   {\n//     json: {\n//       attendances\n//     }\n//   }\n// ];\n\n\n\n\n\n\n\n\n\n\n\n  // const records = $input.all();\n  \n  // return records.map(item => {\n  //   const data = item.json;\n  \n  //   const attendance = {\n  //     org_user_id: String(data.employee_id || '').trim(),\n  \n  //     punched_in_at:\n  //       data.event_type?.toLowerCase() === 'login'\n  //         ? data.event_time\n  //         : null,\n  \n  //     punched_out_at:\n  //       data.event_type?.toLowerCase() === 'logout'\n  //         ? data.event_time\n  //         : null\n  //   };\n  \n  //   return {\n  //     json: {\n  //       access360_id: data.access360_id,\n  //       employee_id: data.employee_id,\n  //       event_type: data.event_type,\n  //       event_time: data.event_time,\n  //       attendances: [attendance]\n  //     }\n  //   };\n  // });\n\n\n\n\n\n\n\n\n\nconst records = $input.all();\n\nfunction formatIST(timestamp) {\n  if (!timestamp) return null;\n\n  // Keep the existing date and time; change only the timezone suffix\n  return timestamp\n    .replace(/\\+00:00$/, '+05:30')\n    .replace(/Z$/, '+05:30');\n}\n\nreturn records.map(item => {\n  const data = item.json;\n\n  const eventTime = formatIST(data.event_time);\n\n  const attendance = {\n    org_user_id: String(data.employee_id || '').trim(),\n\n    punched_in_at:\n      data.event_type?.toLowerCase() === 'login'\n        ? eventTime\n        : null,\n\n    punched_out_at:\n      data.event_type?.toLowerCase() === 'logout'\n        ? eventTime\n        : null\n  };\n\n  return {\n    json: {\n      access360_id: data.access360_id,\n      employee_id: data.employee_id,\n      event_type: data.event_type,\n      event_time: eventTime,\n      attendances: [attendance]\n    }\n  };\n});"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1280,
+            -32
+          ],
+          "id": "39557c9a-c7d6-4dc0-8bf1-435cdc0284ab",
+          "name": "Prepare Attendance Payload1",
+          "alwaysOutputData": true
+        },
+        {
+          "parameters": {
+            "jsCode": "const responses = $input.all();\n\n// These are the 2 items passed through the Limit node.\n// If your Limit node has a different name, update it here.\n// const originalItems = $('Limit').all();\nconst originalItems = $('Prepare Attendance Payload').all();\n\nconst output = [];\n\nfor (let i = 0; i < responses.length; i++) {\n  const results = responses[i].json.results || [];\n  const original = originalItems[i]?.json;\n\n  if (!original) {\n    throw new Error(`Original attendance not found for response ${i}`);\n  }\n\n  for (const result of results) {\n    if (result.status?.toLowerCase() !== 'success') {\n      continue;\n    }\n\n    output.push({\n      json: {\n        access360_id: original.access360_id,\n        employee_id: original.employee_id,\n        event_type: original.event_type,\n        event_time: original.event_time,\n        destination_attendance_id: result.attendance_id\n      }\n    });\n  }\n}\n\nreturn output;"
+          },
+          "type": "n8n-nodes-base.code",
+          "typeVersion": 2,
+          "position": [
+            1936,
+            -128
+          ],
+          "id": "ce92d409-a6be-4a40-90e8-19aa66fecfcb",
+          "name": "Prepare Successful Records for DB1",
+          "alwaysOutputData": true
+        }
+      ],
+      "connections": {
+        "Schedule Trigger": {
+          "main": [
+            [
+              {
+                "node": "Access360 - Get Token1",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Access360 - Employee Logs": {
+          "main": [
+            []
+          ]
+        },
+        "Access360 - Get Token": {
+          "main": [
+            []
+          ]
+        },
+        "Access360 - Get Branch And Company ID": {
+          "main": [
+            []
+          ]
+        },
+        "Access360 - Get Attendance Data": {
+          "main": [
+            [
+              {
+                "node": "Prepare IDs for Duplicate Check",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Access360 - Get Employees": {
+          "main": [
+            []
+          ]
+        },
+        "Combine Employee + Attendance": {
+          "main": [
+            [
+              {
+                "node": "Filter Test Attendance",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Filter Test Attendance": {
+          "main": [
+            [
+              {
+                "node": "Prepare Attendance Payload11",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare Attendance Payload11": {
+          "main": [
+            [
+              {
+                "node": "POST - Store Attendance11",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Filter Today's Attendance": {
+          "main": [
+            []
+          ]
+        },
+        "Prepare Attendance Payload": {
+          "main": [
+            [
+              {
+                "node": "POST - Store Attendance",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "POST - Store Attendance": {
+          "main": [
+            [
+              {
+                "node": "Prepare Successful Records for DB",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Check Processed IDs": {
+          "main": [
+            [
+              {
+                "node": "Filter New Records",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Prepare IDs for Duplicate Check": {
+          "main": [
+            [
+              {
+                "node": "Check Processed IDs",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Filter New Records": {
+          "main": [
+            [
+              {
+                "node": "Prepare Attendance Payload",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Access360 - Get Token1": {
+          "main": [
+            [
+              {
+                "node": "Get Last Processed ID",
+                "type": "main",
+                "index": 0
+              },
+              {
+                "node": "Access360 - Get Branch And Company ID",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "Limit": {
+          "main": [
+            []
+          ]
+        },
+        "Prepare Successful Records for DB": {
+          "main": [
+            [
+              {
+                "node": "access360_processed_attendance1",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        },
+        "access360_processed_attendance1": {
+          "main": [
+            []
+          ]
+        },
+        "Get Last Processed ID": {
+          "main": [
+            [
+              {
+                "node": "Access360 - Get Attendance Data",
+                "type": "main",
+                "index": 0
+              }
+            ]
+          ]
+        }
+      },
+      "authors": "N8N Admin",
+      "name": "Version 3503a720",
+      "description": "",
+      "autosaved": false,
+      "workflowPublishHistory": [
+        {
+          "createdAt": "2026-10-07T18:01:38.246Z",
+          "id": 257,
+          "workflowId": "5Fsie29pVqXY2vNH",
+          "versionId": "3503a720-e33e-40b8-a4a1-d8a9b90713fc",
+          "event": "activated",
+          "userId": "c0d3bba5-1555-40ed-ab2f-0518b8a1ae98"
+        }
+      ]
+    },
+    "scopes": [
+      "workflow:create",
+      "workflow:delete",
+      "workflow:execute",
+      "workflow:execute-chat",
+      "workflow:list",
+      "workflow:move",
+      "workflow:read",
+      "workflow:share",
+      "workflow:update"
+    ],
+    "checksum": "b228fc8cd39de4d234506611411872948449adea68e01386c4426522feff2d1a"
+  }
+}
